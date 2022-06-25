@@ -13,10 +13,10 @@ pip install -r requirements.txt
 Now let's get Mongo and start a server:
 
 ```bash
-mkdir -p /checkpoint/${USER}/mongo/{db,logs}
-cd /checkpoint/${USER}/mongo 
-wget -O - https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.0.tgz | tar -xzvf -  
-./mongodb-linux-x86_64-ubuntu1804-4.2.0/bin/mongod --dbpath /checkpoint/${USER}/mongo/db --logpath /checkpoint/${USER}/mongo/logs/mongodb.log --fork
+sudo mkdir -p /checkpoint/${USER}/mongo/{db,logs}
+cd ~/checkpoint/${USER}/mongo
+sudo wget -O - https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-4.2.0.tgz | sudo tar -xzvf -  
+sudo ./mongodb-linux-x86_64-ubuntu1804-4.2.0/bin/mongod --dbpath ./db --logpath ./logs/mongodb.log --fork
 ```
 
 Which should give the following output: `child process started successfully, parent exiting`
