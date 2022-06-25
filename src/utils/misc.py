@@ -131,7 +131,7 @@ def replay_run(run, viz, args, mongo_path, logger):
     object = gridfs.get(selected_artifact['file_id'])
 
     # with tempfile.TemporaryDirectory() as dir:
-    with tempfile.TemporaryDirectory(dir='/local/veniat') as dir:
+    with tempfile.TemporaryDirectory(dir='/home/TUE/s167139/local/veniat') as dir:
         file_path = os.path.join(dir, selected_artifact['name'])
         with open(file_path, 'wb') as file:
             file.write(object.read())

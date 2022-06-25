@@ -28,6 +28,7 @@ def get_module_by_name(name):
     if name == 'pnn':
         return PNN_LLmodel
     if name.startswith('pssn'):
+        print("Use the MNTDP module")
         return MNTDP
     if name == 'zoo':
         return ZooLLModel

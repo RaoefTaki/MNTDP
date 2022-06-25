@@ -269,6 +269,8 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         'envs': envs
     }
     summary = pandas.DataFrame(summary)
+    print("Summary results:")
+    print(summary)
 
     return return_df, summary
 
@@ -376,6 +378,7 @@ def train_on_tasks(config):
 
 
 def train_t(config):
+    # This function does not allow for printing to be seen in the output files
     seed = config.pop('seed')
     static_params = config.pop('static_params')
 
@@ -653,6 +656,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     step_sum = model_creation_time + training_time + postproc_time + \
                finish_time + eval_time
     best_it = b_state_dict.get('cum_best_iter', b_state_dict['iter'])
+    # TODO: add parameters to be reported here?
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
                 avg_acc_val=avg_val,
@@ -670,6 +674,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 duration_postproc=postproc_time,
                 duration_eval=eval_time,
                 duration_sum=step_sum,
+                iterations=iterations,
+                epochs=epochs,
                 # entropy=stats.pop('entropy'),
                 new_params=learner.new_params(t_id),
                 total_params=learner.n_params(t_id),

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import shutil
 import tempfile
 import threading
@@ -368,7 +369,7 @@ class BaseExperiment(object):
     def save_traces(self):
         logger.warning('Archiving traces folder ...')
         with tempfile.TemporaryDirectory() as dir:
-            archive_name = os.path.join(dir, '{}_traces'.format(self.exp_name))
+            archive_name = os.path.join('/home/TUE/s167139/', re.sub("/", "", dir, count=1), '{}_traces'.format(self.exp_name))
             shutil.make_archive(archive_name, 'zip', self.visdom_traces_folder)
             self.sacred_run.add_artifact('{}.zip'.format(archive_name))
         shutil.rmtree(self.visdom_traces_folder)

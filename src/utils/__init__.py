@@ -5,9 +5,9 @@
 
 import os
 
-VISDOM_CONF_PATH = 'resources/visdom.yaml'
-MONGO_CONF_PATH = 'resources/mongo.yaml'
-LOCAL_SAVE_PATH = '/local/veniat/lileb/runs'
+VISDOM_CONF_PATH = '/home/TUE/s167139/Thesis/MNTDP/resources/visdom.yaml'
+MONGO_CONF_PATH = '/home/TUE/s167139/Thesis/MNTDP/resources/mongo.yaml'
+LOCAL_SAVE_PATH = '/home/TUE/s167139/local/veniat/lileb/runs'
 
 
 def load_conf(path):

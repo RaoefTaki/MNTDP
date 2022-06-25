@@ -38,7 +38,7 @@ def load_component_default_config(component_config, all_default_configs):
 def load_default_config(config, command_name, logger):
     default_config = {}
     for comp, comp_conf in config.items():
-        fn = f'configs/default/{comp}.yaml'
+        fn = f'/home/TUE/s167139/Thesis/MNTDP/configs/default/{comp}.yaml'
         if os.path.isfile(fn):# and ('_name' not in comp_conf):
             comp_default_configs = load_config_file(fn)
             if '_name' in comp_conf:

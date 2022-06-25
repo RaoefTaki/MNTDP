@@ -34,7 +34,8 @@ def get_mongo_db(mongo_conf=None, mongo_path=None):
         mongo_conf = load_conf(mongo_path)
 
     connection_url = get_mongo_connection_url(mongo_conf)
-    return MongoClient(connection_url)[mongo_conf['db']]
+    mongo_client = MongoClient(connection_url)[mongo_conf['db']]
+    return mongo_client
 
 
 def get_mongo_collection(mongo_conf=None, mongo_path=None, collection=None):

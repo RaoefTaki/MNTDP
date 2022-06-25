@@ -119,7 +119,8 @@ class ExhaustiveSearch(nn.Module):
                                  b_sizes=b_sizes, *args, **kwargs))
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
-        # torch.multiprocessing.set_sharing_strategy('file_system')
+        # TODO: leave the line below uncommented?
+        torch.multiprocessing.set_sharing_strategy('file_system')
         all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
