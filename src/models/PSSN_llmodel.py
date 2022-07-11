@@ -196,7 +196,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
         knn_perfs = []
         model_perfs = []
         rand_dists = []
-        print("Check KNN for each t_id")
         for t_id in range(task_id):
             model = self.get_model(t_id)
             # model.freeze_arch()
@@ -205,6 +204,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             features, model_preds, labels = [], [], []
             with torch.no_grad():
+                # Generate the training features & labels, for the KNN algorithm
                 n_samples = 0
                 for x, y in train:
                     x = x.to(device)
@@ -220,11 +220,11 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 model_preds = torch.cat(model_preds, 0)
                 labels = torch.cat(labels, 0).flatten()
             n_neighbors = min(n_neighbors, features.size(0))
-            print("KNN start for t_id:", t_id)
             knn = KNeighborsClassifier(n_neighbors=n_neighbors)
             knn.fit(features.cpu(), labels.cpu())
             preds, gt = [], []
             with torch.no_grad():
+                # Validate the KNN classification performance
                 n_samples = 0
                 for x, y in val:
                     x = x.to(device)
@@ -246,9 +246,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 acc = (model_preds.argmax(1) == labels).float().mean().item()
                 model_perfs.append(acc)
                 rand_dists.append(abs(1/model_preds.size(1) - acc))
-            print("knn_perfs:", knn_perfs[len(knn_perfs)-1])
-            print("model_perfs:", model_perfs[len(model_perfs)-1])
-            print("rand_dists:", rand_dists[len(rand_dists)-1])
         self.arch_scores[task_id]['task id'] = list(range(task_id))
         self.arch_scores[task_id]['knn'] = knn_perfs
         self.arch_scores[task_id]['accs'] = model_perfs

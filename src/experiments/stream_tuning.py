@@ -285,6 +285,8 @@ def train_on_tasks(config):
     np.random.seed(seed)
     random.seed(seed)
 
+    print("[TEST] Start training")
+
     tasks = config.pop('tasks')
 
     task_vis_params = config.pop('vis_params')
@@ -311,6 +313,8 @@ def train_on_tasks(config):
             t_id=t_id, task=task, tasks=tasks, vis_p=vis_p,
             transfer_matrix=transfer_matrix, total_steps=total_steps
         )
+
+        print("[TEST] Current task:", t_id)
 
         if task_level_tuning:
             if not ray.is_initialized():
@@ -360,6 +364,8 @@ def train_on_tasks(config):
 
             #todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
+
+            print("[TEST] Finished task:", t_id)
         else:
             rescaled, t, metrics, b_state_dict, \
             stats = train_single_task(config=deepcopy(config), learner=learner,
@@ -375,6 +381,8 @@ def train_on_tasks(config):
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
+    
+    print("[TEST] End training")
 
 
 def train_t(config):
