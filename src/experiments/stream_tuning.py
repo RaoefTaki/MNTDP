@@ -58,7 +58,7 @@ class StreamTuningExperiment(BaseExperiment):
             logger.info('Architecture details for the first models:')
             for learner, det in details.items():
                 logger.info(f'{learner}: {det} ({sum(det.values())}, '
-                            f'{4*sum(det.values())/1e6})')
+                            f'{4 * sum(det.values()) / 1e6})')
         self.init_plots()
 
         logger.info("General dashboard: {}".format(get_env_url(self.main_viz)))
@@ -126,13 +126,11 @@ class StreamTuningExperiment(BaseExperiment):
         # res_2 = {k: [pandas.DataFrame(itm) for itm in v] for k, v in res_py.items()}
 
         # for (k1, v1), (k2, v2) in zip(res.items(), res_2.items()):
-            # assert k1 == k2
-            # print([i1.equals(i2) for i1, i2 in zip(v1, v2)])
+        # assert k1 == k2
+        # print([i1.equals(i2) for i1, i2 in zip(v1, v2)])
         logger.info(f'Args {" ".join(sys.argv[2:])}')
         print(pandas.DataFrame(summ).set_index('model'))
         return [res_py, self.task_gen.stream_infos(full=False)]
-
-
 
 
 def tune_learner_on_stream(learner, learner_name, task_level_tuning,
@@ -163,7 +161,6 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
               # 'env': learner_name
               'seed': seed
               }
-
 
     def trial_name_creator(trial):
         return learner_name
@@ -219,7 +216,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                 if selected[t_id] == t.experiment_tag:
                     all_val_accs[t.experiment_tag].append(
                         '<span style="font-weight:bold">{}</span>'.format(
-                        t.last_result[f'Val_T{t_id}']))
+                            t.last_result[f'Val_T{t_id}']))
                 else:
                     all_val_accs[t.experiment_tag].append(
                         t.last_result[f'Val_T{t_id}'])
@@ -228,7 +225,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                 )
 
             best_trial = max(task_an.trials,
-                         key=lambda trial: trial.last_result['avg_acc_val_so_far'])
+                             key=lambda trial: trial.last_result['avg_acc_val_so_far'])
 
             df = task_an.trial_dataframes[best_trial.logdir]
             best_trials_df.append(df)
@@ -308,7 +305,7 @@ def train_on_tasks(config):
         all_analysis = []
         selected_tags = []
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
-        #todo sync transfer matrix
+        # todo sync transfer matrix
         static_params = dict(
             t_id=t_id, task=task, tasks=tasks, vis_p=vis_p,
             transfer_matrix=transfer_matrix, total_steps=total_steps
@@ -347,6 +344,7 @@ def train_on_tasks(config):
             def get_key(trial):
                 # return trial.last_result['avg_acc_val_so_far']
                 return trial.last_result['best_val']
+
             best_trial = max(analysis.trials, key=get_key)
             for trial in analysis.trials:
                 if trial != best_trial:
@@ -362,14 +360,18 @@ def train_on_tasks(config):
             learner = torch.load(best_learner_path, map_location='cpu')
             shutil.rmtree(best_trial.logdir)
 
-            #todo UPDATE LEARNER AND SAVE
+            # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
             print("[TEST] Finished task:", t_id)
+
+            print(type(analysis))
+            print(analysis)
+            exit(0)
         else:
             rescaled, t, metrics, b_state_dict, \
-            stats = train_single_task(config=deepcopy(config), learner=learner,
-                                                                          **static_params)
+            stats, info_training = train_single_task(config=deepcopy(config), learner=learner,
+                                                     **static_params)
 
         # all_stats.append(stats)
         # update_rescaled(list(rescaled.values()), list(rescaled.keys()), tag,
@@ -381,7 +383,7 @@ def train_on_tasks(config):
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
-    
+
     print("[TEST] End training")
 
 
@@ -411,7 +413,8 @@ def train_t(config):
         learner_path = config.pop('learner_path')
         learner = torch.load(learner_path)
 
-    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner, **static_params)
+    rescaled, t, metrics, b_state_dict, stats, info_training = train_single_task(config=config, learner=learner,
+                                                                                 **static_params)
 
     learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
     # raise ValueError(learner_save_path)
@@ -420,7 +423,6 @@ def train_t(config):
 
 def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix,
                       total_steps):
-
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
     assert 'model-params' not in config, "Can't have model-specific " \
@@ -519,16 +521,17 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     assert not config, config
     start2 = time.time()
-    rescaled, t, metrics, b_state_dict = train_model(model, datasets_p,
-                                                     batch_sizes, optim_fact,
-                                                     prepare_batch, task,
-                                                     train_loader, eval_loaders,
-                                                     training_params, config)
+    # TODO, marker: training of models conducted in this function
+    rescaled, t, metrics, b_state_dict, info_training = train_model(model, datasets_p,
+                                                                    batch_sizes, optim_fact,
+                                                                    prepare_batch, task,
+                                                                    train_loader, eval_loaders,
+                                                                    training_params, config)
 
     training_time = time.time() - start2
     start3 = time.time()
     if not isinstance(model, ExhaustiveSearch):
-        #todo Handle the state dict loading uniformly for all learners RN only
+        # todo Handle the state dict loading uniformly for all learners RN only
         # the exhaustive search models load the best state dict after training
         model.load_state_dict(b_state_dict['state_dict'])
 
@@ -627,12 +630,12 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     else:
         if len(test_accs) <= lca_n:
             last_key = max(test_accs.keys())
-            assert len(test_accs) == last_key + 1,\
+            assert len(test_accs) == last_key + 1, \
                 f"Can't compute LCA@{lca_n} if steps were skipped " \
                 f"(got {list(test_accs.keys())})"
             test_accs = test_accs.copy()
             last_acc = test_accs[last_key]
-            for i in range(last_key + 1, lca_n+1):
+            for i in range(last_key + 1, lca_n + 1):
                 test_accs[i] = last_acc
         lca = np.mean([test_accs[i] for i in range(lca_n + 1)])
 
@@ -651,14 +654,13 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                   list(map(fill_matrix, transfer_matrix.values())),
                   task_vis)
 
-
     # logger.warning(t_id)
     # logger.warning(transfer_matrix)
 
     avg_val = np.mean(evaluation['Val']['accuracy'])
-    avg_val_so_far = np.mean(evaluation['Val']['accuracy'][:t_id+1])
+    avg_val_so_far = np.mean(evaluation['Val']['accuracy'][:t_id + 1])
     avg_test = np.mean(evaluation['Test']['accuracy'])
-    avg_test_so_far = np.mean(evaluation['Test']['accuracy'][:t_id+1])
+    avg_test_so_far = np.mean(evaluation['Test']['accuracy'][:t_id + 1])
 
     step_time_s = time.time() - start1
     step_sum = model_creation_time + training_time + postproc_time + \
@@ -695,7 +697,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 total_t=round(total_time * 1000) / 1000,
                 env_url=get_env_url(vis_p),
                 **accs, **stats)
-    return rescaled, t, metrics, b_state_dict, stats
+    return rescaled, t, metrics, b_state_dict, stats, info_training
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
@@ -703,15 +705,15 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
     if hasattr(model, 'train_func'):
         assert not config, config
         f = model.train_func
-        t, metrics, b_state_dict = f(datasets_p=datasets_p,
-                                     b_sizes=batch_sizes,
-                                     optim_fact=optim_fact,
-                                     # lr_scheduler=lr_scheduler,
-                                     # viz=task_vis,
-                                     prepare_batch=prepare_batch,
-                                     split_names=task['split_names'],
-                                     # viz=task_vis,
-                                     **training_params)
+        t, metrics, b_state_dict, info_training = f(datasets_p=datasets_p,
+                                                    b_sizes=batch_sizes,
+                                                    optim_fact=optim_fact,
+                                                    # lr_scheduler=lr_scheduler,
+                                                    # viz=task_vis,
+                                                    prepare_batch=prepare_batch,
+                                                    split_names=task['split_names'],
+                                                    # viz=task_vis,
+                                                    **training_params)
         rescaled = list(
             filter(lambda itm: 'rescaled' in itm[0], metrics.items()))
         rescaled = rescaled[0][1]
@@ -719,14 +721,14 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
         optim = optim_fact(model=model)
         if hasattr(model, 'train_loader_wrapper'):
             train_loader = model.train_loader_wrapper(train_loader)
-        t, metrics, b_state_dict = train(model, train_loader, eval_loaders,
-                                         optimizer=optim,
-                                         # lr_scheduler=lr_scheduler,
-                                         # viz=task_vis,
-                                         prepare_batch=prepare_batch,
-                                         split_names=task['split_names'],
-                                         # viz=task_vis,
-                                         **training_params)
+        t, metrics, b_state_dict, info_training = train(model, train_loader, eval_loaders,
+                                                        optimizer=optim,
+                                                        # lr_scheduler=lr_scheduler,
+                                                        # viz=task_vis,
+                                                        prepare_batch=prepare_batch,
+                                                        split_names=task['split_names'],
+                                                        # viz=task_vis,
+                                                        **training_params)
         rescaled = metrics['Val accuracy_0']
 
-    return rescaled, t, metrics, b_state_dict
+    return rescaled, t, metrics, b_state_dict, info_training

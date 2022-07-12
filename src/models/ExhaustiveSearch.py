@@ -103,11 +103,12 @@ class ExhaustiveSearch(nn.Module):
 
         if not self.models:
             self.init_models()
-        # uid = np.random.randint(0, 10000)
-        # logger.warning(f'{uid}-Training all {len(self.models)} options')
+
+        # TODO: what exactly does it do here?
         calls = []
         for path, idx in self.models_idx.items():
             model = self.models[idx]
+            # print("[TEST] PRINTS BELOW")  # This doesn't print
             # print(path, id(next(iter(model.parameters()))))
             # print(path, [type(p.grad)for p in model.parameters()])
             # print(path, [p.grad for p in model.parameters()])
@@ -119,7 +120,7 @@ class ExhaustiveSearch(nn.Module):
                                  b_sizes=b_sizes, *args, **kwargs))
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
-        # TODO: leave the line below uncommented?
+        # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
         torch.multiprocessing.set_sharing_strategy('file_system')
         all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
@@ -162,7 +163,7 @@ class ExhaustiveSearch(nn.Module):
 
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
-        return total_t, best_metrics, best_chkpt
+        return total_t, best_metrics, best_chkpt, None
 
     def forward(self, input):
         if not self.models:
