@@ -163,7 +163,7 @@ class ExhaustiveSearch(nn.Module):
 
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
-        return total_t, best_metrics, best_chkpt, None
+        return total_t, best_metrics, best_chkpt, "INFO TRAINING"
 
     def forward(self, input):
         if not self.models:

@@ -353,6 +353,9 @@ def train_on_tasks(config):
             # am = np.argmax(list(map(get_key, analysis.trials)))
             # print("BEST IS {}: {}".format(am, best_trial.last_result['avg_acc_val']))
 
+            for trial in analysis.trials:
+                print(trial.last_result['info_training'])
+
             # t = best_trial.last_result['duration_iterations']
             total_steps = best_trial.last_result['total_steps']
             selected_tags.append(best_trial.experiment_tag)
@@ -370,8 +373,8 @@ def train_on_tasks(config):
             exit(0)
         else:
             rescaled, t, metrics, b_state_dict, \
-            stats, info_training = train_single_task(config=deepcopy(config), learner=learner,
-                                                     **static_params)
+            stats = train_single_task(config=deepcopy(config), learner=learner,
+                                      **static_params)
 
         # all_stats.append(stats)
         # update_rescaled(list(rescaled.values()), list(rescaled.keys()), tag,
@@ -413,8 +416,8 @@ def train_t(config):
         learner_path = config.pop('learner_path')
         learner = torch.load(learner_path)
 
-    rescaled, t, metrics, b_state_dict, stats, info_training = train_single_task(config=config, learner=learner,
-                                                                                 **static_params)
+    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner,
+                                                                  **static_params)
 
     learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
     # raise ValueError(learner_save_path)
@@ -696,8 +699,9 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 eval_t=round(avg_eval_time * 1000) / 1000,
                 total_t=round(total_time * 1000) / 1000,
                 env_url=get_env_url(vis_p),
+                info_training=info_training,
                 **accs, **stats)
-    return rescaled, t, metrics, b_state_dict, stats, info_training
+    return rescaled, t, metrics, b_state_dict, stats
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
@@ -721,14 +725,15 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
         optim = optim_fact(model=model)
         if hasattr(model, 'train_loader_wrapper'):
             train_loader = model.train_loader_wrapper(train_loader)
-        t, metrics, b_state_dict, info_training = train(model, train_loader, eval_loaders,
-                                                        optimizer=optim,
-                                                        # lr_scheduler=lr_scheduler,
-                                                        # viz=task_vis,
-                                                        prepare_batch=prepare_batch,
-                                                        split_names=task['split_names'],
-                                                        # viz=task_vis,
-                                                        **training_params)
+        t, metrics, b_state_dict = train(model, train_loader, eval_loaders,
+                                         optimizer=optim,
+                                         # lr_scheduler=lr_scheduler,
+                                         # viz=task_vis,
+                                         prepare_batch=prepare_batch,
+                                         split_names=task['split_names'],
+                                         # viz=task_vis,
+                                         **training_params)
+        info_training = None
         rescaled = metrics['Val accuracy_0']
 
     return rescaled, t, metrics, b_state_dict, info_training
