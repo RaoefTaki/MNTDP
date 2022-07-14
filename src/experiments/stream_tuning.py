@@ -435,6 +435,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     if learner_params:
         learner.set_h_params(**learner_params)
 
+    # TODO: probably define shared memory somewhere so that progress values can be kept and saved to perform LC extrapolation
+
     batch_sizes = training_params.pop('batch_sizes')
     # optim_func = training_params.pop('optim_func')
     optim_func = learner.optim_func
