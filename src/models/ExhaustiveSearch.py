@@ -105,11 +105,7 @@ class ExhaustiveSearch(nn.Module):
             self.init_models()
 
         # TODO: what exactly does it do here?
-        ctx = torch.multiprocessing.get_context('spawn')
-        torch.multiprocessing.set_sharing_strategy('file_system')
-
         calls = []
-        all_res = []
         for path, idx in self.models_idx.items():
             model = self.models[idx]
             # print("[TEST] PRINTS BELOW")  # This doesn't print
@@ -119,14 +115,14 @@ class ExhaustiveSearch(nn.Module):
             # print(path, [p is None for p in model.parameters()])
             # print(path, all([p.grad is None for p in model.parameters()]))
             # model = deepcopy(model)
-            call = partial(wrap, model=model, idx=idx,
-                           optim_fact=optim_fact, datasets_p=datasets_p,
-                           b_sizes=b_sizes, *args, **kwargs)
-            calls.append(call)
-            all_res.extend(execute_step([call], True, 4, ctx=ctx))
-
+            calls.append(partial(wrap, model=model, idx=idx,
+                                 optim_fact=optim_fact, datasets_p=datasets_p,
+                                 b_sizes=b_sizes, *args, **kwargs))
+        ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
         # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
+        torch.multiprocessing.set_sharing_strategy('file_system')
+        all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
         all_res = list(map(lambda x: (x[1][2]['value'], x[0]), self.res.items()))
