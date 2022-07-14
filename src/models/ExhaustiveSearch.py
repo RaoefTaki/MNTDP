@@ -123,7 +123,7 @@ class ExhaustiveSearch(nn.Module):
                            optim_fact=optim_fact, datasets_p=datasets_p,
                            b_sizes=b_sizes, *args, **kwargs)
             calls.append(call)
-            all_res.extend(execute_step(call, True, 4, ctx=ctx))
+            all_res.extend(execute_step([call], True, 4, ctx=ctx))
 
         # ctx = None
         # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
