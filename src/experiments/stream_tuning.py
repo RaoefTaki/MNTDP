@@ -368,9 +368,9 @@ def train_on_tasks(config):
 
             print("[TEST] Finished task:", t_id)
 
-            # print(type(analysis))
-            # print(analysis)
-            # exit(0)
+            print(type(analysis))
+            print(analysis)
+            exit(0)
         else:
             rescaled, t, metrics, b_state_dict, \
             stats = train_single_task(config=deepcopy(config), learner=learner,
