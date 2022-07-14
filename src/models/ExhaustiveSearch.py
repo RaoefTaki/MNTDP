@@ -38,7 +38,11 @@ class ExhaustiveSearch(nn.Module):
     def init_models(self):
         archs = list(nx.all_simple_paths(self.graph, self.in_node,
                                          self.out_node))
+        print("[TEST] archs")
+        print(archs)
         for path in archs:
+            print("-----")
+            print(path)
             new_model = FrozenSequential()
             last = None
             i = 0
@@ -66,6 +70,7 @@ class ExhaustiveSearch(nn.Module):
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
             self.models.append(new_model)
+            print(self.models_idx[tuple(path)])
 
     def get_weights(self):
         weights = torch.tensor([1. if n in self._selected_path() else 0.
@@ -104,7 +109,9 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             self.init_models()
 
-        # TODO: what exactly does it do here?
+        # Create calls for each of 6 different hyperparameter combinations
+        # Each different model (of the 7+1 models) is likely treated as one model in this code, where in the training
+        # these 7+1 models are trained per HPO combination
         calls = []
         for path, idx in self.models_idx.items():
             model = self.models[idx]
@@ -163,7 +170,7 @@ class ExhaustiveSearch(nn.Module):
 
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
-        return total_t, best_metrics, best_chkpt, (self.models, len(self.models_idx.items()), self.models_idx.items())
+        return total_t, best_metrics, best_chkpt, (len(self.models_idx.items()), self.models_idx.items())
 
     def forward(self, input):
         if not self.models:
