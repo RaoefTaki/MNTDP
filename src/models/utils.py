@@ -103,7 +103,7 @@ def is_dummy_block(block):
 
 
 def execute_step(step_calls, use_processes, max_workers=None, ctx=None):
-    if not use_processes or len(step_calls) < 2:
+    if not use_processes:# or len(step_calls) < 2:
         return [f() for f in step_calls]
 
     with ProcessPoolExecutor(max_workers, ctx) as executor:
