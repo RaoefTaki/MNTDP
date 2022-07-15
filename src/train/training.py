@@ -218,6 +218,20 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # logger.warning('current lr {:.5e}'.format(
             #     optimizer.param_groups[0]['lr']))
 
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def lc_extrapolator():
+        # Calculate the LC extrapolation results with 95% certainty, once every X iterations
+        trainer.terminate()
+        # all_metrics[select_metric][iteration] = #TODO
+
+
+        # if lc_extrapolation_predicts_no_best:
+        #     # In case the LC extrapolation predicts no improvement on the best run possible with 95% accuracy, we stop
+        #     logger.info('#####')
+        #     logger.info('# Early stopping Run')
+        #     logger.info('#####')
+        #     trainer.terminate()
+
     @trainer.on(Events.ITERATION_COMPLETED)
     def log_event(trainer):
         iteration = trainer.state.iteration if trainer.state else 0
@@ -263,15 +277,19 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
                 if iteration == 0:
                     all_metrics['Trainer loss'][iteration] = float('nan')
                     all_metrics['Trainer accuracy_0'][iteration] = float('nan')
+                    # all_metrics[select_metric][iteration] = float('nan')
                     if hasattr(model, 'arch_sampler'):
                         all_metrics['Trainer all entropy'][iteration] = float('nan')
                         all_metrics['Trainer sampling entropy'][iteration] = float('nan')
                     # if hasattr(model, 'cur_split'):
                         all_metrics['Trainer split'][iteration] = float('nan')
                 continue
+
+            # Handle evaluation data (normally called validation data)
             split_metrics = log_results(evaluator, d_loader, iteration, name)
             if select_metric not in split_metrics:
                 continue
+
             if is_better(split_metrics[select_metric], best['value']):
                 best['value'] = split_metrics[select_metric]
                 best['iter'] = iteration
