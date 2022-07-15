@@ -387,7 +387,7 @@ def train_on_tasks(config):
         # all_stats.append(stats)
         # update_rescaled(list(rescaled.values()), list(rescaled.keys()), tag,
         #                  g_task_vis, False)
-    task_counter += 1
+        task_counter += 1
 
     if task_level_tuning:
         return all_analysis, selected_tags
