@@ -353,8 +353,13 @@ def train_on_tasks(config):
             # am = np.argmax(list(map(get_key, analysis.trials)))
             # print("BEST IS {}: {}".format(am, best_trial.last_result['avg_acc_val']))
 
+            print("[TEST] Length of trials:", len(analysis.trials))
             for trial in analysis.trials:
-                print(trial.last_result['info_training'])
+                print(trial)
+                for info in trial.last_result['info_training']:
+                    print(info)
+                    print("---")
+                print("-----")
 
             # t = best_trial.last_result['duration_iterations']
             total_steps = best_trial.last_result['total_steps']
@@ -370,7 +375,7 @@ def train_on_tasks(config):
 
             # print(type(analysis))
             # print(analysis)
-            # exit(0)
+            exit(0)
         else:
             rescaled, t, metrics, b_state_dict, \
             stats = train_single_task(config=deepcopy(config), learner=learner,
