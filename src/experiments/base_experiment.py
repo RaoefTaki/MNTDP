@@ -249,8 +249,6 @@ class BaseExperiment(object):
             return self._sync_first_models(ref_params)
 
         params_count = defaultdict(list)
-        print("[TEST] task_gen.task_pool:", self.task_gen.task_pool)
-        print("[TEST] ll_models.items():", self.ll_models.items())
         for t in self.task_gen.task_pool:
             for name, ll_model in self.ll_models.items():
                 mod = ll_model.get_model(task_id=t.id, x_dim=t.x_dim,
