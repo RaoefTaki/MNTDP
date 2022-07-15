@@ -173,6 +173,7 @@ class BaseExperiment(object):
                 t = self.task_gen.add_task(task_name, self.data_path)
 
             self.training_envs.append({})
+            print("[TEST] ll_models:", self.ll_models)
             for model in self.ll_models:
                 training_name = '{}_{}_{}'.format(self.exp_name, model,
                                                   task_name)
@@ -248,6 +249,8 @@ class BaseExperiment(object):
             return self._sync_first_models(ref_params)
 
         params_count = defaultdict(list)
+        print("[TEST] task_gen.task_pool:", self.task_gen.task_pool)
+        print("[TEST] ll_models.items():", self.ll_models.items())
         for t in self.task_gen.task_pool:
             for name, ll_model in self.ll_models.items():
                 mod = ll_model.get_model(task_id=t.id, x_dim=t.x_dim,

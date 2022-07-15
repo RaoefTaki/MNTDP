@@ -66,6 +66,7 @@ class ExhaustiveSearch(nn.Module):
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
             self.models.append(new_model)
+        return archs
 
     def get_weights(self):
         weights = torch.tensor([1. if n in self._selected_path() else 0.
@@ -163,7 +164,7 @@ class ExhaustiveSearch(nn.Module):
 
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
-        return total_t, best_metrics, best_chkpt, (self.models, len(self.models_idx.items()), self.models_idx.items())
+        return total_t, best_metrics, best_chkpt, (self.init_models(), self.models, len(self.models_idx.items()), self.models_idx.items())
 
     def forward(self, input):
         if not self.models:
