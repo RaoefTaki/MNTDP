@@ -304,6 +304,8 @@ def train_on_tasks(config):
         redis_address = config.pop('redis_address')
         all_analysis = []
         selected_tags = []
+
+    task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
         static_params = dict(
@@ -375,7 +377,8 @@ def train_on_tasks(config):
 
             # print(type(analysis))
             # print(analysis)
-            exit(0)
+            if task_counter == 1:
+                exit(0)
         else:
             rescaled, t, metrics, b_state_dict, \
             stats = train_single_task(config=deepcopy(config), learner=learner,
@@ -384,6 +387,7 @@ def train_on_tasks(config):
         # all_stats.append(stats)
         # update_rescaled(list(rescaled.values()), list(rescaled.keys()), tag,
         #                  g_task_vis, False)
+    task_counter += 1
 
     if task_level_tuning:
         return all_analysis, selected_tags
