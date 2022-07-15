@@ -341,26 +341,26 @@ def train_on_tasks(config):
             # ray_params['progress_reporter'] = reporter
 
             # Print the optim parameters
-            # TODO: remove afterwards
-            if 'learner' in config:
-                learner = config.pop('learner')
-            else:
-                learner_path = config.pop('learner_path')
-                learner = torch.load(learner_path)
-            optim_func = learner.optim_func
-            optim_params = config.pop('optim')
-            training_params = config.pop('training-params')
-            split_optims = training_params.pop('split_optims')
-            optim_fact = partial(set_optim_params,
-                                 optim_func=optim_func,
-                                 optim_params=optim_params,
-                                 split_optims=split_optims)
-            print(optim_func)
-            print(optim_params)
-            print(split_optims)
-            print(optim_fact)
-            exit(0)
-            # TODO: remove beforehand
+            # # TODO: remove afterwards
+            # if 'learner' in config:
+            #     learner = config.pop('learner')
+            # else:
+            #     learner_path = config.pop('learner_path')
+            #     learner = torch.load(learner_path)
+            # optim_func = learner.optim_func
+            # optim_params = config.pop('optim')
+            # training_params = config.pop('training-params')
+            # split_optims = training_params.pop('split_optims')
+            # optim_fact = partial(set_optim_params,
+            #                      optim_func=optim_func,
+            #                      optim_params=optim_params,
+            #                      split_optims=split_optims)
+            # print(optim_func)
+            # print(optim_params)
+            # print(split_optims)
+            # print(optim_fact)
+            # exit(0)
+            # # TODO: remove beforehand
 
             analysis = tune.run(train_t, config=config, **ray_params)
 
