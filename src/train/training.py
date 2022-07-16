@@ -17,6 +17,12 @@ from src.train.ignite_utils import create_supervised_trainer, _prepare_batch
 from src.train.utils import create_supervised_evaluator, \
     StopAfterIterations, get_attr_transform
 
+from pylrpredictor.curvefunctions import model_defaults, vap, pow3, loglog_linear, dr_hill_zero_background, \
+    log_power, pow4, mmf, exp4, janoschek, weibull, ilog2
+from pylrpredictor.curvemodels import MCMCCurveModel
+from pylrpredictor.ensemblecurvemodel import CurveEnsemble
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -218,19 +224,54 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # logger.warning('current lr {:.5e}'.format(
             #     optimizer.param_groups[0]['lr']))
 
+    def initialize_lc_extrapolation_model():
+        functions_11 = {'vap': vap,
+                        'pow3': pow3,
+                        'loglog_linear': loglog_linear,
+                        'dr_hill_zero_background': dr_hill_zero_background,
+                        'log_power': log_power,
+                        'pow4': pow4,
+                        'mmf': mmf,
+                        'exp4': exp4,
+                        'janoschek': janoschek,
+                        'weibull': weibull,
+                        'ilog2': ilog2}
+
+        lc_models = []
+        for key, value in functions_11.items():
+            temp_lc_model = MCMCCurveModel(function=functions_11[key],
+                                           default_vals=model_defaults[key])
+            lc_models.append(temp_lc_model)
+        lc_model = CurveEnsemble(lc_models)
+        return lc_model
+
     @trainer.on(Events.EPOCH_COMPLETED)
-    def lc_extrapolator():
-        # Calculate the LC extrapolation results with 95% certainty, once every X iterations
-        trainer.terminate()
-        # all_metrics[select_metric][iteration] = #TODO
+    def lc_extrapolator(trainer):
+        epoch = trainer.state.epoch if trainer.state else 0
+        iteration = trainer.state.iteration if trainer.state else 0
+        lc_extrapolation_per_epochs = 30
 
+        if epoch % lc_extrapolation_per_epochs == 0:
+            # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
+            # maximum atained performance so far
+            # First collect the obtained performance metrics for this model
+            select_metric_list = []
+            for j in range(iteration):
+                select_metric_list.append(all_metrics[select_metric][j])
+            x_values = np.array(list(range(1, iteration + 1)))
+            y_values = np.array(select_metric_list)
 
-        # if lc_extrapolation_predicts_no_best:
-        #     # In case the LC extrapolation predicts no improvement on the best run possible with 95% accuracy, we stop
-        #     logger.info('#####')
-        #     logger.info('# Early stopping Run')
-        #     logger.info('#####')
-        #     trainer.terminate()
+            # Fit the LC model
+            lc_model = initialize_lc_extrapolation_model()
+            lc_model.fit(x_values, y_values)
+
+            # Extrapolate and calculate the probabilities
+            current_end_posterior_prob = model.posterior_prob_x_greater_than(max_epoch, best['value'])
+            if current_end_posterior_prob <= 1 - 0.95:
+                logger.info('#####')  # Doesn't print anything, but still..
+                logger.info('# Early stopping Run')
+                logger.info('#####')
+                trainer.terminate()
 
     @trainer.on(Events.ITERATION_COMPLETED)
     def log_event(trainer):
