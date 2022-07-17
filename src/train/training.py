@@ -277,7 +277,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             lc_model.fit(x_values, y_values)
 
             # Extrapolate and calculate the probabilities
-            current_end_posterior_prob = model.posterior_prob_x_greater_than(max_epoch, best['value'])
+            current_end_posterior_prob = lc_model.posterior_prob_x_greater_than(max_epoch, best['value'])
             if current_end_posterior_prob <= 1 - 0.95:
                 logger.info('#####')  # Doesn't print anything, but still..
                 logger.info('# Early stopping Run')
