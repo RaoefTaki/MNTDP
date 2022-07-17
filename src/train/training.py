@@ -245,7 +245,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         lc_model = CurveEnsemble(lc_models)
         return lc_model
 
-    @trainer.on(Events.EPOCH_COMPLETED)
+    # @trainer.on(Events.EPOCH_COMPLETED)
     def lc_extrapolator(trainer):
         epoch = trainer.state.epoch if trainer.state else 0
         iteration = trainer.state.iteration if trainer.state else 0
