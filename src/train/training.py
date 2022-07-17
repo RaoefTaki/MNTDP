@@ -263,12 +263,12 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
             # maximum atained performance so far
             # First collect the obtained performance metrics for this model
-            select_metric_list = [np.nan] * iteration
+            select_metric_list = np.array([np.nan] * iteration)
             for j in range(iteration):
                 if j in all_metrics[select_metric]:
                     select_metric_list[j] = all_metrics[select_metric][j]
             select_metric_list = np_interpolate(select_metric_list)
-            
+
             x_values = np.array(list(range(1, iteration + 1)))
             y_values = np.array(select_metric_list)
 
