@@ -257,7 +257,10 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # First collect the obtained performance metrics for this model
             select_metric_list = []
             for j in range(iteration):
-                select_metric_list.append(all_metrics[select_metric][j])
+                try:
+                    select_metric_list.append(all_metrics[select_metric][j])
+                except KeyError:
+                    raise ValueError("[TEST ERROR]", all_metrics)
             x_values = np.array(list(range(1, iteration + 1)))
             y_values = np.array(select_metric_list)
 
