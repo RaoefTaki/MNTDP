@@ -233,21 +233,11 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         return interpolate_list
 
     def initialize_lc_extrapolation_model():
-        functions_11 = {'vap': vap,
-                        'pow3': pow3,
-                        'loglog_linear': loglog_linear,
-                        'dr_hill_zero_background': dr_hill_zero_background,
-                        'log_power': log_power,
-                        'pow4': pow4,
-                        'mmf': mmf,
-                        'exp4': exp4,
-                        'janoschek': janoschek,
-                        'weibull': weibull,
-                        'ilog2': ilog2}
+        lc_functions = {'pow4': pow4}
 
         lc_models = []
-        for key, value in functions_11.items():
-            temp_lc_model = MCMCCurveModel(function=functions_11[key],
+        for key, value in lc_functions.items():
+            temp_lc_model = MCMCCurveModel(function=lc_functions[key],
                                            default_vals=model_defaults[key])
             lc_models.append(temp_lc_model)
         lc_model = CurveEnsemble(lc_models)
