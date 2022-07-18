@@ -1,0 +1,6 @@
+pylrpredictor @ git+https://github.com/RaoefTaki/pylearningcurvepredictor
+emcee>=2.1.0
+docutils>=0.3
+lmfit
+setuptools
+triangle
