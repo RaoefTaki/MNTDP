@@ -247,7 +247,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     def lc_extrapolator(trainer):
         epoch = trainer.state.epoch if trainer.state else 0
         iteration = trainer.state.iteration if trainer.state else 0
-        lc_extrapolation_per_epochs = 100  # TODO: 100
+        lc_extrapolation_per_epochs = 30
 
         if epoch % lc_extrapolation_per_epochs == 0:
             # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
@@ -265,14 +265,6 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # Fit the LC model
             lc_model = initialize_lc_extrapolation_model()
             lc_model.fit(x_values, y_values)
-
-            # try:
-            #     ages = {'Jim': 30, 'Pam': 28, 'Kevin': 33}
-            #     exception_variable = ages['Michael']
-            # except:
-            #     raise ValueError("[TEST EXCEPTION] [1]:", select_metric_list, " [2]:", all_metrics, " [3]:", best)
-
-            # TODO: Perhaps except extrapolate if the best value was obtained from the current model
 
             # Extrapolate and calculate the probabilities
             current_end_posterior_prob = lc_model.posterior_prob_x_greater_than(max_epoch, best['value'])
