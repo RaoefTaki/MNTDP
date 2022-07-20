@@ -113,7 +113,7 @@ class ExhaustiveSearch(nn.Module):
             models[idx] = self.models[idx]
 
         ctx = torch.multiprocessing.get_context('spawn')
-        torch.multiprocessing.set_sharing_strategy('file_sytem')
+        torch.multiprocessing.set_sharing_strategy('file_system')
 
         # Run one epoch at a time. Check to see if the output is still the same
         kwargs['n_ep_max'] = 1
