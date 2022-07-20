@@ -114,9 +114,6 @@ class ExhaustiveSearch(nn.Module):
         for path, idx in self.models_idx.items():
             models[idx] = self.models[idx]
 
-        ctx = torch.multiprocessing.get_context('spawn')
-        torch.multiprocessing.set_sharing_strategy('file_system')
-
         # Run one epoch at a time. Check to see if the output is still the same
         kwargs['n_ep_max'] = 1
         all_res = None
@@ -128,6 +125,10 @@ class ExhaustiveSearch(nn.Module):
                                      b_sizes=b_sizes, *args, **kwargs))
                 models[idx] = None
 
+            # Set the environment
+            ctx = torch.multiprocessing.get_context('spawn')
+            torch.multiprocessing.set_sharing_strategy('file_system')
+
             # Execute the calls, i.e.: train
             all_res = execute_step(calls, True, 4, ctx=ctx)
 
@@ -137,6 +138,11 @@ class ExhaustiveSearch(nn.Module):
                 resulting_model = res[1]
                 resulting_model_idx = res[2]
                 models[resulting_model_idx] = resulting_model
+
+            raise ValueError("type(all_res)", type(all_res),
+                             "models", type(models),
+                             "models[0]", type(models[0]),
+                             "type(datasets_p)", type(datasets_p))
 
         # raise ValueError(n_ep_max_original, all_res)
         # TODO, test: Does it report good outcomes for 'all_res', or do you somehow need to pass this through in all loops?
