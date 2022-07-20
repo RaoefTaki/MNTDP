@@ -107,33 +107,39 @@ class ExhaustiveSearch(nn.Module):
         # uid = np.random.randint(0, 10000)
         # logger.warning(f'{uid}-Training all {len(self.models)} options')
 
-        calls = []
+        # Get all models
+        models = {}
         for path, idx in self.models_idx.items():
-            model = self.models[idx]
-            # print(path, id(next(iter(model.parameters()))))
-            # print(path, [type(p.grad)for p in model.parameters()])
-            # print(path, [p.grad for p in model.parameters()])
-            # print(path, [p is None for p in model.parameters()])
-            # print(path, all([p.grad is None for p in model.parameters()]))
-            # model = deepcopy(model)
-            # The model has parameters too
-            # model_params = []
-            # for param in model.parameters():
-            #     model_params.append(param)
+            models[idx] = self.models[idx]
 
-            # raise ValueError("Model:", model, "Model type:", type(model), "Model params:", model_params, "idx:", idx,
-            #                  "optim_fact:", optim_fact, "datasets_p:", datasets_p, "b_sizes:", b_sizes, "*args:", args,
-            #                  "**kwargs", kwargs)
-            calls.append(partial(wrap, model=model, idx=idx, optim_fact=optim_fact, datasets_p=datasets_p,
-                                 b_sizes=b_sizes, *args, **kwargs))
         ctx = torch.multiprocessing.get_context('spawn')
-        # ctx = None
-        # TODO: leave the line below uncommented?
-        torch.multiprocessing.set_sharing_strategy('file_system')
-        # TODO: make repetitive calls below
-        all_res = execute_step(calls, True, 4, ctx=ctx)
+        torch.multiprocessing.set_sharing_strategy('file_sytem')
+
+        # Run one epoch at a time. Check to see if the output is still the same
+        kwargs['n_ep_max'] = 1
+        all_res = None
+        for i in range(n_ep_max_original):
+            # Create the calls required for this iteration of SHA
+            calls = []
+            for idx, model in models.items():
+                calls.append(partial(wrap, model=model, idx=idx, optim_fact=optim_fact, datasets_p=datasets_p,
+                                     b_sizes=b_sizes, *args, **kwargs))
+
+            # Execute the calls, i.e.: train
+            all_res = execute_step(calls, True, 4, ctx=ctx)
+
+            # Save the created models
+            models = {}
+            for res in all_res:
+                resulting_model = res[1]
+                resulting_model_idx = res[2]
+                models[resulting_model_idx] = resulting_model
+
+        # TODO, test: Does it report good outcomes for 'all_res', or do you somehow need to pass this through in all loops?
+        # TODO: may take longer because of the multiple processpoolexecutors
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
+
         all_res = list(map(lambda x: (x[1][2]['value'], x[0]), self.res.items()))
         best_path = max(all_res, key=itemgetter(0))[1]
         _, best_metrics, best_chkpt = self.res[best_path]
@@ -209,4 +215,4 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, model=None,
 
     # raise ValueError("res:", res, "model:", model)
     # logger.warning('{}=Received option {} results'.format(uid, idx))
-    return res
+    return res, model, idx
