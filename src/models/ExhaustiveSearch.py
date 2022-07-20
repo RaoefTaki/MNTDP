@@ -135,6 +135,7 @@ class ExhaustiveSearch(nn.Module):
                 resulting_model_idx = res[2]
                 models[resulting_model_idx] = resulting_model
 
+        raise ValueError(n_ep_max_original, all_res)
         # TODO, test: Does it report good outcomes for 'all_res', or do you somehow need to pass this through in all loops?
         # TODO: may take longer because of the multiple processpoolexecutors
         for path, res in zip(self.models_idx.keys(), all_res):
