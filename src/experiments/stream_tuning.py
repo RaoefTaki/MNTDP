@@ -72,6 +72,8 @@ class StreamTuningExperiment(BaseExperiment):
         #                  local_mode=self.local_mode, num_gpus=0)
 
         train_calls = []
+        print(len(self.ll_models))
+        print(self.ll_models)
         for model_name, ll_model in self.ll_models.items():
             vis_params = [vis_params[model_name]
                           for vis_params in self.training_envs]
@@ -131,8 +133,6 @@ class StreamTuningExperiment(BaseExperiment):
         logger.info(f'Args {" ".join(sys.argv[2:])}')
         print(pandas.DataFrame(summ).set_index('model'))
         return [res_py, self.task_gen.stream_infos(full=False)]
-
-
 
 
 def tune_learner_on_stream(learner, learner_name, task_level_tuning,
