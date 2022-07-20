@@ -100,7 +100,7 @@ class ExhaustiveSearch(nn.Module):
             kwargs['patience'] = 6
             p = Path('../../understood/')
             p.mkdir(parents=True, exist_ok=True)
-        n_ep_max = kwargs['n_ep_max']
+        n_ep_max_original = kwargs['n_ep_max']
 
         if not self.models:
             self.init_models()
@@ -124,8 +124,7 @@ class ExhaustiveSearch(nn.Module):
             # raise ValueError("Model:", model, "Model type:", type(model), "Model params:", model_params, "idx:", idx,
             #                  "optim_fact:", optim_fact, "datasets_p:", datasets_p, "b_sizes:", b_sizes, "*args:", args,
             #                  "**kwargs", kwargs)
-            calls.append(partial(wrap, model=model, n_ep_max=n_ep_max, idx=idx,
-                                 optim_fact=optim_fact, datasets_p=datasets_p,
+            calls.append(partial(wrap, model=model, idx=idx, optim_fact=optim_fact, datasets_p=datasets_p,
                                  b_sizes=b_sizes, *args, **kwargs))
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
@@ -197,7 +196,7 @@ class ExhaustiveSearch(nn.Module):
         return graph_arch_details(self.graph)
 
 
-def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, model=None, n_ep_max=300, **kwargs):
+def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, model=None, **kwargs):
     optim = optim_fact(model=model)
     datasets = _load_datasets(**datasets_p)
     train_loader, eval_loaders = get_classic_dataloaders(datasets, b_sizes, 0)
@@ -210,7 +209,7 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, model=None,
                        loss_fn=kwargs['loss_fn'], n_it_max=kwargs['n_it_max'], patience=kwargs['patience'],
                        split_names=kwargs['split_names'], device=kwargs['device'], log_steps=kwargs['log_steps'],
                        log_epoch=kwargs['log_epoch'], prepare_batch=kwargs['prepare_batch'],
-                       single_pass=kwargs['single_pass'], n_ep_max=n_ep_max, **kwargs)
+                       single_pass=kwargs['single_pass'], n_ep_max=kwargs['n_ep_max'], **kwargs)
 
     # raise ValueError("res:", res, "model:", model)
     # logger.warning('{}=Received option {} results'.format(uid, idx))
