@@ -114,8 +114,13 @@ class ExhaustiveSearch(nn.Module):
             # print(path, [p is None for p in model.parameters()])
             # print(path, all([p.grad is None for p in model.parameters()]))
             # model = deepcopy(model)
-            raise ValueError("Model:", model, "idx:", idx, "optim_fact:", optim_fact, "datasets_p:",
-                             datasets_p, "b_sizes:", b_sizes, "*args:", args, "**kwargs", kwargs)
+            model_params = []
+            for param in model.parameters():
+                model_params.append(param)
+                
+            raise ValueError("Model:", model, "Model type:", type(model), "Model params:", model_params, "idx:", idx,
+                             "optim_fact:", optim_fact, "datasets_p:", datasets_p, "b_sizes:", b_sizes, "*args:", args,
+                             "**kwargs", kwargs)
             calls.append(partial(wrap, model=model, idx=idx,
                                  optim_fact=optim_fact, datasets_p=datasets_p,
                                  b_sizes=b_sizes, *args, **kwargs))
