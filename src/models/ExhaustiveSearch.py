@@ -205,11 +205,7 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, model=None,
 
     # res, model = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
     #                    optimizer=optim, **kwargs)
-    res, model = train(model=model, train_loader=train_loader, eval_loaders=eval_loaders, optimizer=optim,
-                       loss_fn=kwargs['loss_fn'], n_it_max=kwargs['n_it_max'], patience=kwargs['patience'],
-                       split_names=kwargs['split_names'], device=kwargs['device'], log_steps=kwargs['log_steps'],
-                       log_epoch=kwargs['log_epoch'], prepare_batch=kwargs['prepare_batch'],
-                       single_pass=kwargs['single_pass'], n_ep_max=kwargs['n_ep_max'], **kwargs)
+    res, model = train(model=model, train_loader=train_loader, eval_loaders=eval_loaders, optimizer=optim, **kwargs)
 
     # raise ValueError("res:", res, "model:", model)
     # logger.warning('{}=Received option {} results'.format(uid, idx))
