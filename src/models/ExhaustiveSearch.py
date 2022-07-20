@@ -14,6 +14,8 @@ from src.train.training import get_classic_dataloaders, train
 from src.train.utils import _load_datasets
 from src.utils.misc import pad_seq
 
+import copy
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,8 +124,9 @@ class ExhaustiveSearch(nn.Module):
             # Create the calls required for this iteration of SHA
             calls = []
             for idx, model in models.items():
-                calls.append(partial(wrap, model=model, idx=idx, optim_fact=optim_fact, datasets_p=datasets_p,
+                calls.append(partial(wrap, model=copy.deepcopy(model), idx=idx, optim_fact=optim_fact, datasets_p=datasets_p,
                                      b_sizes=b_sizes, *args, **kwargs))
+                models[idx] = None
 
             # Execute the calls, i.e.: train
             all_res = execute_step(calls, True, 4, ctx=ctx)
