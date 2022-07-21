@@ -14,7 +14,6 @@ from src.models.utils import is_dummy_block, execute_step, graph_arch_details
 from src.train.training import get_classic_dataloaders, train
 from src.train.utils import _load_datasets
 from src.utils.misc import pad_seq
-from src.utils.misc import get_env_url
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +95,7 @@ class ExhaustiveSearch(nn.Module):
     #         self.init_models()
     #     return self.models[self.models_idx[self._selected_path()]].parameters()
 
-    def train_func(self, datasets_p, b_sizes, optim_fact, tune, vis_p, *args, **kwargs):
+    def train_func(self, datasets_p, b_sizes, optim_fact, tune, vis_p, t_id, *args, **kwargs):
         # TODO: use argumenst for t_id etc to report to the tuner
         # if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/1406'):
         if datasets_p['task']['data_path'][0].startswith( '/net/blackorpheus/veniat/lileb/datasets/2775'):
@@ -108,54 +107,14 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             self.init_models()
 
-        for i in range(100000):
-            tune.report(t=0,
-                        best_val=0,
-                        avg_acc_val=0,
-                        avg_acc_val_so_far=0,
-                        avg_acc_test_so_far=0,
-                        lca=0,
-                        avg_acc_test=0,
-                        test_acc=0,
-                        duration_seconds=0,
-                        duration_iterations=0,
-                        duration_best_it=0,
-                        duration_finish=0,
-                        duration_model_creation=i,
-                        duration_training=0,
-                        duration_postproc=0,
-                        duration_eval=0,
-                        duration_sum=0,
-                        iterations=0,
-                        epochs=0,
-                        # entropy=stats.pop('entropy'),
-                        new_params=0,
-                        total_params=0,
-                        total_steps=0,
-                        fw_t=0,
-                        data_t=0,
-                        epoch_t=0,
-                        eval_t=0,
-                        total_t=0,
-                        env_url=get_env_url(vis_p),
-                        info_training=None)
-            time.sleep(7.5)
-
         # Create calls to train each of different models (combinations of modules), 7+1 (as in thesis), or 7 as depicted here
         # TODO: find out why discrepancy between 7+1 and 7?
         calls = []
         for path, idx in self.models_idx.items():
             model = self.models[idx]
-            # print("[TEST] PRINTS BELOW")  # This doesn't print
-            # print(path, id(next(iter(model.parameters()))))
-            # print(path, [type(p.grad)for p in model.parameters()])
-            # print(path, [p.grad for p in model.parameters()])
-            # print(path, [p is None for p in model.parameters()])
-            # print(path, all([p.grad is None for p in model.parameters()]))
-            # model = deepcopy(model)
             calls.append(partial(wrap, model=model, idx=idx,
                                  optim_fact=optim_fact, datasets_p=datasets_p,
-                                 b_sizes=b_sizes, *args, **kwargs))
+                                 b_sizes=b_sizes, tune=tune, vis_p=vis_p, t_id=t_id, *args, **kwargs))
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
         # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
@@ -225,7 +184,7 @@ class ExhaustiveSearch(nn.Module):
         return graph_arch_details(self.graph)
 
 
-def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, **kwargs):
+def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune, vis_p, t_id, **kwargs):
     model = kwargs['model']
     optim = optim_fact(model=model)
     datasets = _load_datasets(**datasets_p)
@@ -234,6 +193,6 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, **kwargs):
         train_loader = model.train_loader_wrapper(train_loader)
 
     res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                optimizer=optim, **kwargs)
+                optimizer=optim, tune=tune, vis_p=vis_p, t_id=t_id, **kwargs)
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res

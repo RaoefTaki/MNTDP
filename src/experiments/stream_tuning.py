@@ -718,6 +718,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     split_names=task['split_names'],
                                                     tune=tune,
                                                     vis_p=vis_p,
+                                                    t_id=task['id'],
                                                     # viz=task_vis,
                                                     **training_params)
         rescaled = list(
