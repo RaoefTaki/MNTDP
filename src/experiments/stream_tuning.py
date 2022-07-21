@@ -678,8 +678,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # Parameters to be reported to the Ray CLI
     # TODO
     value_actor_remote_initial = ray.get(value_actor.get.remote(0))
-    value_actor.set(12)
-    value_actor_remote_second = ray.get(value_actor)
+    value_actor.set.remote(12)
+    value_actor_remote_second = ray.get(value_actor.get.remote(0))
 
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
