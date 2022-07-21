@@ -524,6 +524,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                                                      training_params, config)
 
     training_time = time.time() - start2
+    raise ValueError("I won't let it go further than here. Try to see if it still gives an error in the Sacred table output")
+
     start3 = time.time()
     if not isinstance(model, ExhaustiveSearch):
         #todo Handle the state dict loading uniformly for all learners RN only
