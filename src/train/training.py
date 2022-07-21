@@ -41,7 +41,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
           n_it_max, patience, split_names, select_metric='Val accuracy_0',
           select_mode='max', viz=None, device='cpu', lr_scheduler=None, name=None, log_steps=None,
           log_epoch=False, _run=None, prepare_batch=_prepare_batch,
-          single_pass=False, n_ep_max=None, tune=None, vis_p=None, t_id=-1):
+          single_pass=False, n_ep_max=None):
 
     # print(model)
 
