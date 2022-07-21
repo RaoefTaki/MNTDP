@@ -716,7 +716,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 duration_iterations=t,
                 duration_best_it=best_it,
                 duration_finish=finish_time,
-                duration_model_creation=999,#model_creation_time,
+                duration_model_creation=model_creation_time,
                 duration_training=training_time,
                 duration_postproc=postproc_time,
                 duration_eval=eval_time,
