@@ -344,7 +344,8 @@ def train_on_tasks(config):
 
             # TODO: try initialising float actors for shared variables
             value_actor = ValueActor.remote(None)
-            analysis = tune.run(train_t, value_actor=value_actor, config=config, **ray_params)
+            config['value_actor'] = value_actor
+            analysis = tune.run(train_t, config=config, **ray_params)
 
             all_analysis.append(analysis)
 
@@ -389,10 +390,11 @@ def train_on_tasks(config):
     print("[TEST] End training")
 
 
-def train_t(config, value_actor=None):
+def train_t(config):
     # This function does not allow for printing to be seen in the output files
     seed = config.pop('seed')
     static_params = config.pop('static_params')
+    value_actor = config.pop('value_actor')
 
     torch.backends.cudnn.enabled = True
     if static_params['t_id'] == 0:
