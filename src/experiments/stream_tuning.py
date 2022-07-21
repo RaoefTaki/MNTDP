@@ -529,7 +529,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
                                                                     train_loader, eval_loaders,
-                                                                    training_params, config)
+                                                                    training_params, vis_p, config)
 
     training_time = time.time() - start2
     start3 = time.time()
@@ -705,7 +705,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
-                task, train_loader, eval_loaders, training_params, config):
+                task, train_loader, eval_loaders, training_params, vis_p, config):
     if hasattr(model, 'train_func'):
         assert not config, config
         f = model.train_func
@@ -717,6 +717,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     prepare_batch=prepare_batch,
                                                     split_names=task['split_names'],
                                                     tune=tune,
+                                                    vis_p=vis_p,
                                                     # viz=task_vis,
                                                     **training_params)
         rescaled = list(
