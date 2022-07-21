@@ -205,8 +205,6 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         config['ray_params'] = ray_params
         config['local_mode'] = local_mode
         config['redis_address'] = redis_address
-        print(config)
-        exit(0)
         analysis, selected = train_on_tasks(config)
         for t_id, (task, task_an) in enumerate(zip(stream, analysis)):
             # envs.append([])
