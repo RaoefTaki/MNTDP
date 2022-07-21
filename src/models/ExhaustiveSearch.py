@@ -114,7 +114,7 @@ class ExhaustiveSearch(nn.Module):
             model = self.models[idx]
             calls.append(partial(wrap, model=model, idx=idx,
                                  optim_fact=optim_fact, datasets_p=datasets_p,
-                                 b_sizes=b_sizes, *args, **kwargs))
+                                 b_sizes=b_sizes, tune=tune, vis_p=vis_p, t_id=t_id, *args, **kwargs))
 
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
@@ -185,7 +185,7 @@ class ExhaustiveSearch(nn.Module):
         return graph_arch_details(self.graph)
 
 
-def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, **kwargs):
+def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune=None, vis_p=None, t_id=-1, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
     #     raise ValueError("INTERCEPT. t_id:", t_id)
