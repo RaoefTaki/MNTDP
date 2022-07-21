@@ -31,10 +31,10 @@ from src.utils.misc import get_env_url, fill_matrix, \
 from src.utils.plotting import update_summary, plot_tasks_env_urls, \
     plot_heatmaps, \
     plot_trajectory, list_top_archs, process_final_results
+from src.utils.ray_utils import ValueActor
 
 visdom.logger.setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
-
 
 class StreamTuningExperiment(BaseExperiment):
     def run(self):
@@ -226,7 +226,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                 )
 
             best_trial = max(task_an.trials,
-                         key=lambda trial: trial.last_result['avg_acc_val_so_far'])
+                             key=lambda trial: trial.last_result['avg_acc_val_so_far'])
 
             df = task_an.trial_dataframes[best_trial.logdir]
             best_trials_df.append(df)
@@ -341,7 +341,10 @@ def train_on_tasks(config):
             # TODO: HPO happens inside this function below. It's very hard to make changes to this like using LC extrapolation or
             # TODO SHA, unless there is a shared space
             # raise ValueError("config:", config, "ray_params:", ray_params)
-            analysis = tune.run(train_t, config=config, **ray_params)
+
+            # TODO: try initialising float actors for shared variables
+            value_actor = ValueActor(None)
+            analysis = tune.run(train_t, value_actor=value_actor, config=config, **ray_params)
 
             all_analysis.append(analysis)
 
@@ -386,7 +389,7 @@ def train_on_tasks(config):
     print("[TEST] End training")
 
 
-def train_t(config):
+def train_t(config, value_actor=None):
     # This function does not allow for printing to be seen in the output files
     seed = config.pop('seed')
     static_params = config.pop('static_params')
@@ -412,7 +415,8 @@ def train_t(config):
         learner_path = config.pop('learner_path')
         learner = torch.load(learner_path)
 
-    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner, **static_params)
+    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner,
+                                                                  value_actor=value_actor, **static_params)
 
     learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
     # raise ValueError(learner_save_path)
@@ -420,7 +424,7 @@ def train_t(config):
 
 
 def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix,
-                      total_steps):
+                      total_steps, value_actor=None):
 
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
@@ -668,7 +672,13 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     step_sum = model_creation_time + training_time + postproc_time + \
                finish_time + eval_time
     best_it = b_state_dict.get('cum_best_iter', b_state_dict['iter'])
-    # TODO: add parameters to be reported here?
+
+    # Parameters to be reported to the Ray CLI
+    # TODO
+    value_actor_remote_initial = ray.get(value_actor.get.remote(0))
+    value_actor.set(12)
+    value_actor_remote_second = ray.get(value_actor)
+
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
                 avg_acc_val=avg_val,
@@ -681,8 +691,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 duration_iterations=t,
                 duration_best_it=best_it,
                 duration_finish=finish_time,
-                duration_model_creation=999,#model_creation_time,
-                duration_training=training_time,
+                duration_model_creation=value_actor_remote_initial,#model_creation_time,
+                duration_training=value_actor_remote_second,#training_time,
                 duration_postproc=postproc_time,
                 duration_eval=eval_time,
                 duration_sum=step_sum,
