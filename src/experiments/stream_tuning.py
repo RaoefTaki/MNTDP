@@ -525,8 +525,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     assert not config, config
     start2 = time.time()
     # TODO, marker: training of models conducted in this function
-    if t_id != 0:
-        raise ValueError("INTERCEPT. t_id:", t_id)
     rescaled, t, metrics, b_state_dict, info_training = train_model(model, datasets_p,
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
