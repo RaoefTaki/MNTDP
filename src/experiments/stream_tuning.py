@@ -344,6 +344,11 @@ def train_on_tasks(config):
 
             # TODO: try initialising float actors for shared variables
             value_actor = ValueActor.remote(None)
+            value_actor_remote_initial = ray.get(value_actor.get.remote(0))
+            print(value_actor_remote_initial)
+            value_actor.set.remote(12)
+            value_actor_remote_second = ray.get(value_actor.get.remote(0))
+            print(value_actor_remote_second)
             config['value_actor'] = value_actor
             analysis = tune.run(train_t, config=config, **ray_params)
 
