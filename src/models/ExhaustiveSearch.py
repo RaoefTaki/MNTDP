@@ -117,7 +117,7 @@ class ExhaustiveSearch(nn.Module):
                                  b_sizes=b_sizes, tune=tune, vis_p=vis_p, t_id=t_id, *args, **kwargs))
 
         if t_id != 0:
-            raise ValueError("INTERCEPT. t_id:", t_id)
+            raise ValueError("INTERCEPT. t_id:", t_id, "calls:", calls)
 
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
