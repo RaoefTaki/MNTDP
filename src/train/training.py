@@ -244,12 +244,17 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         lc_model = CurveEnsemble(lc_models)
         return lc_model
 
+    if t_id != 0:
+        raise ValueError("INTERCEPT. t_id:", t_id)
+
     @trainer.on(Events.EPOCH_COMPLETED)
     def lc_extrapolator(trainer):
         epoch = trainer.state.epoch if trainer.state else 0
         iteration = trainer.state.iteration if trainer.state else 0
         lc_extrapolation_per_epochs = 30
 
+        # TODO: test for smaller epoch so that we can see it in s_test, e.g. 1 epoch
+        # TODO: waar loopt ie vast na de eerste taak?
         if epoch % lc_extrapolation_per_epochs == 0:
             # Report to the tuner with temporary values such that the scheduler can be informed
             tune.report(t=t_id,
