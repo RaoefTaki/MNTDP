@@ -116,9 +116,6 @@ class ExhaustiveSearch(nn.Module):
                                  optim_fact=optim_fact, datasets_p=datasets_p,
                                  b_sizes=b_sizes, tune=tune, vis_p=vis_p, t_id=t_id, *args, **kwargs))
 
-        if t_id != 0:
-            raise ValueError("INTERCEPT. t_id:", t_id, "calls:", calls)
-
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
         # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
@@ -189,6 +186,9 @@ class ExhaustiveSearch(nn.Module):
 
 
 def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune, vis_p, t_id, **kwargs):
+    if t_id != 0:
+        raise ValueError("INTERCEPT. t_id:", t_id)
+
     model = kwargs['model']
     optim = optim_fact(model=model)
     datasets = _load_datasets(**datasets_p)
