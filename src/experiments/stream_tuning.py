@@ -328,40 +328,6 @@ def train_on_tasks(config):
             config['learner_path'] = learner_path
             config['seed'] += t_id
 
-            # reporter = CLIReporter(max_progress_rows=10)
-            # print(reporter._metric_columns)
-            # print(reporter.DEFAULT_COLUMNS)
-            # reporter.add_metric_column('avg_acc_val')
-            # reporter.add_metric_column('total_params')
-            # reporter.add_metric_column('fw_t')
-            # reporter.add_metric_column('data_t')
-            # reporter.add_metric_column('eval_t')
-            # reporter.add_metric_column('epoch_t')
-            # reporter.add_metric_column('total_t')
-            # ray_params['progress_reporter'] = reporter
-
-            # Print the optim parameters
-            # # TODO: remove afterwards
-            # if 'learner' in config:
-            #     learner = config.pop('learner')
-            # else:
-            #     learner_path = config.pop('learner_path')
-            #     learner = torch.load(learner_path)
-            # optim_func = learner.optim_func
-            # optim_params = config.pop('optim')
-            # training_params = config.pop('training-params')
-            # split_optims = training_params.pop('split_optims')
-            # optim_fact = partial(set_optim_params,
-            #                      optim_func=optim_func,
-            #                      optim_params=optim_params,
-            #                      split_optims=split_optims)
-            # print(optim_func)
-            # print(optim_params)
-            # print(split_optims)
-            # print(optim_fact)
-            # exit(0)
-            # # TODO: remove beforehand
-
             analysis = tune.run(train_t, config=config, **ray_params)
 
             all_analysis.append(analysis)
@@ -750,6 +716,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     # viz=task_vis,
                                                     prepare_batch=prepare_batch,
                                                     split_names=task['split_names'],
+                                                    tune=tune,
                                                     # viz=task_vis,
                                                     **training_params)
         rescaled = list(

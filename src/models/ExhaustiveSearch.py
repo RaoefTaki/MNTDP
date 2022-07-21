@@ -94,7 +94,7 @@ class ExhaustiveSearch(nn.Module):
     #         self.init_models()
     #     return self.models[self.models_idx[self._selected_path()]].parameters()
 
-    def train_func(self, datasets_p, b_sizes, optim_fact, *args, **kwargs):
+    def train_func(self, datasets_p, b_sizes, optim_fact, tune, *args, **kwargs):
         # if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/1406'):
         if datasets_p['task']['data_path'][0].startswith( '/net/blackorpheus/veniat/lileb/datasets/2775'):
             kwargs['n_ep_max'] = 6
@@ -104,6 +104,39 @@ class ExhaustiveSearch(nn.Module):
 
         if not self.models:
             self.init_models()
+
+        raise ValueError("tune", tune, "kwargs", kwargs)
+        # tune.report(t=t_id,
+        #             best_val=b_state_dict['value'],
+        #             avg_acc_val=avg_val,
+        #             avg_acc_val_so_far=avg_val_so_far,
+        #             avg_acc_test_so_far=avg_test_so_far,
+        #             lca=lca,
+        #             avg_acc_test=avg_test,
+        #             test_acc=evaluation['Test']['accuracy'][t_id],
+        #             duration_seconds=step_time_s,
+        #             duration_iterations=t,
+        #             duration_best_it=best_it,
+        #             duration_finish=finish_time,
+        #             duration_model_creation=model_creation_time,
+        #             duration_training=training_time,
+        #             duration_postproc=postproc_time,
+        #             duration_eval=eval_time,
+        #             duration_sum=step_sum,
+        #             iterations=iterations,
+        #             epochs=epochs,
+        #             # entropy=stats.pop('entropy'),
+        #             new_params=learner.new_params(t_id),
+        #             total_params=learner.n_params(t_id),
+        #             total_steps=total_steps + t,
+        #             fw_t=round(avg_forward_time * 1000) / 1000,
+        #             data_t=round(avg_data_time * 1000) / 1000,
+        #             epoch_t=round(avg_epoch_time * 1000) / 1000,
+        #             eval_t=round(avg_eval_time * 1000) / 1000,
+        #             total_t=round(total_time * 1000) / 1000,
+        #             env_url=get_env_url(vis_p),
+        #             info_training=info_training,
+        #             **accs, **stats)
 
         # Create calls to train each of different models (combinations of modules), 7+1 (as in thesis), or 7 as depicted here
         # TODO: find out why discrepancy between 7+1 and 7?
