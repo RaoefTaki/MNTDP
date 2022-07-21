@@ -72,8 +72,6 @@ class StreamTuningExperiment(BaseExperiment):
         #                  local_mode=self.local_mode, num_gpus=0)
 
         train_calls = []
-        print(len(self.ll_models))
-        print(self.ll_models)
         for model_name, ll_model in self.ll_models.items():
             vis_params = [vis_params[model_name]
                           for vis_params in self.training_envs]
@@ -245,6 +243,8 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                 ray.init(redis_address)
                 # logging_level=logging.DEBUG)
         ray_params['config'] = config
+        print(ray_params)
+        exit(0)
         analysis = tune.run(train_on_tasks, **ray_params)
 
         results = sorted(analysis.trials, reverse=True,
