@@ -338,6 +338,9 @@ def train_on_tasks(config):
             # reporter.add_metric_column('epoch_t')
             # reporter.add_metric_column('total_t')
             # ray_params['progress_reporter'] = reporter
+            # TODO: HPO happens inside this function below. It's very hard to make changes to this like using LC extrapolation or
+            # TODO SHA, unless there is a shared space
+            raise ValueError("config:", config, "ray_params:", ray_params)
             analysis = tune.run(train_t, config=config, **ray_params)
 
             all_analysis.append(analysis)
