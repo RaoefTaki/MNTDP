@@ -121,7 +121,7 @@ class ExhaustiveSearch(nn.Module):
                         duration_iterations=0,
                         duration_best_it=0,
                         duration_finish=0,
-                        duration_model_creation=0,
+                        duration_model_creation=i,
                         duration_training=0,
                         duration_postproc=0,
                         duration_eval=0,
