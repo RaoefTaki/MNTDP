@@ -144,7 +144,7 @@ class ExhaustiveSearch(nn.Module):
             #                  "models[0]", type(models[0]),
             #                  "type(datasets_p)", type(datasets_p))
 
-        raise ValueError("Try to see where the sacred logging happens exactly 3", optim_fact)
+        # raise ValueError("Try to see where the sacred logging happens exactly 3", optim_fact)
 
         # TODO, test: Does it report good outcomes for 'all_res', or do you somehow need to pass this through in all loops?
         # TODO: may take longer because of the multiple processpoolexecutors

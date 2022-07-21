@@ -434,6 +434,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     optim_params = config.pop('optim')
     schedule_mode = training_params.pop('schedule_mode')
     split_optims = training_params.pop('split_optims')
+    raise ValueError(optim_func, optim_params, split_optims, schedule_mode)
 
     dropout = config.pop('dropout') if 'dropout' in config else None
 
