@@ -340,7 +340,7 @@ def train_on_tasks(config):
             # ray_params['progress_reporter'] = reporter
             # TODO: HPO happens inside this function below. It's very hard to make changes to this like using LC extrapolation or
             # TODO SHA, unless there is a shared space
-            raise ValueError("config:", config, "ray_params:", ray_params)
+            # raise ValueError("config:", config, "ray_params:", ray_params)
             analysis = tune.run(train_t, config=config, **ray_params)
 
             all_analysis.append(analysis)
@@ -437,7 +437,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     optim_params = config.pop('optim')
     schedule_mode = training_params.pop('schedule_mode')
     split_optims = training_params.pop('split_optims')
-    raise ValueError(optim_func, optim_params, split_optims, schedule_mode)
+    # raise ValueError(optim_func, optim_params, split_optims, schedule_mode)
 
     dropout = config.pop('dropout') if 'dropout' in config else None
 
@@ -528,7 +528,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                                                      training_params, config)
 
     training_time = time.time() - start2
-    raise ValueError("I won't let it go further than here. Try to see if it still gives an error in the Sacred table output")
+    # raise ValueError("I won't let it go further than here. Try to see if it still gives an error in the Sacred table output")
 
     start3 = time.time()
     if not isinstance(model, ExhaustiveSearch):
@@ -681,7 +681,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 duration_iterations=t,
                 duration_best_it=best_it,
                 duration_finish=finish_time,
-                duration_model_creation=model_creation_time,
+                duration_model_creation=999,#model_creation_time,
                 duration_training=training_time,
                 duration_postproc=postproc_time,
                 duration_eval=eval_time,
