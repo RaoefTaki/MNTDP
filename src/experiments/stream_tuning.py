@@ -393,9 +393,6 @@ def train_t(config):
     seed = config.pop('seed')
     static_params = config.pop('static_params')
 
-    if static_params['t_id'] != 0:
-        raise ValueError("INTERCEPT. t_id:", static_params['t_id'])
-
     torch.backends.cudnn.enabled = True
     if static_params['t_id'] == 0:
         torch.backends.cudnn.deterministic = True
@@ -435,6 +432,9 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     if learner_params:
         learner.set_h_params(**learner_params)
+
+    if t_id != 0:
+        raise ValueError("INTERCEPT. t_id:", t_id)
 
     # TODO: probably define shared memory somewhere so that progress values can be kept and saved to perform LC extrapolation
 
