@@ -185,7 +185,7 @@ class ExhaustiveSearch(nn.Module):
         return graph_arch_details(self.graph)
 
 
-def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune, vis_p, t_id, **kwargs):
+def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     if t_id != 0:
         raise ValueError("INTERCEPT. t_id:", t_id)

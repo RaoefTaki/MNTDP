@@ -244,71 +244,71 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         lc_model = CurveEnsemble(lc_models)
         return lc_model
 
-    @trainer.on(Events.EPOCH_COMPLETED)
-    def lc_extrapolator(trainer):
-        epoch = trainer.state.epoch if trainer.state else 0
-        iteration = trainer.state.iteration if trainer.state else 0
-        lc_extrapolation_per_epochs = 30
-
-        # TODO: test for smaller epoch so that we can see it in s_test, e.g. 1 epoch
-        # TODO: waar loopt ie vast na de eerste taak?
-        if epoch % lc_extrapolation_per_epochs == 0:
-            pass
-            # Report to the tuner with temporary values such that the scheduler can be informed
-            # tune.report(t=t_id,
-            #             best_val=best['value'],
-            #             avg_acc_val=-1,
-            #             avg_acc_val_so_far=-1,
-            #             avg_acc_test_so_far=-1,
-            #             lca=-1,
-            #             avg_acc_test=-1,
-            #             test_acc=-1,
-            #             duration_seconds=-1,
-            #             duration_iterations=iteration,
-            #             duration_best_it=-1,
-            #             duration_finish=-1,
-            #             duration_model_creation=-1,
-            #             duration_training=-1,
-            #             duration_postproc=-1,
-            #             duration_eval=-1,
-            #             duration_sum=-1,
-            #             iterations=-1,
-            #             epochs=epoch,
-            #             # entropy=stats.pop('entropy'),
-            #             new_params=-1,
-            #             total_params=-1,
-            #             total_steps=-1,
-            #             fw_t=-1,
-            #             data_t=-1,
-            #             epoch_t=-1,
-            #             eval_t=-1,
-            #             total_t=-1,
-            #             env_url=get_env_url(vis_p),
-            #             info_training=None)
-
-            # # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
-            # # maximum atained performance so far
-            # # First collect the obtained performance metrics for this model
-            # select_metric_list = np.array([np.nan] * iteration)
-            # for j in range(iteration):
-            #     if j in all_metrics[select_metric]:
-            #         select_metric_list[j] = all_metrics[select_metric][j]
-            # select_metric_list = np_interpolate(select_metric_list)
-            #
-            # x_values = np.array(list(range(1, iteration + 1)))
-            # y_values = np.array(select_metric_list)
-            #
-            # # Fit the LC model
-            # lc_model = initialize_lc_extrapolation_model()
-            # lc_model.fit(x_values, y_values)
-            #
-            # # Extrapolate and calculate the probabilities
-            # current_end_posterior_prob = lc_model.posterior_prob_x_greater_than(max_epoch, best['value'])
-            # if current_end_posterior_prob <= 1 - 0.95:
-            #     logger.info('#####')  # Doesn't print anything, but still..
-            #     logger.info('# Early stopping Run')
-            #     logger.info('#####')
-            #     trainer.terminate()
+    # @trainer.on(Events.EPOCH_COMPLETED)
+    # def lc_extrapolator(trainer):
+    #     epoch = trainer.state.epoch if trainer.state else 0
+    #     iteration = trainer.state.iteration if trainer.state else 0
+    #     lc_extrapolation_per_epochs = 30
+    #
+    #     # TODO: test for smaller epoch so that we can see it in s_test, e.g. 1 epoch
+    #     # TODO: waar loopt ie vast na de eerste taak?
+    #     if epoch % lc_extrapolation_per_epochs == 0:
+    #         pass
+    #         # Report to the tuner with temporary values such that the scheduler can be informed
+    #         # tune.report(t=t_id,
+    #         #             best_val=best['value'],
+    #         #             avg_acc_val=-1,
+    #         #             avg_acc_val_so_far=-1,
+    #         #             avg_acc_test_so_far=-1,
+    #         #             lca=-1,
+    #         #             avg_acc_test=-1,
+    #         #             test_acc=-1,
+    #         #             duration_seconds=-1,
+    #         #             duration_iterations=iteration,
+    #         #             duration_best_it=-1,
+    #         #             duration_finish=-1,
+    #         #             duration_model_creation=-1,
+    #         #             duration_training=-1,
+    #         #             duration_postproc=-1,
+    #         #             duration_eval=-1,
+    #         #             duration_sum=-1,
+    #         #             iterations=-1,
+    #         #             epochs=epoch,
+    #         #             # entropy=stats.pop('entropy'),
+    #         #             new_params=-1,
+    #         #             total_params=-1,
+    #         #             total_steps=-1,
+    #         #             fw_t=-1,
+    #         #             data_t=-1,
+    #         #             epoch_t=-1,
+    #         #             eval_t=-1,
+    #         #             total_t=-1,
+    #         #             env_url=get_env_url(vis_p),
+    #         #             info_training=None)
+    #
+    #         # # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
+    #         # # maximum atained performance so far
+    #         # # First collect the obtained performance metrics for this model
+    #         # select_metric_list = np.array([np.nan] * iteration)
+    #         # for j in range(iteration):
+    #         #     if j in all_metrics[select_metric]:
+    #         #         select_metric_list[j] = all_metrics[select_metric][j]
+    #         # select_metric_list = np_interpolate(select_metric_list)
+    #         #
+    #         # x_values = np.array(list(range(1, iteration + 1)))
+    #         # y_values = np.array(select_metric_list)
+    #         #
+    #         # # Fit the LC model
+    #         # lc_model = initialize_lc_extrapolation_model()
+    #         # lc_model.fit(x_values, y_values)
+    #         #
+    #         # # Extrapolate and calculate the probabilities
+    #         # current_end_posterior_prob = lc_model.posterior_prob_x_greater_than(max_epoch, best['value'])
+    #         # if current_end_posterior_prob <= 1 - 0.95:
+    #         #     logger.info('#####')  # Doesn't print anything, but still..
+    #         #     logger.info('# Early stopping Run')
+    #         #     logger.info('#####')
+    #         #     trainer.terminate()
 
     @trainer.on(Events.ITERATION_COMPLETED)
     def log_event(trainer):
