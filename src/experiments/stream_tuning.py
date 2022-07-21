@@ -396,6 +396,11 @@ def train_t(config):
     static_params = config.pop('static_params')
     value_actor = config.pop('value_actor')
 
+    value_actor_remote_initial = ray.get(value_actor.get.remote(0))
+    value_actor.set.remote(12)
+    value_actor_remote_second = ray.get(value_actor.get.remote(0))
+    raise ValueError("value_actor_remote_second", value_actor_remote_second)
+
     torch.backends.cudnn.enabled = True
     if static_params['t_id'] == 0:
         torch.backends.cudnn.deterministic = True
