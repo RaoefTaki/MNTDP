@@ -198,6 +198,6 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, **kwargs):
         train_loader = model.train_loader_wrapper(train_loader)
 
     res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                optimizer=optim, **kwargs)
+                optimizer=optim, tune=None, vis_p=None, t_id=-1, **kwargs)
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res
