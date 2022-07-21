@@ -393,7 +393,7 @@ def train_t(config):
     seed = config.pop('seed')
     static_params = config.pop('static_params')
 
-    if config['static_params']['t_id'] != 0:
+    if static_params['t_id'] != 0:
         raise ValueError("INTERCEPT. t_id:", static_params['t_id'])
 
     torch.backends.cudnn.enabled = True
