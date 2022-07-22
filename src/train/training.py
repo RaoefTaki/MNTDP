@@ -245,10 +245,14 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         return lc_model
 
     @trainer.on(Events.EPOCH_COMPLETED)
-    def lc_extrapolator(trainer):
+    def epoch_completed(trainer):
         epoch = trainer.state.epoch if trainer.state else 0
         iteration = trainer.state.iteration if trainer.state else 0
         lc_extrapolation_per_epochs = 1
+
+        if t_id != 0:
+            raise ValueError("trainer.state", trainer.state, "trainer.state.epoch:", trainer.state.epoch,
+                             "iteration:", trainer.state.iteration, "tune_report:", tune_report)
 
         # TODO: test for smaller epoch so that we can see it in s_test, e.g. 1 epoch
         # TODO: waar loopt ie vast na de eerste taak?
