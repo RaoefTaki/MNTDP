@@ -334,7 +334,7 @@ def train_on_tasks(config):
 
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
-            print("Len(analysis):", len(analysis.trials), "analysis:", analysis, "analysis.trials:", analysis.trials)
+            print("Len(analysis):", len(analysis.trials), "analysis:", analysis, "analysis.trials:", map(get_key, analysis.trials))
 
             def get_key(trial):
                 # return trial.last_result['avg_acc_val_so_far']
