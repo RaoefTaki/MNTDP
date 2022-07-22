@@ -334,12 +334,12 @@ def train_on_tasks(config):
 
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
-            
+
             def get_key(trial):
                 # return trial.last_result['avg_acc_val_so_far']
                 return trial.last_result['best_val']
 
-            print("Len(analysis):", len(analysis.trials), "analysis:", analysis, "analysis.trials:", map(get_key, analysis.trials))
+            print("Len(analysis):", len(analysis.trials), "analysis:", analysis, "analysis.trials:", list(map(get_key, analysis.trials)))
 
             best_trial = max(analysis.trials, key=get_key)
             for trial in analysis.trials:
