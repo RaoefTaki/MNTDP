@@ -71,8 +71,8 @@ class StreamTuningExperiment(BaseExperiment):
         #         ray.init(object_store_memory=int(1e7), include_webui=True,
         #                  local_mode=self.local_mode, num_gpus=0)
 
+        # Since there is only 1 model in runs that we consider, we run the training call without parallel processing
         train_calls = []
-        raise ValueError(self.ll_models)
         for model_name, ll_model in self.ll_models.items():
             vis_params = [vis_params[model_name]
                           for vis_params in self.training_envs]
@@ -108,10 +108,11 @@ class StreamTuningExperiment(BaseExperiment):
                           )
             train_calls.append(partial(tune_learner_on_stream, **params))
 
-        ctx = torch.multiprocessing.get_context('spawn')
-        # ctx = None
-        results_array = execute_step(train_calls, self.use_processes, ctx=ctx)
-        res = dict(zip(self.ll_models.keys(), results_array)) # TODO: somehow here extra lines are included from tune_report functions
+        # Perform the training and obtain the results
+        res = (0, train_calls[0]())
+
+        # results_array = execute_step(train_calls, self.use_processes, ctx=ctx)
+        # res = dict(zip(self.ll_models.keys(), results_array)) # TODO: somehow here extra lines are included from tune_report functions
 
         summ = process_final_results(self.main_viz, res, self.exp_name,
                                      self.visdom_conf, self.task_envs_str,
