@@ -110,7 +110,7 @@ class StreamTuningExperiment(BaseExperiment):
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
         results_array = execute_step(train_calls, self.use_processes, ctx=ctx)
-        res = dict(zip(self.ll_models.keys(), results_array))
+        res = dict(zip(self.ll_models.keys(), results_array)) # TODO: somehow here extra lines are included from tune_report functions
 
         summ = process_final_results(self.main_viz, res, self.exp_name,
                                      self.visdom_conf, self.task_envs_str,
@@ -334,6 +334,9 @@ def train_on_tasks(config):
 
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
+
+            # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
+            # TODO: also print out the **accs, **stats of tune_report maybe
 
             def get_key(trial):
                 # return trial.last_result['avg_acc_val_so_far']
@@ -676,37 +679,37 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                finish_time + eval_time
     best_it = b_state_dict.get('cum_best_iter', b_state_dict['iter'])
     # TODO: add parameters to be reported here?
-    tune_report(t=t_id,
-                best_val=b_state_dict['value'],
-                avg_acc_val=avg_val,
-                avg_acc_val_so_far=avg_val_so_far,
-                avg_acc_test_so_far=avg_test_so_far,
-                lca=lca,
-                avg_acc_test=avg_test,
-                test_acc=evaluation['Test']['accuracy'][t_id],
-                duration_seconds=step_time_s,
-                duration_iterations=t,
-                duration_best_it=best_it,
-                duration_finish=finish_time,
-                duration_model_creation=model_creation_time,
-                duration_training=training_time,
-                duration_postproc=postproc_time,
-                duration_eval=eval_time,
-                duration_sum=step_sum,
-                iterations=iterations,
-                epochs=epochs,
-                # entropy=stats.pop('entropy'),
-                new_params=learner.new_params(t_id),
-                total_params=learner.n_params(t_id),
-                total_steps=total_steps + t,
-                fw_t=round(avg_forward_time * 1000) / 1000,
-                data_t=round(avg_data_time * 1000) / 1000,
-                epoch_t=round(avg_epoch_time * 1000) / 1000,
-                eval_t=round(avg_eval_time * 1000) / 1000,
-                total_t=round(total_time * 1000) / 1000,
-                env_url=get_env_url(vis_p),
-                info_training=info_training,
-                **accs, **stats)
+    # tune_report(t=t_id,
+    #             best_val=b_state_dict['value'],
+    #             avg_acc_val=avg_val,
+    #             avg_acc_val_so_far=avg_val_so_far,
+    #             avg_acc_test_so_far=avg_test_so_far,
+    #             lca=lca,
+    #             avg_acc_test=avg_test,
+    #             test_acc=evaluation['Test']['accuracy'][t_id],
+    #             duration_seconds=step_time_s,
+    #             duration_iterations=t,
+    #             duration_best_it=best_it,
+    #             duration_finish=finish_time,
+    #             duration_model_creation=model_creation_time,
+    #             duration_training=training_time,
+    #             duration_postproc=postproc_time,
+    #             duration_eval=eval_time,
+    #             duration_sum=step_sum,
+    #             iterations=iterations,
+    #             epochs=epochs,
+    #             # entropy=stats.pop('entropy'),
+    #             new_params=learner.new_params(t_id),
+    #             total_params=learner.n_params(t_id),
+    #             total_steps=total_steps + t,
+    #             fw_t=round(avg_forward_time * 1000) / 1000,
+    #             data_t=round(avg_data_time * 1000) / 1000,
+    #             epoch_t=round(avg_epoch_time * 1000) / 1000,
+    #             eval_t=round(avg_eval_time * 1000) / 1000,
+    #             total_t=round(total_time * 1000) / 1000,
+    #             env_url=get_env_url(vis_p),
+    #             info_training=info_training,
+    #             **accs, **stats)
     return rescaled, t, metrics, b_state_dict, stats
 
 
