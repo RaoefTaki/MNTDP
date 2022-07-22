@@ -72,6 +72,7 @@ class StreamTuningExperiment(BaseExperiment):
         #                  local_mode=self.local_mode, num_gpus=0)
 
         train_calls = []
+        raise ValueError(self.ll_models)
         for model_name, ll_model in self.ll_models.items():
             vis_params = [vis_params[model_name]
                           for vis_params in self.training_envs]
