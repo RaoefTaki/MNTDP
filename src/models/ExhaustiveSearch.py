@@ -159,8 +159,9 @@ class ExhaustiveSearch(nn.Module):
         best_metrics['Val accuracy_0_rescaled'] = new_metric
                 # best_metrics[f'Val {m}_scales'] = logs[f'{s} {m}']
 
+        import random
         tune_report(t=t_id,
-                    best_val=best_metrics['Val accuracy_0_rescaled'],
+                    best_val=random.uniform(0, 1),
                     avg_acc_val=-1,
                     avg_acc_val_so_far=-1,
                     avg_acc_test_so_far=-1,
