@@ -307,6 +307,7 @@ def train_on_tasks(config):
 
     # Set the tune_report variable
     tune_report = tune.report
+    tune_run = tune.run
     config['tune_report'] = tune_report
 
     task_counter = 0
@@ -332,7 +333,7 @@ def train_on_tasks(config):
             config['learner_path'] = learner_path
             config['seed'] += t_id
 
-            analysis = tune.run(train_t, config=config, **ray_params)
+            analysis = tune_run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
@@ -369,8 +370,6 @@ def train_on_tasks(config):
 
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
-
-            ray.shutdown()
 
             print("[TEST] Finished task:", t_id)
 
