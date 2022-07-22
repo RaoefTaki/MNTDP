@@ -328,6 +328,8 @@ def train_on_tasks(config):
             config['learner_path'] = learner_path
             config['seed'] += t_id
 
+            tune_report = tune.report
+            config['tune_report'] = tune_report
             analysis = tune.run(train_t, config=config, **ray_params)
 
             all_analysis.append(analysis)
@@ -426,6 +428,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                       total_steps):
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
+    tune_report = config.pop('tune_report')
     assert 'model-params' not in config, "Can't have model-specific " \
                                          "parameters while tuning at the " \
                                          "stream level."
@@ -525,7 +528,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     assert not config, config
     start2 = time.time()
     # TODO, marker: training of models conducted in this function
-    tune_report = tune.report
     rescaled, t, metrics, b_state_dict, info_training = train_model(model, datasets_p,
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
@@ -671,7 +673,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                finish_time + eval_time
     best_it = b_state_dict.get('cum_best_iter', b_state_dict['iter'])
     # TODO: add parameters to be reported here?
-    tune.report(t=t_id,
+    tune_report(t=t_id,
                 best_val=b_state_dict['value'],
                 avg_acc_val=avg_val,
                 avg_acc_val_so_far=avg_val_so_far,
