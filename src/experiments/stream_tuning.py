@@ -525,11 +525,12 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     assert not config, config
     start2 = time.time()
     # TODO, marker: training of models conducted in this function
+    tune_report = tune.report
     rescaled, t, metrics, b_state_dict, info_training = train_model(model, datasets_p,
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
                                                                     train_loader, eval_loaders,
-                                                                    training_params, vis_p, config)
+                                                                    training_params, tune_report, vis_p, config)
 
     training_time = time.time() - start2
     start3 = time.time()
@@ -705,7 +706,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
-                task, train_loader, eval_loaders, training_params, vis_p, config):
+                task, train_loader, eval_loaders, training_params, tune_report, vis_p, config):
     if hasattr(model, 'train_func'):
         assert not config, config
         f = model.train_func
@@ -716,7 +717,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     # viz=task_vis,
                                                     prepare_batch=prepare_batch,
                                                     split_names=task['split_names'],
-                                                    tune=tune,
+                                                    tune_report=tune_report,
                                                     vis_p=vis_p,
                                                     t_id=task['id'],
                                                     # viz=task_vis,

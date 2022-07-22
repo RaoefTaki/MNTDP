@@ -95,7 +95,7 @@ class ExhaustiveSearch(nn.Module):
     #         self.init_models()
     #     return self.models[self.models_idx[self._selected_path()]].parameters()
 
-    def train_func(self, datasets_p, b_sizes, optim_fact, tune, vis_p, t_id, *args, **kwargs):
+    def train_func(self, datasets_p, b_sizes, optim_fact, tune_report, vis_p, t_id, *args, **kwargs):
         # TODO: use argumenst for t_id etc to report to the tuner
         # if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/1406'):
         if datasets_p['task']['data_path'][0].startswith( '/net/blackorpheus/veniat/lileb/datasets/2775'):
@@ -114,7 +114,7 @@ class ExhaustiveSearch(nn.Module):
             model = self.models[idx]
             calls.append(partial(wrap, model=model, idx=idx,
                                  optim_fact=optim_fact, datasets_p=datasets_p,
-                                 b_sizes=b_sizes, tune_report=tune.report, vis_p=vis_p, t_id=t_id, *args, **kwargs))
+                                 b_sizes=b_sizes, tune_report=tune_report, vis_p=vis_p, t_id=t_id, *args, **kwargs))
 
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
