@@ -305,10 +305,6 @@ def train_on_tasks(config):
         all_analysis = []
         selected_tags = []
 
-    # Set the tune_report variable
-    tune_report = tune.report
-    config['tune_report'] = tune_report
-
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
@@ -320,13 +316,16 @@ def train_on_tasks(config):
         print("[TEST] Current task:", t_id)
 
         if task_level_tuning:
-            if not ray.is_initialized():
-                if local_mode:
-                    ray.init(local_mode=local_mode)
-                else:
-                    ray.init(redis_address,
-                             log_to_driver=False,
-                             logging_level=logging.ERROR)
+            if local_mode:
+                ray.init(local_mode=local_mode)
+            else:
+                ray.init(redis_address,
+                         log_to_driver=False,
+                         logging_level=logging.ERROR)
+
+            # Set the tune_report variable
+            tune_report = tune.report
+            config['tune_report'] = tune_report
 
             config['static_params'] = static_params
             config['learner_path'] = learner_path
