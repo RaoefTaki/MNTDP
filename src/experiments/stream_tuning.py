@@ -370,6 +370,8 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
+            ray.shutdown()
+
             print("[TEST] Finished task:", t_id)
 
             # print(type(analysis))
