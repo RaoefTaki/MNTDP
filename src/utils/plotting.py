@@ -823,6 +823,7 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
 
     global_summary = defaultdict(list)
     first_plot = True
+    raise ValueError(res_dict)
     for ll_name, (best_traj, exp_summary) in res_dict.items():
         if plot:
             exp_env = '{}_{}'.format(exp_name, ll_name)
