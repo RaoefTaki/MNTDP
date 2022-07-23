@@ -483,7 +483,12 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     else:
         task_vis = None
     env_url = get_env_url(vis_p)
-    raise ValueError("t_id:", t_id, "env_url:", env_url, "vis_p:", vis_p)
+    if t_id != 0:
+        raise ValueError("t_id:", t_id, "env_url:", env_url, "vis_p:", vis_p)
+    # ValueError: ('t_id:', 0, 'env_url:', 'http://localhost:8097/env/1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0', 'vis_p:', {'env': '1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0', 'log_to_filename': '/home/TUE/s167139/data/veniat/lileb/visdom_traces/1/1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0', 'server': 'localhost', 'port': 8097, 'offline': True})
+    # ValueError: ('t_id:', 0, 'env_url:', 'http://localhost:8097/env/1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0', 'vis_p:', {'env': '1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0', 'log_to_filename': '/home/TUE/s167139/data/veniat/lileb/visdom_traces/1/1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0', 'server': 'localhost', 'port': 8097, 'offline': True})
+    # ... etc
+
 
     t_trans = [[] for _ in range(len(task['split_names']))]
     t_trans[0] = transformations.copy()
