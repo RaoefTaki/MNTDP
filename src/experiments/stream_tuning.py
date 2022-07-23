@@ -692,6 +692,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                finish_time + eval_time
     best_it = b_state_dict.get('cum_best_iter', b_state_dict['iter'])
     # TODO: add parameters to be reported here?
+    # tune_report is already called inside ExhaustiveSearch. When reporting multiple times to tune_report for 1 trial,
+    # clean it up so that only the last one remains before plotting.py is ran
     # tune_report(t=t_id,
     #             best_val=b_state_dict['value'],
     #             avg_acc_val=avg_val,
