@@ -157,39 +157,41 @@ class ExhaustiveSearch(nn.Module):
         # print(new_metric)
         # print()
         best_metrics['Val accuracy_0_rescaled'] = new_metric
+
+        raise ValueError("best_metrics", best_metrics)
                 # best_metrics[f'Val {m}_scales'] = logs[f'{s} {m}']
 
-        # import random
-        # tune_report(t=t_id,
-        #             best_val=random.uniform(0, 1),
-        #             avg_acc_val=-1,
-        #             avg_acc_val_so_far=-1,
-        #             avg_acc_test_so_far=-1,
-        #             lca=-1,
-        #             avg_acc_test=-1,
-        #             test_acc=-1,
-        #             duration_seconds=-1,
-        #             duration_iterations=-1,
-        #             duration_best_it=-1,
-        #             duration_finish=-1,
-        #             duration_model_creation=-1,
-        #             duration_training=-1,
-        #             duration_postproc=-1,
-        #             duration_eval=-1,
-        #             duration_sum=-1,
-        #             iterations=-1,
-        #             epochs=-1,
-        #             # entropy=stats.pop('entropy'),
-        #             new_params=-1,
-        #             total_params=-1,
-        #             total_steps=-1,
-        #             fw_t=-1,
-        #             data_t=-1,
-        #             epoch_t=-1,
-        #             eval_t=-1,
-        #             total_t=-1,
-        #             env_url=get_env_url(vis_p),
-        #             info_training=None)
+        import random
+        tune_report(t=t_id,
+                    best_val=best_metrics['value'],
+                    avg_acc_val=-1,
+                    avg_acc_val_so_far=-1,
+                    avg_acc_test_so_far=-1,
+                    lca=-1,
+                    avg_acc_test=-1,
+                    test_acc=-1,
+                    duration_seconds=-1,
+                    duration_iterations=-1,
+                    duration_best_it=-1,
+                    duration_finish=-1,
+                    duration_model_creation=-1,
+                    duration_training=-1,
+                    duration_postproc=-1,
+                    duration_eval=-1,
+                    duration_sum=-1,
+                    iterations=-1,
+                    epochs=-1,
+                    # entropy=stats.pop('entropy'),
+                    new_params=-1,
+                    total_params=-1,
+                    total_steps=-1,
+                    fw_t=-1,
+                    data_t=-1,
+                    epoch_t=-1,
+                    eval_t=-1,
+                    total_t=-1,
+                    env_url=get_env_url(vis_p),
+                    info_training=None)
 
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
