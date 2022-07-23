@@ -823,7 +823,21 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
 
     global_summary = defaultdict(list)
     first_plot = True
-    raise ValueError(res_dict)
+    # raise ValueError(res_dict)
+    # ValueError: (0, (    t  best_val  ...  timesteps_since_restore  iterations_since_restore
+    # 0   0    0.1100  ...                        0                         1
+    # 1   0    0.1100  ...                        0                         2
+    # 2   1    0.1750  ...                        0                         1
+    # 3   1    0.1750  ...                        0                         2
+    # 4   2    0.1350  ...                        0                         1
+    # 5   2    0.1350  ...                        0                         2
+    # 6   3    0.1700  ...                        0                         1
+    # 7   3    0.1700  ...                        0                         2
+    # 8   4    0.1600  ...                        0                         1
+    # 9   4    0.1600  ...                        0                         2
+    # 10  5    0.2555  ...                        0                         1
+    # 11  5    0.2555  ...                        0                         2
+
     for ll_name, (best_traj, exp_summary) in res_dict.items():
         if plot:
             exp_env = '{}_{}'.format(exp_name, ll_name)
