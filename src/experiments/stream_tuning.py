@@ -255,7 +255,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                                                  task['descriptor'])
                 envs[-1].append(env)
         return_df = analysis.trial_dataframes[results[0].logdir]
-        return_df = return_df.groupby('t').tail(1).reset_index()
+    return_df = return_df.groupby('t').tail(1).reset_index()
     summary = {
         'model': [t.experiment_tag for t in results],
         'Avg acc Val': [t.last_result['avg_acc_val'] for t in results],
