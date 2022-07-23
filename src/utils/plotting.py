@@ -893,7 +893,9 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
             logger.warning('There was an issue with the results, revieved '
                            '{} results while the stream contains {} tasks.'
                            .format(len(best_traj), n_task))
-            raise RuntimeError
+            raise RuntimeError('There was an issue with the results, revieved '
+                               '{} results while the stream contains {} tasks.'
+                               .format(len(best_traj), n_task))
         for t_id, result in best_traj.iterrows():
             # for eval_t in range(t_id + 1):
             # arr = [result['Test_T{}'.format(eval_t)]
