@@ -483,6 +483,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     else:
         task_vis = None
     env_url = get_env_url(vis_p)
+    raise ValueError("t_id:", t_id, "env_url:", env_url, "vis_p:", vis_p)
 
     t_trans = [[] for _ in range(len(task['split_names']))]
     t_trans[0] = transformations.copy()
