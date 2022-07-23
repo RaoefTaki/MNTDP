@@ -838,7 +838,7 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
     # 10  5    0.2555  ...                        0                         1
     # 11  5    0.2555  ...                        0                         2
 
-    for ll_name, (best_traj, exp_summary) in res_dict.items():
+    for ll_name, (best_traj, exp_summary) in res_dict[1].items():
         if plot:
             exp_env = '{}_{}'.format(exp_name, ll_name)
             if traces_folder is not None:
