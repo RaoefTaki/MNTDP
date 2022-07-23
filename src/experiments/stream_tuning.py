@@ -483,12 +483,15 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     else:
         task_vis = None
     env_url = get_env_url(vis_p)
-    if t_id != 0:
-        raise ValueError("t_id:", t_id, "env_url:", env_url, "vis_p:", vis_p)
+    # if t_id != 0:
+    #     raise ValueError("t_id:", t_id, "env_url:", env_url, "vis_p:", vis_p)
     # ValueError: ('t_id:', 0, 'env_url:', 'http://localhost:8097/env/1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0', 'vis_p:', {'env': '1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0', 'log_to_filename': '/home/TUE/s167139/data/veniat/lileb/visdom_traces/1/1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0', 'server': 'localhost', 'port': 8097, 'offline': True})
     # ValueError: ('t_id:', 0, 'env_url:', 'http://localhost:8097/env/1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0', 'vis_p:', {'env': '1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0', 'log_to_filename': '/home/TUE/s167139/data/veniat/lileb/visdom_traces/1/1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0', 'server': 'localhost', 'port': 8097, 'offline': True})
     # ... etc
-
+    # ValueError: ('t_id:', 1, 'env_url:', 'http://localhost:8097/env/1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T1', 'vis_p:', {'env': '1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T1', 'log_to_filename': '/home/TUE/s167139/data/veniat/lileb/visdom_traces/1/1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T1', 'server': 'localhost', 'port': 8097, 'offline': True})
+    # ... etc
+    # TODO: try to fix the error that occurs at approx. line 346 in stream_tuning.py, put tune_reporter back in at end of this func
+    # TODO: and try to see if can run s_test fully with good/expected results
 
     t_trans = [[] for _ in range(len(task['split_names']))]
     t_trans[0] = transformations.copy()
@@ -689,37 +692,37 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                finish_time + eval_time
     best_it = b_state_dict.get('cum_best_iter', b_state_dict['iter'])
     # TODO: add parameters to be reported here?
-    # tune_report(t=t_id,
-    #             best_val=b_state_dict['value'],
-    #             avg_acc_val=avg_val,
-    #             avg_acc_val_so_far=avg_val_so_far,
-    #             avg_acc_test_so_far=avg_test_so_far,
-    #             lca=lca,
-    #             avg_acc_test=avg_test,
-    #             test_acc=evaluation['Test']['accuracy'][t_id],
-    #             duration_seconds=step_time_s,
-    #             duration_iterations=t,
-    #             duration_best_it=best_it,
-    #             duration_finish=finish_time,
-    #             duration_model_creation=model_creation_time,
-    #             duration_training=training_time,
-    #             duration_postproc=postproc_time,
-    #             duration_eval=eval_time,
-    #             duration_sum=step_sum,
-    #             iterations=iterations,
-    #             epochs=epochs,
-    #             # entropy=stats.pop('entropy'),
-    #             new_params=learner.new_params(t_id),
-    #             total_params=learner.n_params(t_id),
-    #             total_steps=total_steps + t,
-    #             fw_t=round(avg_forward_time * 1000) / 1000,
-    #             data_t=round(avg_data_time * 1000) / 1000,
-    #             epoch_t=round(avg_epoch_time * 1000) / 1000,
-    #             eval_t=round(avg_eval_time * 1000) / 1000,
-    #             total_t=round(total_time * 1000) / 1000,
-    #             env_url=get_env_url(vis_p),
-    #             info_training=info_training,
-    #             **accs, **stats)
+    tune_report(t=t_id,
+                best_val=b_state_dict['value'],
+                avg_acc_val=avg_val,
+                avg_acc_val_so_far=avg_val_so_far,
+                avg_acc_test_so_far=avg_test_so_far,
+                lca=lca,
+                avg_acc_test=avg_test,
+                test_acc=evaluation['Test']['accuracy'][t_id],
+                duration_seconds=step_time_s,
+                duration_iterations=t,
+                duration_best_it=best_it,
+                duration_finish=finish_time,
+                duration_model_creation=model_creation_time,
+                duration_training=training_time,
+                duration_postproc=postproc_time,
+                duration_eval=eval_time,
+                duration_sum=step_sum,
+                iterations=iterations,
+                epochs=epochs,
+                # entropy=stats.pop('entropy'),
+                new_params=learner.new_params(t_id),
+                total_params=learner.n_params(t_id),
+                total_steps=total_steps + t,
+                fw_t=round(avg_forward_time * 1000) / 1000,
+                data_t=round(avg_data_time * 1000) / 1000,
+                epoch_t=round(avg_epoch_time * 1000) / 1000,
+                eval_t=round(avg_eval_time * 1000) / 1000,
+                total_t=round(total_time * 1000) / 1000,
+                env_url=get_env_url(vis_p),
+                info_training=info_training,
+                **accs, **stats)
     return rescaled, t, metrics, b_state_dict, stats
 
 
