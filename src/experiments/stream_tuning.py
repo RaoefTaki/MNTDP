@@ -453,6 +453,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     optim_params = config.pop('optim')
     schedule_mode = training_params.pop('schedule_mode')
     split_optims = training_params.pop('split_optims')
+    env_url = get_env_url(vis_p)
 
     dropout = config.pop('dropout') if 'dropout' in config else None
 
@@ -541,7 +542,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
                                                                     train_loader, eval_loaders,
-                                                                    training_params, tune_report, vis_p, config)
+                                                                    training_params, tune_report, env_url, config)
 
     training_time = time.time() - start2
     start3 = time.time()
@@ -717,7 +718,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
-                task, train_loader, eval_loaders, training_params, tune_report, vis_p, config):
+                task, train_loader, eval_loaders, training_params, tune_report, env_url, config):
     if hasattr(model, 'train_func'):
         assert not config, config
         f = model.train_func
@@ -729,7 +730,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     prepare_batch=prepare_batch,
                                                     split_names=task['split_names'],
                                                     tune_report=tune_report,
-                                                    vis_p=vis_p,
+                                                    vis_p=env_url,
                                                     t_id=task['id'],
                                                     # viz=task_vis,
                                                     **training_params)

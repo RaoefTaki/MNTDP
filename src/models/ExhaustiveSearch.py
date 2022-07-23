@@ -95,7 +95,7 @@ class ExhaustiveSearch(nn.Module):
     #         self.init_models()
     #     return self.models[self.models_idx[self._selected_path()]].parameters()
 
-    def train_func(self, datasets_p, b_sizes, optim_fact, tune_report, vis_p, t_id, *args, **kwargs):
+    def train_func(self, datasets_p, b_sizes, optim_fact, tune_report, env_url, t_id, *args, **kwargs):
         # TODO: use argumenst for t_id etc to report to the tuner
         # if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/1406'):
         if datasets_p['task']['data_path'][0].startswith( '/net/blackorpheus/veniat/lileb/datasets/2775'):
@@ -114,7 +114,7 @@ class ExhaustiveSearch(nn.Module):
             model = self.models[idx]
             calls.append(partial(wrap, model=model, idx=idx,
                                  optim_fact=optim_fact, datasets_p=datasets_p,
-                                 b_sizes=b_sizes, tune_report=tune_report, vis_p=vis_p, t_id=t_id, *args, **kwargs))
+                                 b_sizes=b_sizes, tune_report=tune_report, env_url=env_url, t_id=t_id, *args, **kwargs))
 
         ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
@@ -217,7 +217,7 @@ class ExhaustiveSearch(nn.Module):
         return graph_arch_details(self.graph)
 
 
-def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune_report=None, vis_p=None, t_id=-1, **kwargs):
+def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune_report=None, env_url=None, t_id=-1, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
     #     raise ValueError("INTERCEPT. t_id:", t_id)
@@ -230,6 +230,6 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, tune_report
         train_loader = model.train_loader_wrapper(train_loader)
 
     res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                optimizer=optim, tune_report=tune_report, vis_p=vis_p, t_id=t_id, **kwargs)
+                optimizer=optim, tune_report=tune_report, env_url=env_url, t_id=t_id, **kwargs)
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res

@@ -41,7 +41,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
           n_it_max, patience, split_names, select_metric='Val accuracy_0',
           select_mode='max', viz=None, device='cpu', lr_scheduler=None, name=None, log_steps=None,
           log_epoch=False, _run=None, prepare_batch=_prepare_batch,
-          single_pass=False, n_ep_max=None, tune_report=None, vis_p=None, t_id=-1):
+          single_pass=False, n_ep_max=None, tune_report=None, env_url=None, t_id=-1):
 
     # print(model)
 
@@ -287,7 +287,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
                         epoch_t=-1,
                         eval_t=-1,
                         total_t=-1,
-                        env_url=None,#get_env_url(vis_p),
+                        env_url=env_url,
                         info_training=None)
 
             # # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
