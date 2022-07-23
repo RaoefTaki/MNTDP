@@ -255,7 +255,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                                                  task['descriptor'])
                 envs[-1].append(env)
         return_df = analysis.trial_dataframes[results[0].logdir]
-    return_df = return_df.groupby('t').tail(1).reset_index()
+    # return_df = return_df.groupby('t').tail(1).reset_index() # TODO: re-enable
     summary = {
         'model': [t.experiment_tag for t in results],
         'Avg acc Val': [t.last_result['avg_acc_val'] for t in results],
@@ -269,6 +269,9 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         'envs': envs
     }
     summary = pandas.DataFrame(summary)
+    pandas.set_option('display.max_colwidth', None)
+    raise ValueError("return_df:", return_df, "return_df.columns:", return_df.columns, "len(return_df.index):", len(return_df.index),
+                     "summary:", summary, "summary.columns:", summary.columns, "len(summary.index):", len(summary.index))
     print("Summary results:")
     print(summary)
 
