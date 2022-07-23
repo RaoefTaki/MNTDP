@@ -453,7 +453,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     optim_params = config.pop('optim')
     schedule_mode = training_params.pop('schedule_mode')
     split_optims = training_params.pop('split_optims')
-    env_url = get_env_url(vis_p)
 
     dropout = config.pop('dropout') if 'dropout' in config else None
 
@@ -483,6 +482,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
         logger.info(get_env_url(task_vis))
     else:
         task_vis = None
+    env_url = get_env_url(vis_p)
 
     t_trans = [[] for _ in range(len(task['split_names']))]
     t_trans[0] = transformations.copy()
