@@ -270,8 +270,30 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
     }
     summary = pandas.DataFrame(summary)
     pandas.set_option('display.max_colwidth', None)
-    raise ValueError("return_df:", return_df, "return_df.columns:", return_df.columns, "len(return_df.index):", len(return_df.index),
-                     "summary:", summary, "summary.columns:", summary.columns, "len(summary.index):", len(summary.index))
+    # raise ValueError("return_df:", return_df, "return_df.columns:", return_df.columns, "len(return_df.index):", len(return_df.index),
+    #                  "summary:", summary, "summary.columns:", summary.columns, "len(summary.index):", len(summary.index))
+    #     [12 rows x 45 columns], 'return_df.columns:', Index(['t', 'best_val', 'avg_acc_val', 'avg_acc_val_so_far',
+    #                                                          'avg_acc_test_so_far', 'lca', 'avg_acc_test', 'test_acc',
+    #                                                          'duration_seconds', 'duration_iterations', 'duration_best_it',
+    #                                                          'duration_finish', 'duration_model_creation', 'duration_training',
+    #                                                          'duration_postproc', 'duration_eval', 'duration_sum', 'iterations',
+    #                                                          'epochs', 'new_params', 'total_params', 'total_steps', 'fw_t', 'data_t',
+    #                                                          'epoch_t', 'eval_t', 'total_t', 'env_url', 'info_training',
+    #                                                          'time_this_iter_s', 'done', 'timesteps_total', 'episodes_total',
+    #                                                          'training_iteration', 'trial_id', 'experiment_id', 'date', 'timestamp',
+    #                                                          'time_total_s', 'pid', 'hostname', 'node_ip', 'time_since_restore',
+    #                                                          'timesteps_since_restore', 'iterations_since_restore'],
+    #                                                         dtype='object'), 'len(return_df.index):', 12, 'summary:',                                 model  ...                                                                                                                                                                                                                                                                                                                                                                                                                envs
+    # 0    4_0_lr=0.01,0_weight_decay=1e-05  ...                                      [1_Trial_PSSN-search-6-fw_0_0_lr=0.01,0_weight_decay=0_md-T0, 1_Trial_PSSN-search-6-fw_0_0_lr=0.01,0_weight_decay=0_md-T1, 1_Trial_PSSN-search-6-fw_0_0_lr=0.01,0_weight_decay=0_md-T2, 1_Trial_PSSN-search-6-fw_0_0_lr=0.01,0_weight_decay=0_md-T3, 1_Trial_PSSN-search-6-fw_0_0_lr=0.01,0_weight_decay=0_md-T4, 1_Trial_PSSN-search-6-fw_0_0_lr=0.01,0_weight_decay=0_md-T5]
+    # 1   2_0_lr=0.01,0_weight_decay=0.0001  ...                                [1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T0, 1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T1, 1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T2, 1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T3, 1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T4, 1_Trial_PSSN-search-6-fw_1_0_lr=0.001,0_weight_decay=0_md-T5]
+    # 2        0_0_lr=0.01,0_weight_decay=0  ...        [1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T0, 1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T1, 1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T2, 1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T3, 1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T4, 1_Trial_PSSN-search-6-fw_2_0_lr=0.01,0_weight_decay=0.0001_md-T5]
+    # 3   5_0_lr=0.001,0_weight_decay=1e-05  ...  [1_Trial_PSSN-search-6-fw_3_0_lr=0.001,0_weight_decay=0.0001_md-T0, 1_Trial_PSSN-search-6-fw_3_0_lr=0.001,0_weight_decay=0.0001_md-T1, 1_Trial_PSSN-search-6-fw_3_0_lr=0.001,0_weight_decay=0.0001_md-T2, 1_Trial_PSSN-search-6-fw_3_0_lr=0.001,0_weight_decay=0.0001_md-T3, 1_Trial_PSSN-search-6-fw_3_0_lr=0.001,0_weight_decay=0.0001_md-T4, 1_Trial_PSSN-search-6-fw_3_0_lr=0.001,0_weight_decay=0.0001_md-T5]
+    # 4  3_0_lr=0.001,0_weight_decay=0.0001  ...              [1_Trial_PSSN-search-6-fw_4_0_lr=0.01,0_weight_decay=1e-05_md-T0, 1_Trial_PSSN-search-6-fw_4_0_lr=0.01,0_weight_decay=1e-05_md-T1, 1_Trial_PSSN-search-6-fw_4_0_lr=0.01,0_weight_decay=1e-05_md-T2, 1_Trial_PSSN-search-6-fw_4_0_lr=0.01,0_weight_decay=1e-05_md-T3, 1_Trial_PSSN-search-6-fw_4_0_lr=0.01,0_weight_decay=1e-05_md-T4, 1_Trial_PSSN-search-6-fw_4_0_lr=0.01,0_weight_decay=1e-05_md-T5]
+    # 5       1_0_lr=0.001,0_weight_decay=0  ...        [1_Trial_PSSN-search-6-fw_5_0_lr=0.001,0_weight_decay=1e-05_md-T0, 1_Trial_PSSN-search-6-fw_5_0_lr=0.001,0_weight_decay=1e-05_md-T1, 1_Trial_PSSN-search-6-fw_5_0_lr=0.001,0_weight_decay=1e-05_md-T2, 1_Trial_PSSN-search-6-fw_5_0_lr=0.001,0_weight_decay=1e-05_md-T3, 1_Trial_PSSN-search-6-fw_5_0_lr=0.001,0_weight_decay=1e-05_md-T4, 1_Trial_PSSN-search-6-fw_5_0_lr=0.001,0_weight_decay=1e-05_md-T5]
+    #
+    # [6 rows x 10 columns], 'summary.columns:', Index(['model', 'Avg acc Val', 'Acc Val', 'Avg acc Test', 'Acc Test', 'Params',
+    #                                                   'Steps', 'paths', 'evaluated_params', 'envs'],
+    #                                                  dtype='object'), 'len(summary.index):', 6)
     print("Summary results:")
     print(summary)
 
