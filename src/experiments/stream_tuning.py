@@ -730,7 +730,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     prepare_batch=prepare_batch,
                                                     split_names=task['split_names'],
                                                     tune_report=tune_report,
-                                                    vis_p=env_url,
+                                                    env_url=env_url,
                                                     t_id=task['id'],
                                                     # viz=task_vis,
                                                     **training_params)
