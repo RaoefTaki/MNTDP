@@ -109,7 +109,7 @@ class StreamTuningExperiment(BaseExperiment):
             train_calls.append(partial(tune_learner_on_stream, **params))
 
         # Perform the training and obtain the results
-        res = (0, train_calls[0]())
+        res = [('PSSN-search-6-fw', train_calls[0]())]
 
         # results_array = execute_step(train_calls, self.use_processes, ctx=ctx)
         # res = dict(zip(self.ll_models.keys(), results_array)) # TODO: somehow here extra lines are included from tune_report functions
