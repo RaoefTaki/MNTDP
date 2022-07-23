@@ -287,7 +287,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
                         epoch_t=-1,
                         eval_t=-1,
                         total_t=-1,
-                        env_url=get_env_url(vis_p),
+                        env_url=None,#get_env_url(vis_p),
                         info_training=None)
 
             # # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
