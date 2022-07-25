@@ -17,6 +17,7 @@ import visdom
 from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.logger import JsonLogger, CSVLogger
+import ray.tune.utils
 from torchvision.transforms import transforms
 
 from src.experiments.base_experiment import BaseExperiment
@@ -382,7 +383,7 @@ def train_on_tasks(config):
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
             # Next define the amount of parallelism, as per the original MNTDP program
-            division_factor = 2.0
+            division_factor = 4.0
             ray_params['resources_per_trial'] = {'cpu': ray_params['resources_per_trial']['cpu'] / division_factor, 'gpu': ray_params['resources_per_trial']['gpu'] / division_factor}
             # raise ValueError(ray_params)
             # ValueError: {'loggers': [<class 'ray.tune.logger.JsonLogger'>, <class 'ray.tune.logger.CSVLogger'>],
@@ -460,6 +461,11 @@ def train_on_tasks(config):
 
 
 def train_t(config):
+    # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
+    # Occasionally, you may run into GPU memory issues when running a new trial.
+    # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
+    tune.utils.wait_for_gpu()
+
     # This function does not allow for printing to be seen in the output files
     seed = config.pop('seed')
     static_params = config.pop('static_params')
