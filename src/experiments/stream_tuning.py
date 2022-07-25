@@ -361,6 +361,10 @@ def train_on_tasks(config):
             config['learner_path'] = learner_path
             config['seed'] += t_id
 
+            raise ValueError("config:", config)
+
+            # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
+            # First define the possibilities for each criteria
             analysis = tune_run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
 
