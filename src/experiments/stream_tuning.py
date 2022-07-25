@@ -429,9 +429,6 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
-            print("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
-            exit(0)
-
             # TODO: flush memory of unused saved models before moving to the next task
             torch.cuda.empty_cache()
 
@@ -567,12 +564,15 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     assert t_id == task['id']
 
-    start1 = time.time()
-    model = learner.get_model(task['id'], x_dim=task['x_dim'],
-                              n_classes=task['n_classes'],
-                              descriptor=task['descriptor'],
-                              dataset=eval_loaders[:2])
-    model_creation_time = time.time() - start1
+    try:
+        start1 = time.time()
+        model = learner.get_model(task['id'], x_dim=task['x_dim'],
+                                  n_classes=task['n_classes'],
+                                  descriptor=task['descriptor'],
+                                  dataset=eval_loaders[:2])
+        model_creation_time = time.time() - start1
+    except:
+        raise ValueError("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
     # Crashes with information:
     # raise ValueError(task['id'], optim_fact)
     # ValueError: (1, functools.partial(<function set_optim_params at 0x7ee4133a0040>,
