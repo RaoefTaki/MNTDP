@@ -125,8 +125,9 @@ class ExhaustiveSearch(nn.Module):
         # ctx = None
         # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
         # torch.multiprocessing.set_sharing_strategy('file_system')
-        raise ValueError(optim_fact, type(optim_fact), optim_fact.keywords)#, optim_fact.keywords[1][0]['architecture'])#, optim_fact.args[1], optim_fact.args[1][0], optim_fact.args[1][0]['architecture'])
-        all_res = [calls[optim_fact.args[1][0]['architecture']]]
+        raise ValueError(optim_fact, type(optim_fact), optim_fact.keywords['optim_params'][0]['architecture'], optim_fact.keywords)
+
+        all_res = [calls[optim_fact.keywords['optim_params'][0]['architecture']]]
         # all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
