@@ -378,7 +378,7 @@ def train_on_tasks(config):
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
             config['optim'] = [{'architecture': {'grid_search': list(range(7))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
-            raise ValueError(config)
+            # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
             # Next define the amount of parallelism, as per the original MNTDP program
             ray_params['resources_per_trial'] = {'cpu': ray_params['resources_per_trial']['cpu'] / 4.0, 'gpu': ray_params['resources_per_trial']['gpu'] / 4.0}

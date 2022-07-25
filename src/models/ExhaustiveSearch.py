@@ -107,6 +107,8 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             self.init_models()
 
+        raise ValueError(optim_fact)
+
         # Create calls to train each of different models (combinations of modules), 7+1 (as in thesis), or 7 as depicted here
         # TODO: find out why discrepancy between 7+1 and 7?
         calls = []
