@@ -382,7 +382,8 @@ def train_on_tasks(config):
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
             # Next define the amount of parallelism, as per the original MNTDP program
-            ray_params['resources_per_trial'] = {'cpu': ray_params['resources_per_trial']['cpu'] / 4.0, 'gpu': ray_params['resources_per_trial']['gpu'] / 4.0}
+            division_factor = 1.0
+            ray_params['resources_per_trial'] = {'cpu': ray_params['resources_per_trial']['cpu'] / division_factor, 'gpu': ray_params['resources_per_trial']['gpu'] / division_factor}
             # raise ValueError(ray_params)
             # ValueError: {'loggers': [<class 'ray.tune.logger.JsonLogger'>, <class 'ray.tune.logger.CSVLogger'>],
             # 'name': 'PSSN-search-6-fw', 'resources_per_trial': {'cpu': 0.5, 'gpu': 0.25}, 'num_samples': 1,
@@ -433,7 +434,6 @@ def train_on_tasks(config):
             torch.cuda.empty_cache()
 
             print("[TEST] Finished task:", t_id)
-            time.sleep(15)
 
             # print(type(analysis))
             # print(analysis)
