@@ -377,7 +377,7 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            nr_of_architectures = 1#7
+            nr_of_architectures = 7
             config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
@@ -561,12 +561,19 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     assert t_id == task['id']
 
-    start1 = time.time()
-    model = learner.get_model(task['id'], x_dim=task['x_dim'],
-                              n_classes=task['n_classes'],
-                              descriptor=task['descriptor'],
-                              dataset=eval_loaders[:2])
-    model_creation_time = time.time() - start1
+    try:
+        start1 = time.time()
+        model = learner.get_model(task['id'], x_dim=task['x_dim'],
+                                  n_classes=task['n_classes'],
+                                  descriptor=task['descriptor'],
+                                  dataset=eval_loaders[:2])
+        model_creation_time = time.time() - start1
+    except RuntimeError:
+        optim_fact_2 = partial(set_optim_params,
+                               optim_func=optim_func,
+                               optim_params=optim_params,
+                               split_optims=split_optims)
+        raise ValueError(task['id'], optim_fact_2)
 
     loss_fn = task['loss_fn']
     training_params['loss_fn'] = loss_fn
