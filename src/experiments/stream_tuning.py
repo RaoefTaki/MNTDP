@@ -429,6 +429,9 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
+            print("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
+            exit(0)
+
             # TODO: flush memory of unused saved models before moving to the next task
             torch.cuda.empty_cache()
 
