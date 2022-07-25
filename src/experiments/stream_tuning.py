@@ -377,11 +377,18 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            pass
+            config['optim'] = [{'architecture': {'grid_search': list(range(7))}, 'lr': config['optim']['lr'], 'weight_decay': config['optim']['weight_decay']}]
+            raise ValueError(config)
 
             # Next define the amount of parallelism, as per the original MNTDP program
             ray_params['resources_per_trial'] = {'cpu': ray_params['resources_per_trial']['cpu'] / 4.0, 'gpu': ray_params['resources_per_trial']['gpu'] / 4.0}
-            raise ValueError(ray_params)
+            # raise ValueError(ray_params)
+            # ValueError: {'loggers': [<class 'ray.tune.logger.JsonLogger'>, <class 'ray.tune.logger.CSVLogger'>],
+            # 'name': 'PSSN-search-6-fw', 'resources_per_trial': {'cpu': 0.5, 'gpu': 0.25}, 'num_samples': 1,
+            # 'local_dir': '/home/TUE/s167139/data/veniat/lileb/ray_results/1', 'verbose': 1,
+            # 'progress_reporter': <ray.tune.progress_reporter.CLIReporter object at 0x7fcceeca2460>,
+            # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
+            # 'max_failures': 3}
 
             analysis = tune_run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
