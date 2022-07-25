@@ -107,7 +107,10 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             self.init_models()
 
-        raise ValueError(optim_fact)
+        # raise ValueError(optim_fact)
+        # ValueError: functools.partial(<function set_optim_params at 0x7f80c9f9fd30>,
+        # optim_func=functools.partial(<class 'torch.optim.adam.Adam'>, weight_decay=0, lr=0.001, betas=[0.9, 0.999]),
+        # optim_params=[{'architecture': 0, 'lr': 0.01, 'weight_decay': 0}], split_optims=True)
 
         # Create calls to train each of different models (combinations of modules), 7+1 (as in thesis), or 7 as depicted here
         # TODO: find out why discrepancy between 7+1 and 7?
@@ -118,11 +121,12 @@ class ExhaustiveSearch(nn.Module):
                                  optim_fact=optim_fact, datasets_p=datasets_p,
                                  b_sizes=b_sizes, tune_report=tune_report, env_url=env_url, t_id=t_id, *args, **kwargs))
 
-        ctx = torch.multiprocessing.get_context('spawn')
+        # ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
         # TODO: make new branch, and make the execution of these steps here smarter, possibly using a callback or something
-        torch.multiprocessing.set_sharing_strategy('file_system')
-        all_res = execute_step(calls, True, 4, ctx=ctx)
+        # torch.multiprocessing.set_sharing_strategy('file_system')
+        all_res = [calls[optim_fact.args[1]]]
+        # all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
         all_res = list(map(lambda x: (x[1][2]['value'], x[0]), self.res.items()))
