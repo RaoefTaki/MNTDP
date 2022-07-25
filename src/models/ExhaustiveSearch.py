@@ -134,9 +134,9 @@ class ExhaustiveSearch(nn.Module):
         # {'optim_func': functools.partial(<class 'torch.optim.adam.Adam'>, weight_decay=0, lr=0.001, betas=[0.9, 0.999]),
         # 'optim_params': [{'architecture': 0, 'lr': 0.01, 'weight_decay': 0}], 'split_optims': True})
 
-        raise ValueError(len(calls), len(self.models_idx), optim_fact.keywords['optim_params'][0]['architecture'])
+        # raise ValueError(len(calls), len(self.models_idx), optim_fact.keywords['optim_params'][0]['architecture'])
 
-        all_res = [calls[optim_fact.keywords['optim_params'][0]['architecture']]]
+        all_res = [calls[0]]#optim_fact.keywords['optim_params'][0]['architecture']]]
         # all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
