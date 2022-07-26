@@ -69,6 +69,7 @@ class ExhaustiveSearch(nn.Module):
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
             self.models.append(new_model)
+        raise ValueError(archs, self.models_idx, len(self.models_idx))
         return archs
 
     def get_weights(self):
