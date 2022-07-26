@@ -334,11 +334,6 @@ def train_on_tasks(config):
         all_analysis = []
         selected_tags = []
 
-    # Set the tune_report variable
-    tune_report = tune.report
-    tune_run = tune.run
-    config['tune_report'] = tune_report
-
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
@@ -393,7 +388,7 @@ def train_on_tasks(config):
             # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
             # 'max_failures': 3}
 
-            analysis = tune_run(train_t, config=config, **ray_params)
+            analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
@@ -500,7 +495,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                       total_steps):
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
-    tune_report = config.pop('tune_report')
     assert 'model-params' not in config, "Can't have model-specific " \
                                          "parameters while tuning at the " \
                                          "stream level."
@@ -622,7 +616,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
                                                                     train_loader, eval_loaders,
-                                                                    training_params, tune_report, env_url, config)
+                                                                    training_params, env_url, config)
 
     training_time = time.time() - start2
     start3 = time.time()
@@ -765,7 +759,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # TODO: add parameters to be reported here?
     # tune_report is already called inside ExhaustiveSearch. When reporting multiple times to tune_report for 1 trial,
     # clean it up so that only the last one remains before plotting.py is ran
-    tune_report(t=t_id,
+    tune.report(t=t_id,
                 best_val=b_state_dict['value'],
                 avg_acc_val=avg_val,
                 avg_acc_val_so_far=avg_val_so_far,
@@ -800,7 +794,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
-                task, train_loader, eval_loaders, training_params, tune_report, env_url, config):
+                task, train_loader, eval_loaders, training_params, env_url, config):
     if hasattr(model, 'train_func'):
         assert not config, config
         f = model.train_func
@@ -811,7 +805,6 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     # viz=task_vis,
                                                     prepare_batch=prepare_batch,
                                                     split_names=task['split_names'],
-                                                    tune_report=tune_report,
                                                     env_url=env_url,
                                                     t_id=task['id'],
                                                     # viz=task_vis,
