@@ -69,8 +69,8 @@ class ExhaustiveSearch(nn.Module):
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
             self.models.append(new_model)
-        if iteration is not None and iteration > 0:
-            raise ValueError(archs, self.models_idx, len(self.models_idx))
+        # if iteration is not None and iteration > 0:
+        #     raise ValueError(archs, self.models_idx, len(self.models_idx))
         return archs
 
     def get_weights(self):
@@ -140,7 +140,10 @@ class ExhaustiveSearch(nn.Module):
 
         # raise ValueError(len(calls), len(self.models_idx), optim_fact.keywords['optim_params'][0]['architecture'])
 
-        all_res = [calls[0]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        # Change the model ID to use depending on the ID of the task
+        # At the first task, there is only 1 model so this needs to be 0 ofc
+        model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
+        all_res = [calls[model_id_to_use]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
         # all_res = execute_step(calls, True, 4, ctx=ctx)
         for path, res in zip(self.models_idx.keys(), all_res):
             self.res[path] = res
