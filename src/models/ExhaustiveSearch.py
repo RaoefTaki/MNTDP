@@ -38,7 +38,7 @@ class ExhaustiveSearch(nn.Module):
 
         self.max_new_blocks = max_new_blocks
 
-    def init_models(self):
+    def init_models(self, iteration=None):
         archs = list(nx.all_simple_paths(self.graph, self.in_node,
                                          self.out_node))
         for path in archs:
@@ -69,7 +69,8 @@ class ExhaustiveSearch(nn.Module):
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
             self.models.append(new_model)
-        raise ValueError(archs, self.models_idx, len(self.models_idx))
+        if iteration > 0:
+            raise ValueError(archs, self.models_idx, len(self.models_idx))
         return archs
 
     def get_weights(self):
@@ -108,7 +109,7 @@ class ExhaustiveSearch(nn.Module):
             p.mkdir(parents=True, exist_ok=True)
 
         if not self.models:
-            self.init_models()
+            self.init_models(iteration=t_id)
 
         # raise ValueError(optim_fact)
         # ValueError: functools.partial(<function set_optim_params at 0x7f80c9f9fd30>,
