@@ -431,8 +431,10 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
-            # TODO: flush memory of unused saved models before moving to the next task
-            torch.cuda.empty_cache()
+            # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
+            # Occasionally, you may run into GPU memory issues when running a new trial.
+            # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
+            tune.utils.wait_for_gpu()
 
             print("[TEST] Finished task:", t_id)
 
@@ -461,11 +463,6 @@ def train_on_tasks(config):
 
 
 def train_t(config):
-    # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
-    # Occasionally, you may run into GPU memory issues when running a new trial.
-    # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
-    tune.utils.wait_for_gpu()
-
     # This function does not allow for printing to be seen in the output files
     seed = config.pop('seed')
     static_params = config.pop('static_params')
