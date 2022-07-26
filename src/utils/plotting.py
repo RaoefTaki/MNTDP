@@ -454,6 +454,7 @@ def plot_tasks_env_urls(urls, viz, name='all'):
 
 
 def update_acc_plots(all_perfs, name, viz):
+    print("[TEST] all_perfs:", all_perfs)
     n_tasks = len(all_perfs)
     current_accuracies = all_perfs[-1]
     accuracies_when_seen = [all_perfs[i][i] for i in range(n_tasks)]
@@ -896,7 +897,9 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
             raise RuntimeError('There was an issue with the results, revieved '
                                '{} results while the stream contains {} tasks.'
                                .format(len(best_traj), n_task))
+        print("[TEST] best_traj:", best_traj)
         for t_id, result in best_traj.iterrows():
+            print("[TEST] t_id:", t_id, "result:", result)
             for eval_t in range(t_id + 1):
                 arr = [result['Test_T{}'.format(eval_t)]
                        for eval_t in range(len(best_traj))]
