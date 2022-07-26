@@ -379,6 +379,7 @@ def train_on_tasks(config):
 
             # Next define the amount of parallelism, as per the original MNTDP program
             division_factor = 4.0
+            config['division_factor'] = division_factor
             ray_params['resources_per_trial'] = {'cpu': ray_params['resources_per_trial']['cpu'] / division_factor, 'gpu': ray_params['resources_per_trial']['gpu'] / division_factor}
             # raise ValueError(ray_params)
             # ValueError: {'loggers': [<class 'ray.tune.logger.JsonLogger'>, <class 'ray.tune.logger.CSVLogger'>],
@@ -426,11 +427,6 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
-            # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
-            # Occasionally, you may run into GPU memory issues when running a new trial.
-            # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
-            tune.utils.wait_for_gpu()
-
             print("[TEST] Finished task:", t_id)
 
             # print(type(analysis))
@@ -458,6 +454,12 @@ def train_on_tasks(config):
 
 
 def train_t(config):
+    # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
+    # Occasionally, you may run into GPU memory issues when running a new trial.
+    # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
+    division_factor = config.pop('static_params')
+    tune.utils.wait_for_gpu(gpu_memory_limit=1-(1/division_factor))
+
     # This function does not allow for printing to be seen in the output files
     seed = config.pop('seed')
     static_params = config.pop('static_params')
