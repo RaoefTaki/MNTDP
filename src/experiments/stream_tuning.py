@@ -444,15 +444,16 @@ def train_on_tasks(config):
         #                  g_task_vis, False)
         task_counter += 1
 
+    print("[TEST] End training")
+
     if task_level_tuning:
+        print("[TEST] all_analysis:", all_analysis, "len(all_analysis):", len(all_analysis),
+              "selected_tags:", selected_tags, "len(selected_tags):", len(selected_tags))
         return all_analysis, selected_tags
     else:
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
-
-    print("[TEST] End training")
-
 
 def train_t(config):
     # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
