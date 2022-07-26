@@ -457,7 +457,7 @@ def train_t(config):
     # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
     # Occasionally, you may run into GPU memory issues when running a new trial.
     # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
-    division_factor = config.pop('static_params')
+    division_factor = config.pop('division_factor')
     tune.utils.wait_for_gpu(gpu_memory_limit=1-(1/division_factor))
 
     # This function does not allow for printing to be seen in the output files
