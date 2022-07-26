@@ -108,6 +108,7 @@ class ExhaustiveSearch(nn.Module):
             p = Path('../../understood/')
             p.mkdir(parents=True, exist_ok=True)
 
+        # TODO: pull this forward if possible (if it helps speed at all), i.e. calculate the possible models earlier
         if not self.models:
             self.init_models(iteration=t_id)
 
