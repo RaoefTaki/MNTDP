@@ -256,7 +256,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                                                  task['descriptor'])
                 envs[-1].append(env)
         return_df = analysis.trial_dataframes[results[0].logdir]
-    raise ValueError("return_df:", return_df, "return_df.groupby('t').tail(1).reset_index():", return_df.groupby('t').tail(1).reset_index())
+    # Get only the last one per task t in case there are multiple:
     return_df = return_df.groupby('t').tail(1).reset_index()
     summary = {
         'model': [t.experiment_tag for t in results],

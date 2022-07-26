@@ -917,39 +917,39 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
             avg_duration = sum_durations / (t_id + 1)
             avg_acc_t = sum_acc_t / (t_id + 1)
             avg_lca = sum_lca / (t_id + 1)
-            # if plot:
-            #     update_plots(ll_name, t_id, main_vis, None, False,
-            #                  all_test_accuracies, avg_duration,
-            #                  avg_acc_t, result['avg_acc_test'], {},
-            #                  durations, result.get('entropy'), None,
-            #                  result['test_acc'], params, result['lca'],
-            #                  avg_lca)
-            #     # if isinstance(best_ll_model, ProgressiveSSN):
-            #     #     for i, trial_tag in enumerate(parto_mem['model']):
-            #     #         tag = trial_tag.split('_')[0]
-            #     #         env = '{}_Pareto_{}-{}_T{}'.format(self.exp_name, ll_name,
-            #     #                                     tag, t_id)
-            #     #         log_file = '{}/{}'.format(self.visdom_traces_folder,
-            #     #                                   env)
-            #     #         viz = visdom.Visdom(env=env, log_to_filename=log_file,
-            #     #                             **self.visdom_conf)
-            #     #         trial_path = parto_mem['paths'][i]
-            #     #         viz.text('<pre>{}</pre>'.format(trial_tag))
-            #     #         self.task_envs_str[ll_name].append(
-            #     #             get_env_url(viz))
-            #     #         files = ['trained', 'pruned', 'cleaned',
-            #     #                  'full', 'newget']
-            #     #         for f in files:
-            #     #             file = path.join(trial_path, 'model_T{}_{}.svg'
-            #     #                              .format(t_id, f))
-            #     #             if path.isfile(file):
-            #     #                 plot_svg(str(open(file).readlines()), f, viz)
-            #     task_envs = exp_summary['envs']
-            #     for trial_envs in task_envs:
-            #         params = {**visdom_conf, 'env': trial_envs[t_id]}
-            #         task_envs_str[ll_name].append(get_env_url(params))
-            #
-            #     best_task_envs_str[ll_name].append(result['env_url'])
+            if plot:
+                update_plots(ll_name, t_id, main_vis, None, False,
+                             all_test_accuracies, avg_duration,
+                             avg_acc_t, result['avg_acc_test'], {},
+                             durations, result.get('entropy'), None,
+                             result['test_acc'], params, result['lca'],
+                             avg_lca)
+                # if isinstance(best_ll_model, ProgressiveSSN):
+                #     for i, trial_tag in enumerate(parto_mem['model']):
+                #         tag = trial_tag.split('_')[0]
+                #         env = '{}_Pareto_{}-{}_T{}'.format(self.exp_name, ll_name,
+                #                                     tag, t_id)
+                #         log_file = '{}/{}'.format(self.visdom_traces_folder,
+                #                                   env)
+                #         viz = visdom.Visdom(env=env, log_to_filename=log_file,
+                #                             **self.visdom_conf)
+                #         trial_path = parto_mem['paths'][i]
+                #         viz.text('<pre>{}</pre>'.format(trial_tag))
+                #         self.task_envs_str[ll_name].append(
+                #             get_env_url(viz))
+                #         files = ['trained', 'pruned', 'cleaned',
+                #                  'full', 'newget']
+                #         for f in files:
+                #             file = path.join(trial_path, 'model_T{}_{}.svg'
+                #                              .format(t_id, f))
+                #             if path.isfile(file):
+                #                 plot_svg(str(open(file).readlines()), f, viz)
+                task_envs = exp_summary['envs']
+                for trial_envs in task_envs:
+                    params = {**visdom_conf, 'env': trial_envs[t_id]}
+                    task_envs_str[ll_name].append(get_env_url(params))
+
+                best_task_envs_str[ll_name].append(result['env_url'])
             ### Update task plots
 
         global_summary['model'].append(ll_name)
