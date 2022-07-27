@@ -390,6 +390,8 @@ def train_on_tasks(config):
             # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
             # 'max_failures': 3}
 
+            # TODO: what happens if this is ran sequentially?
+            ray_params['resources_per_trial'] = {'cpu': 2, 'gpu': 1}
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
 
@@ -566,6 +568,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     assert t_id == task['id']
 
+    # TODO: this below should not be ran concurrently. It should be ran once beforehand
     start1 = time.time()
     model = learner.get_model(task['id'], x_dim=task['x_dim'],
                               n_classes=task['n_classes'],
