@@ -581,7 +581,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # optim_func=functools.partial(<class 'torch.optim.adam.Adam'>,
     # weight_decay=0, lr=0.001, betas=[0.9, 0.999]),
     # optim_params=[{'architecture': 5, 'lr': 0.01, 'weight_decay': 0}], split_optims=True))
-    raise ValueError("model:", model)
+    # TODO: check to see if the model actually grows over time
+    raise ValueError("model.models:", model.models, "model.models_idx:", model.models_idx, "model.get_graph():", model.get_graph())
 
     loss_fn = task['loss_fn']
     training_params['loss_fn'] = loss_fn
