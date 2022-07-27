@@ -428,8 +428,7 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
-            # Fully wait here
-            tune.utils.wait_for_gpu(target_util=1)
+            raise ValueError("learner:", learner, "best_learner_path:", best_learner_path, "learner_path:", learner_path)
 
             print("[TEST] Finished task:", t_id)
 
