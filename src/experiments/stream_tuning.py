@@ -429,26 +429,28 @@ def train_on_tasks(config):
             torch.save(learner, learner_path)
 
             # Get some data
-            batch_sizes = config['training-params']['batch_sizes']
-            normalize = config['training-params']['normalize']
-            t_trans = [[] for _ in range(len(task['split_names']))]
-            transformations = []
-            t_trans[0] = transformations.copy()
+            if task['id'] > 0:
+                batch_sizes = config['training-params']['batch_sizes']
+                normalize = config['training-params']['normalize']
+                t_trans = [[] for _ in range(len(task['split_names']))]
+                transformations = []
+                t_trans[0] = transformations.copy()
 
-            datasets_p = dict(task=task,
-                              transforms=t_trans,
-                              normalize=normalize)
-            datasets = _load_datasets(**datasets_p)
-            train_loader, eval_loaders = get_classic_dataloaders(datasets,
-                                                                 batch_sizes)
-            learner_model = learner.get_model(task['id'], x_dim=task['x_dim'],
-                                              n_classes=task['n_classes'],
-                                              descriptor=task['descriptor'],
-                                              dataset=eval_loaders[:2])
-            # Display current model
-            raise ValueError("learner:", learner, "learner_model:", learner_model, "learner_model.models:", learner_model.models,
-                             "learner_model.models_idx:", learner_model.models_idx, "learner_model.get_graph():", learner_model.get_graph(),
-                             "best_learner_path:", best_learner_path, "learner_path:", learner_path)
+                datasets_p = dict(task=task,
+                                  transforms=t_trans,
+                                  normalize=normalize)
+                datasets = _load_datasets(**datasets_p)
+                train_loader, eval_loaders = get_classic_dataloaders(datasets,
+                                                                     batch_sizes)
+                learner_model = learner.get_model(task['id'], x_dim=task['x_dim'],
+                                                  n_classes=task['n_classes'],
+                                                  descriptor=task['descriptor'],
+                                                  dataset=eval_loaders[:2])
+                archs = learner_model.init_models()
+                # Display current model
+                raise ValueError("learner:", learner, "learner_model:", learner_model, "learner_model.models:", learner_model.models,
+                                 "learner_model.models_idx:", learner_model.models_idx, "learner_model.get_graph():", learner_model.get_graph(),
+                                 "learner_model.archs:", archs, "best_learner_path:", best_learner_path, "learner_path:", learner_path)
 
             print("[TEST] Finished task:", t_id)
 
