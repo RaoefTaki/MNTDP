@@ -390,8 +390,6 @@ def train_on_tasks(config):
             # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
             # 'max_failures': 3}
 
-            # TODO: what happens if this is ran sequentially?
-            ray_params['resources_per_trial'] = {'cpu': 2, 'gpu': 1}
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
 
@@ -796,6 +794,9 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 total_t=round(total_time * 1000) / 1000,
                 env_url=get_env_url(vis_p),
                 info_training=info_training,
+                used_architecture_id=info_training['params']['architecture'],
+                used_lr=info_training['params']['lr'],
+                used_weight_decay=info_training['params']['weight_decay'],
                 **accs, **stats)
     return rescaled, t, metrics, b_state_dict, stats
 
