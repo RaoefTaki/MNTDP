@@ -110,7 +110,7 @@ class ExhaustiveSearch(nn.Module):
 
         # TODO: pull this forward if possible (if it helps speed at all), i.e. calculate the possible models earlier
         if not self.models:
-            self.init_models(iteration=t_id)
+            archs = self.init_models(iteration=t_id)
 
         # raise ValueError(optim_fact)
         # ValueError: functools.partial(<function set_optim_params at 0x7f80c9f9fd30>,
@@ -140,6 +140,11 @@ class ExhaustiveSearch(nn.Module):
         # 'optim_params': [{'architecture': 0, 'lr': 0.01, 'weight_decay': 0}], 'split_optims': True})
 
         # raise ValueError(len(calls), len(self.models_idx), optim_fact.keywords['optim_params'][0]['architecture'])
+
+        if t_id > 0:
+            raise ValueError('archs:', archs,
+                             "optim_fact.keywords['optim_params'][0]['architecture']:", optim_fact.keywords['optim_params'][0]['architecture'],
+                             'self.models_idx:', self.models_idx)
 
         # Change the model ID to use depending on the ID of the task
         # At the first task, there is only 1 model so this needs to be 0 ofc
