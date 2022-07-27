@@ -428,6 +428,9 @@ def train_on_tasks(config):
             # todo UPDATE LEARNER AND SAVE
             torch.save(learner, learner_path)
 
+            # Fully wait here
+            tune.utils.wait_for_gpu(target_util=1)
+
             print("[TEST] Finished task:", t_id)
 
             # print(type(analysis))
@@ -583,7 +586,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # optim_params=[{'architecture': 5, 'lr': 0.01, 'weight_decay': 0}], split_optims=True))
     # TODO: check to see if the model actually grows over time
     if t_id > 0:
-        raise ValueError("model.models:", model.models, "model.models_idx:", model.models_idx, "model.get_graph():", model.get_graph())
+        raise ValueError("learner:", learner, "model.models:", model.models, "model.models_idx:", model.models_idx, "model.get_graph():", model.get_graph())
 
     loss_fn = task['loss_fn']
     training_params['loss_fn'] = loss_fn
