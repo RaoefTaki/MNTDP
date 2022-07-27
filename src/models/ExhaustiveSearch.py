@@ -141,10 +141,25 @@ class ExhaustiveSearch(nn.Module):
 
         # raise ValueError(len(calls), len(self.models_idx), optim_fact.keywords['optim_params'][0]['architecture'])
 
-        if t_id > 0:
-            raise ValueError('archs:', archs,
-                             "optim_fact.keywords['optim_params'][0]['architecture']:", optim_fact.keywords['optim_params'][0]['architecture'],
-                             'self.models_idx:', self.models_idx)
+        # if t_id > 0:
+        #     raise ValueError('archs:', archs,
+        #                      "optim_fact.keywords['optim_params'][0]['architecture']:", optim_fact.keywords['optim_params'][0]['architecture'],
+        #                      'self.models_idx:', self.models_idx)
+        # ValueError: ('archs:', [[(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')],
+        # [(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (1, 6, 0, 'f'), (1, 6), (1, 'OUT', 1), (1, 'OUT')],
+        # [(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (1, 5, 0, 'f'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')],
+        # [(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (1, 4, 0, 'f'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')],
+        # [(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (1, 3, 0, 'f'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')],
+        # [(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (1, 2, 0, 'f'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')],
+        # [(1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')]],
+        # "optim_fact.keywords['optim_params'][0]['architecture']:", 1,
+        # 'self.models_idx:', {((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')): 0,
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (1, 6, 0, 'f'), (1, 6), (1, 'OUT', 1), (1, 'OUT')): 1,
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (1, 5, 0, 'f'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')): 2,
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (1, 4, 0, 'f'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')): 3,
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (1, 3, 0, 'f'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')): 4,
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (1, 2, 0, 'f'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')): 5,
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')): 6})
 
         # Change the model ID to use depending on the ID of the task
         # At the first task, there is only 1 model so this needs to be 0 ofc
@@ -193,6 +208,11 @@ class ExhaustiveSearch(nn.Module):
 
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
+
+        if t_id > 0:
+            raise ValueError("total_t:", total_t, "best_metrics:", best_metrics, "best_chkpt:", best_chkpt,
+                             "best_path:", best_path, "self.res:", self.res, "all_res:", all_res)
+
         return total_t, best_metrics, best_chkpt,\
                {'params': optim_fact.keywords['optim_params'][0], 'models': self.models, 'len(models)': len(self.models),
                 'models_idx': self.models_idx.items(), 'len(models_idx)': len(self.models_idx.items())}
