@@ -831,7 +831,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 eval_t=round(avg_eval_time * 1000) / 1000,
                 total_t=round(total_time * 1000) / 1000,
                 env_url=get_env_url(vis_p),
-                info_training=info_training,
+                # info_training=info_training,
                 path=info_training['path'],
                 used_architecture_id=info_training['params']['architecture'],
                 **accs, **stats)
