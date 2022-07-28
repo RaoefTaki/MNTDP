@@ -202,14 +202,14 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
     envs = []
     all_val_accs = defaultdict(list)
     all_test_accs = defaultdict(list)
-    total_iterations = 0
+    total_iterations_so_far_per_task = []  # The number of iterations in total conducted, so far, for each encountered task
     if task_level_tuning:
         best_trials_df = []
         config['ray_params'] = ray_params
         config['local_mode'] = local_mode
         config['redis_address'] = redis_address
         # Call the training etc. function
-        analysis, selected, total_iterations = train_on_tasks(config)
+        analysis, selected, total_iterations_so_far_per_task = train_on_tasks(config)
         for t_id, (task, task_an) in enumerate(zip(stream, analysis)):
             # envs.append([])
             for trial_n, t in enumerate(task_an.trials):
@@ -260,6 +260,8 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         return_df = analysis.trial_dataframes[results[0].logdir]
     # Get only the last one per task t in case there are multiple:
     return_df = return_df.groupby('t').tail(1).reset_index()
+    return_df['duration_iterations'] = total_iterations_so_far_per_task
+
     summary = {
         'model': [t.experiment_tag for t in results],
         'Avg acc Val': [t.last_result['avg_acc_val'] for t in results],
@@ -267,7 +269,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         'Avg acc Test': [t.last_result['avg_acc_test'] for t in results],
         'Acc Test': [all_test_accs[t.experiment_tag] for t in results],
         'Params': [t.last_result['total_params'] for t in results],
-        'Steps': [total_iterations for t in results], #[t.last_result['total_steps'] for t in results], # TODO: make sure this is correct in the Visdom 'updates' too
+        'Steps': [total_iterations_so_far_per_task[len(total_iterations_so_far_per_task)-1] for t in results], #[t.last_result['total_steps'] for t in results], # TODO: make sure this is correct in the Visdom 'updates' too
         'paths': [t.logdir for t in results],
         'evaluated_params': [t.evaluated_params for t in results],
         'envs': envs
@@ -324,7 +326,7 @@ def train_on_tasks(config):
     transfer_matrix = defaultdict(list)
     total_steps = 0
 
-    total_iterations = 0
+    total_iterations_so_far_per_task = []
 
     if 'learner' in config:
         learner = config.pop('learner')
@@ -414,17 +416,10 @@ def train_on_tasks(config):
                     trial_path = trial.logdir
                     shutil.rmtree(trial_path)
                 total_iterations_for_this_task += trial.last_result['duration_iterations']
-            total_iterations += total_iterations_for_this_task
+            nr_of_iterations_to_add = total_iterations_so_far_per_task[t_id - 1] + total_iterations_for_this_task if t_id >= 1 else total_iterations_for_this_task
+            total_iterations_so_far_per_task.append(nr_of_iterations_to_add)
             # am = np.argmax(list(map(get_key, analysis.trials)))
             # print("BEST IS {}: {}".format(am, best_trial.last_result['avg_acc_val']))
-
-            # print("[TEST] Length of trials:", len(analysis.trials))
-            # for trial in analysis.trials:
-            #     print(trial)
-            #     for info in trial.last_result['info_training']:
-            #         print(info)
-            #         print("---")
-            #     print("-----")
 
             # t = best_trial.last_result['duration_iterations']
             # Changed the total nr of iterations to accomodate for this new approach, so total_steps is essentially not used anymore
@@ -471,7 +466,7 @@ def train_on_tasks(config):
             #     # Note that
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
-            print("[TEST] Iterations in total so far:", total_iterations)
+            print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
             print("[TEST] Finished task:", t_id)
 
             # print(type(analysis))
@@ -493,7 +488,7 @@ def train_on_tasks(config):
     if task_level_tuning:
         print("[TEST] all_analysis:", all_analysis, "len(all_analysis):", len(all_analysis),
               "selected_tags:", selected_tags, "len(selected_tags):", len(selected_tags))
-        return all_analysis, selected_tags, total_iterations
+        return all_analysis, selected_tags, total_iterations_so_far_per_task
     else:
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
