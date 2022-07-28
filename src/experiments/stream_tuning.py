@@ -300,8 +300,8 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
     # [6 rows x 10 columns], 'summary.columns:', Index(['model', 'Avg acc Val', 'Acc Val', 'Avg acc Test', 'Acc Test', 'Params',
     #                                                   'Steps', 'paths', 'evaluated_params', 'envs'],
     #                                                  dtype='object'), 'len(summary.index):', 6)
-    print("Summary results:")
-    print(summary)
+    # print("Summary results:")
+    # print(summary)
 
     return return_df, summary
 
@@ -406,10 +406,10 @@ def train_on_tasks(config):
                 # return trial.last_result['avg_acc_val_so_far']
                 return trial.last_result['best_val']
 
-            print("Len(analysis):", len(analysis.trials), "analysis:", analysis, "analysis.trials:", list(map(get_key, analysis.trials)))
+            print("Len(analysis):", len(analysis.trials), "analysis.trials:", list(map(get_key, analysis.trials)))
 
             best_trial = max(analysis.trials, key=get_key)
-            # Changed the total nr of iterations to accomodate for this new approach
+            # Changed the total nr of iterations to accommodate for this new approach
             total_iterations_for_this_task = 0
             for trial in analysis.trials:
                 if trial != best_trial:
@@ -486,8 +486,7 @@ def train_on_tasks(config):
     print("[TEST] End training")
 
     if task_level_tuning:
-        print("[TEST] all_analysis:", all_analysis, "len(all_analysis):", len(all_analysis),
-              "selected_tags:", selected_tags, "len(selected_tags):", len(selected_tags))
+        print("[TEST] len(all_analysis):", len(all_analysis), "selected_tags:", selected_tags)
         return all_analysis, selected_tags, total_iterations_so_far_per_task
     else:
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
