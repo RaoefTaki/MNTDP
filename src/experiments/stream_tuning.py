@@ -800,6 +800,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # TODO: add parameters to be reported here?
     # tune_report is already called inside ExhaustiveSearch. When reporting multiple times to tune_report for 1 trial,
     # clean it up so that only the last one remains before plotting.py is ran
+    raise ValueError("info_training['path']:", info_training['path'])
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
                 avg_acc_val=avg_val,
