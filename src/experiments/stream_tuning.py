@@ -830,9 +830,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 total_t=round(total_time * 1000) / 1000,
                 env_url=get_env_url(vis_p),
                 info_training=info_training,
+                path=info_training['path'],
                 used_architecture_id=info_training['params']['architecture'],
-                used_lr=info_training['params']['lr'],
-                used_weight_decay=info_training['params']['weight_decay'],
                 **accs, **stats)
     return rescaled, t, metrics, b_state_dict, stats
 
