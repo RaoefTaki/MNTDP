@@ -415,7 +415,15 @@ def train_on_tasks(config):
                                       descriptor=task['descriptor'],
                                       dataset=eval_loaders[:2])
             model_creation_time = time.time() - start1
-            config['model'] = deepcopy(model)
+            nr_of_hpo_configs = len(config['optim'][0]['architecture']['grid_search']) * len(config['optim'][0]['lr']['grid_search']) * len(config['optim'][0]['weight_decay']['grid_search'])
+            models_list = []  # TODO: idk if this will work for s_long...
+            time_start = time.time()
+            for i in range(nr_of_hpo_configs):
+                models_list.append(deepcopy(model))
+                pass
+            raise ValueError(models_list[0].__repr__(), models_list[1].__repr__(), models_list[2].__repr__(), model_creation_time, time.time() - time_start)
+            exit(0)
+            config['model'] = models_list
             config['model_creation_time'] = model_creation_time
 
             analysis = tune.run(train_t, config=config, **ray_params)
