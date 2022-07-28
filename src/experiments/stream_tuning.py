@@ -635,7 +635,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # model_creation_time = time.time() - start1
     model = config.pop('model')
     model_creation_time = config.pop('model_creation_time')
-    
+
     # raise ValueError("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
     # 0 in memory if it crashes in learner.getmodel(...)
     # Crashes with information:

@@ -213,6 +213,8 @@ class ExhaustiveSearch(nn.Module):
         self.models[self.models_idx[best_path]].load_state_dict(best_chkpt['state_dict'])
         best_chkpt['cum_best_iter'] = cum_best_iter
 
+        raise ValueError("[TEST] It gets here!")
+
         # if t_id > 0:
         #     raise ValueError("optim_fact.keywords['optim_params'][0]['architecture']:", optim_fact.keywords['optim_params'][0]['architecture'],
         #                      "total_t:", total_t, "best_metrics:", best_metrics, "best_chkpt:", best_chkpt,
