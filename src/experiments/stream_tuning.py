@@ -202,12 +202,14 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
     envs = []
     all_val_accs = defaultdict(list)
     all_test_accs = defaultdict(list)
+    total_iterations = 0
     if task_level_tuning:
         best_trials_df = []
         config['ray_params'] = ray_params
         config['local_mode'] = local_mode
         config['redis_address'] = redis_address
-        analysis, selected = train_on_tasks(config)
+        # Call the training etc. function
+        analysis, selected, total_iterations = train_on_tasks(config)
         for t_id, (task, task_an) in enumerate(zip(stream, analysis)):
             # envs.append([])
             for trial_n, t in enumerate(task_an.trials):
@@ -265,7 +267,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         'Avg acc Test': [t.last_result['avg_acc_test'] for t in results],
         'Acc Test': [all_test_accs[t.experiment_tag] for t in results],
         'Params': [t.last_result['total_params'] for t in results],
-        'Steps': [t.last_result['total_steps'] for t in results],
+        'Steps': [total_iterations for t in results], #[t.last_result['total_steps'] for t in results], # TODO: make sure this is correct in the Visdom 'updates' too
         'paths': [t.logdir for t in results],
         'evaluated_params': [t.evaluated_params for t in results],
         'envs': envs
@@ -321,6 +323,8 @@ def train_on_tasks(config):
     # all_stats = []
     transfer_matrix = defaultdict(list)
     total_steps = 0
+
+    total_iterations = 0
 
     if 'learner' in config:
         learner = config.pop('learner')
@@ -403,10 +407,14 @@ def train_on_tasks(config):
             print("Len(analysis):", len(analysis.trials), "analysis:", analysis, "analysis.trials:", list(map(get_key, analysis.trials)))
 
             best_trial = max(analysis.trials, key=get_key)
+            # Changed the total nr of iterations to accomodate for this new approach
+            total_iterations_for_this_task = 0
             for trial in analysis.trials:
                 if trial != best_trial:
                     trial_path = trial.logdir
                     shutil.rmtree(trial_path)
+                total_iterations_for_this_task += trial.last_result['duration_iterations']
+            total_iterations += total_iterations_for_this_task
             # am = np.argmax(list(map(get_key, analysis.trials)))
             # print("BEST IS {}: {}".format(am, best_trial.last_result['avg_acc_val']))
 
@@ -419,6 +427,7 @@ def train_on_tasks(config):
             #     print("-----")
 
             # t = best_trial.last_result['duration_iterations']
+            # Changed the total nr of iterations to accomodate for this new approach, so total_steps is essentially not used anymore
             total_steps = best_trial.last_result['total_steps']
             selected_tags.append(best_trial.experiment_tag)
             best_learner_path = os.path.join(best_trial.logdir, 'learner.pth')
@@ -461,6 +470,8 @@ def train_on_tasks(config):
             #     # if t_id > 0: ...'learner_model.models_idx:', {((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')): 0}, 'learner_model.get_graph():', <networkx.classes.digraph.DiGraph object at 0x7f0a380ec250>, 'learner_model.archs:', [[(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')]], 'best_learner_path:', '/home/TUE/s167139/data/veniat/lileb/ray_results/1/PSSN-search-6-fw/PSSN-search-6-fw_32_0_architecture=4,0_lr=0.01,0_weight_decay=1e-05_2022-07-27_18-28-10/learner.pth', 'learner_path:', '/home/TUE/s167139/data/veniat/lileb/ray_results/1/model_initializations/PSSN-search-6-fw')
             #     # Note that
 
+            print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
+            print("[TEST] Iterations in total so far:", total_iterations)
             print("[TEST] Finished task:", t_id)
 
             # print(type(analysis))
@@ -482,7 +493,7 @@ def train_on_tasks(config):
     if task_level_tuning:
         print("[TEST] all_analysis:", all_analysis, "len(all_analysis):", len(all_analysis),
               "selected_tags:", selected_tags, "len(selected_tags):", len(selected_tags))
-        return all_analysis, selected_tags
+        return all_analysis, selected_tags, total_iterations
     else:
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
