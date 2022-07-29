@@ -418,12 +418,15 @@ def train_on_tasks(config):
             train_loader, eval_loaders = get_classic_dataloaders(datasets,
                                                                  batch_sizes)
             model_creation_time_start = time.time()
-            model_temp = learner.get_model(task['id'], x_dim=task['x_dim'],
-                                           n_classes=task['n_classes'],
-                                           descriptor=task['descriptor'],
-                                           dataset=eval_loaders[:2])
+            model = learner.get_model(task['id'], x_dim=task['x_dim'],
+                                      n_classes=task['n_classes'],
+                                      descriptor=task['descriptor'],
+                                      dataset=eval_loaders[:2])
             print("[TEST] model_creation_time for t_id:", t_id, "is:", time.time() - model_creation_time_start)
-            config['model_temp'] = model_temp
+            model_creation_time_2_start = time.time()
+            model_2 = learner.get_model(task['id'])
+            print("[TEST] model_creation_2_time for t_id:", t_id, "is:", time.time() - model_creation_time_2_start)
+            exit(0)
 
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
@@ -551,10 +554,15 @@ def train_t(config):
     if 'learner' in config:
         learner = config.pop('learner')
     else:
+        # It accesses this
         learner_path = config.pop('learner_path')
-        learner = torch.load(learner_path)
+        # learner = torch.load(learner_path)  # TODO: commented this out to try to speed up by only creating the model once
 
-    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner,
+    learner_and_model = config.pop('learner_and_model')
+    learner = learner_and_model[0]
+    model = learner_and_model[0] # TODO: deep copy or not?
+
+    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner, model=model,
                                                                   **static_params)
 
     learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
@@ -562,7 +570,7 @@ def train_t(config):
     torch.save(learner, learner_save_path)
 
 
-def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix,
+def train_single_task(t_id, task, tasks, vis_p, learner, model, config, transfer_matrix,
                       total_steps):
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
@@ -639,7 +647,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     #                           n_classes=task['n_classes'],
     #                           descriptor=task['descriptor'],
     #                           dataset=eval_loaders[:2])
-    model = deepcopy(config.pop('model_temp'))
+    # model = deepcopy(config.pop('model_temp'))
     model_creation_time = time.time() - start1
     # raise ValueError("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
     # 0 in memory if it crashes in learner.getmodel(...)
@@ -772,7 +780,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     postproc_time = time.time() - start3
     start4 = time.time()
     save_path = tune.get_trial_dir()
-    raise ValueError("[TEST] Info just before crash:", t, metrics, b_state_dict, info_training['path'])
     finish_res = learner.finish_task(datasets[0], t_id,
                                      task_vis, save_path)
     finish_time = time.time() - start4
