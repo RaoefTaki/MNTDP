@@ -624,6 +624,11 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     assert t_id == task['id']
 
+    optim_fact = partial(set_optim_params,
+                         optim_func=optim_func,
+                         optim_params=optim_params,
+                         split_optims=split_optims)
+
     # TODO: this below should maybe not be ran concurrently, preferably it should be ran once beforehand to save time
     start1 = time.time()
     model = learner.get_model(task['id'], x_dim=task['x_dim'],
@@ -631,6 +636,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                               descriptor=task['descriptor'],
                               dataset=eval_loaders[:2])
     model_creation_time = time.time() - start1
+    raise ValueError(optim_fact, optim_fact.keywords['optim_params'][0])
+
     # raise ValueError("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
     # 0 in memory if it crashes in learner.getmodel(...)
     # Crashes with information:
@@ -658,10 +665,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     #     training_params[]
 
     # optim = set_optim_params(optim_func, optim_params, model, split_optims)
-    optim_fact = partial(set_optim_params,
-                         optim_func=optim_func,
-                         optim_params=optim_params,
-                         split_optims=split_optims)
     # if schedule_mode == 'steps':
     #     lr_scheduler = torch.optim.lr_scheduler.\
     #         MultiStepLR(optim[0], milestones=[25, 40])
