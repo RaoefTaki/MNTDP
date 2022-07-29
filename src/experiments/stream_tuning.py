@@ -396,35 +396,6 @@ def train_on_tasks(config):
             # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
             # 'max_failures': 3}
 
-            # Trying out creating the model here, to see the creation times. Perhaps this can be sped up a lot
-            batch_sizes = config['training-params']['batch_sizes']
-            normalize = config['training-params']['normalize']
-            augment_data = config['training-params']['augment_data']
-            transformations = []
-            if augment_data:
-                transformations.extend([
-                    transforms.ToPILImage(),
-                    transforms.RandomHorizontalFlip(),
-                    transforms.RandomCrop(32, 4),
-                    transforms.ToTensor()
-                ])
-            t_trans = [[] for _ in range(len(task['split_names']))]
-            t_trans[0] = transformations.copy()
-
-            datasets_p = dict(task=task,
-                              transforms=t_trans,
-                              normalize=normalize)
-            datasets = _load_datasets(**datasets_p)
-            train_loader, eval_loaders = get_classic_dataloaders(datasets,
-                                                                 batch_sizes)
-            model_creation_time_start = time.time()
-            model = learner.get_model(task['id'], x_dim=task['x_dim'],
-                                      n_classes=task['n_classes'],
-                                      descriptor=task['descriptor'],
-                                      dataset=eval_loaders[:2])
-            print("[TEST] model_creation_time for t_id:", t_id, "is:", time.time() - model_creation_time_start)
-            config['learner_temp'] = learner
-
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)
 
@@ -551,20 +522,19 @@ def train_t(config):
     if 'learner' in config:
         learner = config.pop('learner')
     else:
-        # It accesses this
         learner_path = config.pop('learner_path')
-        # learner = torch.load(learner_path)  # TODO: commented this out to try to speed up by only creating the model once
+        learner = torch.load(learner_path)
 
-    learner = deepcopy(config.pop('learner_temp'))
-
-    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner, **static_params)
+    rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner,
+                                                                  **static_params)
 
     learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
     # raise ValueError(learner_save_path)
     torch.save(learner, learner_save_path)
 
 
-def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix, total_steps):
+def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix,
+                      total_steps):
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
     assert 'model-params' not in config, "Can't have model-specific " \
@@ -636,7 +606,10 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     # TODO: this below should maybe not be ran concurrently, preferably it should be ran once beforehand to save time
     start1 = time.time()
-    model = learner.get_model(task['id'])
+    model = learner.get_model(task['id'], x_dim=task['x_dim'],
+                              n_classes=task['n_classes'],
+                              descriptor=task['descriptor'],
+                              dataset=eval_loaders[:2])
     model_creation_time = time.time() - start1
     # raise ValueError("[TEST] Memory currently in the GPU cache:", torch.cuda.memory_allocated())
     # 0 in memory if it crashes in learner.getmodel(...)

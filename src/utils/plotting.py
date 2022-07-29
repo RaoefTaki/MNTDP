@@ -380,7 +380,7 @@ def plot_corr_coeffs(all_aucs, potentials, model_names, viz):
         for trace_name, trace_values in trace.items():
             corr = np.corrcoef(trace_values, rowvar=False)
             corr_coeffs[k][trace_name] = corr if isinstance(corr, Number) \
-                                              else corr[0, 1]
+                else corr[0, 1]
 
     names = list(list(corr_coeffs.values())[0].keys())
     ks = ['@{}'.format(k) for k in corr_coeffs.keys()]
@@ -591,7 +591,7 @@ def update_ents(model, value, task_id, viz):
 
 def write_text(txt, viz, name=None):
     viz.text('<pre>{}</pre>'.format(txt), win='txt{}'.format(name),
-                       opts={'width': REF_WIDTH, 'height': REF_HEIGHT})
+             opts={'width': REF_WIDTH, 'height': REF_HEIGHT})
 
 
 def update_plots(learner_name, task_id, main_vis, task_viz, first, all_perfs,
@@ -610,9 +610,9 @@ def update_plots(learner_name, task_id, main_vis, task_viz, first, all_perfs,
                       title='Confusion matrix', width=600, height=600,
                       xlabel='Predicted category',
                       ylabel='Real category',
-                    # rownames=categories,
-                    # columnnames=categories
-                    )
+                      # rownames=categories,
+                      # columnnames=categories
+                      )
     if all_perfs is not None:
         update_acc_plots(all_perfs, learner_name, main_vis)
         plot_heatmaps([learner_name], [all_perfs], main_vis)
@@ -652,13 +652,13 @@ def update_plots(learner_name, task_id, main_vis, task_viz, first, all_perfs,
         if 'model_creation' in durations:
             new_creation_time = durations['model_creation']
             plot_creation_times(new_creation_time, n_tasks_seen, learner_name,
-                             main_vis, first)
+                                main_vis, first)
 
     if params:
         plot_total_params(params['total'], n_tasks_seen, learner_name,
                           main_vis, first)
         plot_new_params(params['new'], n_tasks_seen, learner_name, main_vis,
-                          first)
+                        first)
     if lca:
         plot_lca(lca, n_tasks_seen, learner_name, main_vis, first)
         update_avg_lca(avg_lca, n_tasks_seen, learner_name, main_vis, first)
@@ -687,7 +687,7 @@ def plot_grid_result(df, color, title, viz):
     fig = parallel_coordinates(df, color=color, title=title,
                                width=2*REF_WIDTH, height=2*REF_HEIGHT)
     viz.plotlyplot(fig, opts={'width': 2*REF_WIDTH,
-                                    'height': 2*REF_HEIGHT})
+                              'height': 2*REF_HEIGHT})
 
 
 def plot_svg(svg, name, viz):
@@ -988,4 +988,3 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
 
             first_plot = False
     return global_summary
-
