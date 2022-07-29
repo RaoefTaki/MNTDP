@@ -900,6 +900,7 @@ def process_final_results(main_vis, res_dict, exp_name, visdom_conf,
         print("[TEST] best_traj:", best_traj)
         for t_id, result in best_traj.iterrows():
             print("[TEST] t_id:", t_id, "result:", result)
+            print("[TEST] t_id:", t_id, "path:", result['path'])
             arr = [result['Test_T{}'.format(eval_t)]
                    for eval_t in range(len(best_traj))]
             all_test_accuracies.append(arr)

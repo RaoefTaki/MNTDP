@@ -167,7 +167,7 @@ class ExhaustiveSearch(nn.Module):
         # At the first task, there is only 1 model so this needs to be 0 ofc
         model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
 
-        # Accomodate that this is only run once: let all_res still be TODO length
+        # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
 
         all_res = [calls[model_id_to_use]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
