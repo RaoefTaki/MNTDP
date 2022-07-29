@@ -772,6 +772,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     postproc_time = time.time() - start3
     start4 = time.time()
     save_path = tune.get_trial_dir()
+    raise ValueError("[TEST] Info just before crash:", t, metrics, b_state_dict, info_training['path'])
     finish_res = learner.finish_task(datasets[0], t_id,
                                      task_vis, save_path)
     finish_time = time.time() - start4
