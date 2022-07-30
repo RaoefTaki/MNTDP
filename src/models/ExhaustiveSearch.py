@@ -171,6 +171,7 @@ class ExhaustiveSearch(nn.Module):
         total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
         model_trained = None
         iterations_print_list = []
+        run_counter = 0
         for i in range(total_early_stopping_checks):
             # Create the calls inside here, so we can modify them each time if needed
             call = None
@@ -195,8 +196,10 @@ class ExhaustiveSearch(nn.Module):
             model_trained = all_res[0][1]  # Re-use the model_trained now
             iterations_print_list.append(all_res[0][0][0])
             all_res = [all_res[0][0]]
+            run_counter += 1
 
-        raise ValueError("It gets here, print iterations_print_list:", iterations_print_list)
+        raise ValueError("It gets here, print iterations_print_list:", iterations_print_list, "run_counter:", run_counter,
+                         "original_max_epochs:", original_max_epochs, "total_early_stopping_checks:", total_early_stopping_checks)
 
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
