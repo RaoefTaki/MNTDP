@@ -35,7 +35,7 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
-        self.MAX_EPOCHS_BEFORE_CHECK = 1
+        self.MAX_EPOCHS_BEFORE_CHECK = 3
 
         self.max_new_blocks = max_new_blocks
 
