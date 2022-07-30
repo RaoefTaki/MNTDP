@@ -175,7 +175,6 @@ class ExhaustiveSearch(nn.Module):
             paths = []
             for path, idx in self.models_idx.items():
                 model = self.models[idx]
-                raise ValueError("self.models[idx]", self.models[idx], "kwargs", kwargs)
                 calls.append(partial(wrap, model=model, idx=idx,
                                      optim_fact=optim_fact, datasets_p=datasets_p,
                                      b_sizes=b_sizes, env_url=env_url, t_id=t_id, *args, **kwargs))
@@ -184,9 +183,11 @@ class ExhaustiveSearch(nn.Module):
             # Decide, based on some criteria, whether to continue with learning or not
             pass  # TODO; some criteria to decide
 
-            # Assign the outcome during the last iteration
-            if i == total_early_stopping_checks - 1:
-                all_res = [calls[model_id_to_use]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+            # Execute and override the outcomes
+            all_res = [calls[model_id_to_use]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+            raise ValueError(all_res)
+            all_res = all_res[0][0]
+            model_trained = all_res[0][1] # Re-use the model_trained now
 
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
@@ -271,14 +272,15 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     #     raise ValueError("INTERCEPT. t_id:", t_id)
 
     model = kwargs['model']
+    raise ValueError("model", model)
     optim = optim_fact(model=model)
     datasets = _load_datasets(**datasets_p)
     train_loader, eval_loaders = get_classic_dataloaders(datasets, b_sizes, 0)
     if hasattr(model, 'train_loader_wrapper'):
         train_loader = model.train_loader_wrapper(train_loader)
 
-    res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                optimizer=optim, env_url=env_url, t_id=t_id, **kwargs)
+    res, model_trained = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
+                               optimizer=optim, env_url=env_url, t_id=t_id, **kwargs)
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
-    return res
+    return res, model_trained

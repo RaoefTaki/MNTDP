@@ -354,4 +354,4 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     if hasattr(model, 'iter_per_epoch'):
         model.iter_per_epoch = len(train_loader)
     trainer.run(train_loader, max_epochs=max_epoch)
-    return trainer.state.iteration, all_metrics, best
+    return (trainer.state.iteration, all_metrics, best), model
