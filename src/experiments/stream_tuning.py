@@ -760,20 +760,21 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     stats.update(finish_res)
 
-    test_accs = metrics['Test accuracy_0']
-    if not test_accs:
-        lca = np.float('nan')
-    else:
-        if len(test_accs) <= lca_n:
-            last_key = max(test_accs.keys())
-            assert len(test_accs) == last_key + 1, \
-                f"Can't compute LCA@{lca_n} if steps were skipped " \
-                f"(got {list(test_accs.keys())})"
-            test_accs = test_accs.copy()
-            last_acc = test_accs[last_key]
-            for i in range(last_key + 1, lca_n + 1):
-                test_accs[i] = last_acc
-        lca = np.mean([test_accs[i] for i in range(lca_n + 1)])
+    # test_accs = metrics['Test accuracy_0']
+    # if not test_accs:
+    #     lca = np.float('nan')
+    # else:
+    #     if len(test_accs) <= lca_n:
+    #         last_key = max(test_accs.keys())
+    #         assert len(test_accs) == last_key + 1, \
+    #             f"Can't compute LCA@{lca_n} if steps were skipped " \
+    #             f"(got {list(test_accs.keys())})"
+    #         test_accs = test_accs.copy()
+    #         last_acc = test_accs[last_key]
+    #         for i in range(last_key + 1, lca_n + 1):
+    #             test_accs[i] = last_acc
+    #     lca = np.mean([test_accs[i] for i in range(lca_n + 1)])
+    lca = -1
 
     accs = {}
     key = 'accuracy'
