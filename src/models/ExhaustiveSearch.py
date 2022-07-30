@@ -170,6 +170,7 @@ class ExhaustiveSearch(nn.Module):
         kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK
         total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
         model_trained = None
+        iterations_print_list = []
         for i in range(total_early_stopping_checks):
             # Create the calls inside here, so we can modify them each time if needed
             call = None
@@ -192,9 +193,10 @@ class ExhaustiveSearch(nn.Module):
             # Execute and override the outcomes
             all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
             model_trained = all_res[0][1]  # Re-use the model_trained now
+            iterations_print_list.append(all_res[0][0][0])
             all_res = [all_res[0][0]]
 
-        # raise ValueError("It gets here, print some res info:", all_res)
+        raise ValueError("It gets here, print iterations_print_list:", iterations_print_list)
 
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
