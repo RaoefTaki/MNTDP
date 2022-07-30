@@ -119,9 +119,6 @@ class ExhaustiveSearch(nn.Module):
         # optim_params=[{'architecture': 0, 'lr': 0.01, 'weight_decay': 0}], split_optims=True)
 
         # Create calls to train each of different models (combinations of modules), 7+1 (as in thesis), or 7 as depicted here
-        # TODO: find out why discrepancy between 7+1 and 7?
-        original_max_epochs = kwargs['n_ep_max']
-        kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK  # Should preferably fit fully inside original_max_epochs one or more times
 
         # ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
