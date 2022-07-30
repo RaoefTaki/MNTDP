@@ -194,7 +194,7 @@ class ExhaustiveSearch(nn.Module):
             model_trained = all_res[0][1]  # Re-use the model_trained now
             all_res = all_res[0][0]
 
-        raise ValueError("It gets here, print some res info:", all_res)
+        # raise ValueError("It gets here, print some res info:", all_res)
 
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
