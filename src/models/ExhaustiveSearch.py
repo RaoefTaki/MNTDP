@@ -35,7 +35,7 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
-        self.MAX_EPOCHS_BEFORE_CHECK = 3
+        self.MAX_EPOCHS_BEFORE_CHECK = 1
 
         self.max_new_blocks = max_new_blocks
 
@@ -168,9 +168,9 @@ class ExhaustiveSearch(nn.Module):
         total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
         model_trained = None
         conducted_iterations = 0
-        conducted_iterations_list = []
+        # conducted_iterations_list = []
         conducted_epochs = 0
-        conducted_epochs_list = []
+        # conducted_epochs_list = []
         run_counter = 0
         for i in range(total_early_stopping_checks):
             # Create the calls inside here, so we can modify them each time if needed
@@ -198,14 +198,14 @@ class ExhaustiveSearch(nn.Module):
             model_trained = all_res[0][1]  # Re-use the model_trained now
             conducted_iterations = all_res[0][0][0]
             conducted_epochs = all_res[0][2]
-            conducted_epochs_list.append(conducted_epochs)
-            conducted_iterations_list.append(conducted_iterations)
+            # conducted_epochs_list.append(conducted_epochs)
+            # conducted_iterations_list.append(conducted_iterations)
             all_res = [all_res[0][0]]
             run_counter += 1
 
-        raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
-                         "conducted_epochs:", conducted_epochs_list, "run_counter:", run_counter,
-                         "original_max_epochs:", original_max_epochs, "total_early_stopping_checks:", total_early_stopping_checks)
+        # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
+        #                  "conducted_epochs:", conducted_epochs_list, "run_counter:", run_counter,
+        #                  "original_max_epochs:", original_max_epochs, "total_early_stopping_checks:", total_early_stopping_checks)
 
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
