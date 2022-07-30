@@ -170,7 +170,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         return learner_name
         # return '{}_{}'.format(learner_name, trial.trial_id)
 
-    reporter = CLIReporter(max_progress_rows=10, max_report_frequency=5)
+    reporter = CLIReporter(max_progress_rows=10, max_report_frequency=60)
     # reporter.add_metric_column('avg_acc_val')
     reporter.add_metric_column('avg_acc_val_so_far', 'avg_val')
     reporter.add_metric_column('avg_acc_test_so_far', 'avg_test')
@@ -398,16 +398,16 @@ def train_on_tasks(config):
             # 'max_failures': 3}
 
             # Define the scheduler for ASHA
-            # asha_scheduler = ASHAScheduler(
-            #     time_attr='training_iteration',
-            #     metric='episode_reward_mean',
-            #     mode='max',
-            #     max_t=100,
-            #     grace_period=10,
-            #     reduction_factor=3,
-            #     brackets=1)
+            asha_scheduler = ASHAScheduler(
+                time_attr='epochs',
+                metric='best_val',
+                mode='max',
+                max_t=config['training-params']['n_ep_max'],
+                grace_period=1,
+                reduction_factor=3,
+                brackets=1)
 
-            analysis = tune.run(train_t, config=config, **ray_params)
+            analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
