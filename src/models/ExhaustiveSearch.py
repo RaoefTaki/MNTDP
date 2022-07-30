@@ -191,8 +191,8 @@ class ExhaustiveSearch(nn.Module):
 
             # Execute and override the outcomes
             all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
-            all_res = all_res[0][0]
             model_trained = all_res[0][1]  # Re-use the model_trained now
+            all_res = all_res[0][0]
 
         raise ValueError("It gets here, print some res info:", all_res)
 
