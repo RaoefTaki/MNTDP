@@ -203,6 +203,9 @@ class ExhaustiveSearch(nn.Module):
             # Decide, based on some criteria, whether to continue with learning or not
             pass  # TODO; some criteria to decide
 
+            raise ValueError("all_res[0][2]['value']:", all_res[0][2]['value'],
+                             "conducted_iterations:", conducted_iterations, "conducted_epochs:", conducted_epochs)
+
             # Report the results so far
             tune.report(t=t_id,
                         best_val=all_res[0][2]['value'],
