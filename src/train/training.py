@@ -41,7 +41,8 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
           n_it_max, patience, split_names, select_metric='Val accuracy_0',
           select_mode='max', viz=None, device='cpu', lr_scheduler=None, name=None, log_steps=None,
           log_epoch=False, _run=None, prepare_batch=_prepare_batch,
-          single_pass=False, n_ep_max=None, tune_report=None, env_url=None, t_id=-1):
+          single_pass=False, n_ep_max=None, tune_report=None, env_url=None, t_id=-1,
+          conducted_iterations=0, conducted_epochs=0):
 
     # print(model)
 
@@ -68,6 +69,10 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     trainer = create_supervised_trainer(model, optimizer, loss_fn,
                                         device=device,
                                         prepare_batch=prepare_batch)
+
+    # Set the new iteration and epoch
+    trainer.state.iteration = conducted_iterations
+    trainer.state.epoch = conducted_epochs
 
     if hasattr(model, 'new_epoch_hook'):
         trainer.add_event_handler(Events.EPOCH_STARTED, model.new_epoch_hook)
@@ -354,4 +359,4 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     if hasattr(model, 'iter_per_epoch'):
         model.iter_per_epoch = len(train_loader)
     trainer.run(train_loader, max_epochs=max_epoch)
-    return (trainer.state.iteration, all_metrics, best), model
+    return (trainer.state.iteration, all_metrics, best), model, trainer.state.epoch
