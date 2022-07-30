@@ -18,6 +18,7 @@ from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.logger import JsonLogger, CSVLogger
 import ray.tune.utils
+from ray.tune.schedulers import ASHAScheduler
 from torchvision.transforms import transforms
 
 from src.experiments.base_experiment import BaseExperiment
@@ -169,7 +170,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         return learner_name
         # return '{}_{}'.format(learner_name, trial.trial_id)
 
-    reporter = CLIReporter(max_progress_rows=10, max_report_frequency=60)
+    reporter = CLIReporter(max_progress_rows=10, max_report_frequency=5)
     # reporter.add_metric_column('avg_acc_val')
     reporter.add_metric_column('avg_acc_val_so_far', 'avg_val')
     reporter.add_metric_column('avg_acc_test_so_far', 'avg_test')
@@ -395,6 +396,16 @@ def train_on_tasks(config):
             # 'progress_reporter': <ray.tune.progress_reporter.CLIReporter object at 0x7fcceeca2460>,
             # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
             # 'max_failures': 3}
+
+            # Define the scheduler for ASHA
+            # asha_scheduler = ASHAScheduler(
+            #     time_attr='training_iteration',
+            #     metric='episode_reward_mean',
+            #     mode='max',
+            #     max_t=100,
+            #     grace_period=10,
+            #     reduction_factor=3,
+            #     brackets=1)
 
             analysis = tune.run(train_t, config=config, **ray_params)
             all_analysis.append(analysis)

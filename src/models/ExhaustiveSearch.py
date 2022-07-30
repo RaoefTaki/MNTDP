@@ -190,9 +190,6 @@ class ExhaustiveSearch(nn.Module):
                                     *args, **kwargs))
                     call_path = path
 
-            # Decide, based on some criteria, whether to continue with learning or not
-            pass  # TODO; some criteria to decide
-
             # Execute and override the outcomes
             all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
             model_trained = all_res[0][1]  # Re-use the model_trained now
@@ -202,6 +199,15 @@ class ExhaustiveSearch(nn.Module):
             # conducted_iterations_list.append(conducted_iterations)
             all_res = [all_res[0][0]]
             run_counter += 1
+
+            # Decide, based on some criteria, whether to continue with learning or not
+            pass  # TODO; some criteria to decide
+
+            # Report the results so far
+            tune.report(t=t_id,
+                        best_val=all_res[0][2]['value'],
+                        iterations=conducted_iterations,
+                        epochs=conducted_epochs)
 
         # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
         #                  "conducted_epochs:", conducted_epochs_list, "run_counter:", run_counter,
