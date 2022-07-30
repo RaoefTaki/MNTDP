@@ -35,6 +35,7 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
+        self.MAX_EPOCHS_BEFORE_CHECK = 1
 
         self.max_new_blocks = max_new_blocks
 
@@ -119,14 +120,8 @@ class ExhaustiveSearch(nn.Module):
 
         # Create calls to train each of different models (combinations of modules), 7+1 (as in thesis), or 7 as depicted here
         # TODO: find out why discrepancy between 7+1 and 7?
-        calls = []
-        paths = []
-        for path, idx in self.models_idx.items():
-            model = self.models[idx]
-            calls.append(partial(wrap, model=model, idx=idx,
-                                 optim_fact=optim_fact, datasets_p=datasets_p,
-                                 b_sizes=b_sizes, env_url=env_url, t_id=t_id, *args, **kwargs))
-            paths.append(path)
+        original_max_epochs = kwargs['n_ep_max']
+        kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK  # Should preferably fit fully inside original_max_epochs one or more times
 
         # ctx = torch.multiprocessing.get_context('spawn')
         # ctx = None
@@ -167,10 +162,35 @@ class ExhaustiveSearch(nn.Module):
         # At the first task, there is only 1 model so this needs to be 0 ofc
         model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
 
+        # Repeatedly run the model for x epochs, and at every termination check whether we should run it further using
+        # some criteria
+        all_res = []
+
+        original_max_epochs = kwargs['n_ep_max']
+        kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK
+        total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
+        for i in range(total_early_stopping_checks):
+            # Create the calls inside here, so we can modify them each time if needed
+            calls = []
+            paths = []
+            for path, idx in self.models_idx.items():
+                model = self.models[idx]
+                raise ValueError("self.models[idx]", self.models[idx], "kwargs", kwargs)
+                calls.append(partial(wrap, model=model, idx=idx,
+                                     optim_fact=optim_fact, datasets_p=datasets_p,
+                                     b_sizes=b_sizes, env_url=env_url, t_id=t_id, *args, **kwargs))
+                paths.append(path)
+
+            # Decide, based on some criteria, whether to continue with learning or not
+            pass  # TODO; some criteria to decide
+
+            # Assign the outcome during the last iteration
+            if i == total_early_stopping_checks - 1:
+                all_res = [calls[model_id_to_use]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
 
-        all_res = [calls[model_id_to_use]()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
         self.res[paths[model_id_to_use]] = all_res[0]
         all_res = list(map(lambda x: (x[1][2]['value'], x[0]), self.res.items()))
         best_path = max(all_res, key=itemgetter(0))[1]
@@ -259,5 +279,6 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
 
     res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
                 optimizer=optim, env_url=env_url, t_id=t_id, **kwargs)
+    # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res
