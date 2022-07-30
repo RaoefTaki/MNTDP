@@ -272,7 +272,6 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     #     raise ValueError("INTERCEPT. t_id:", t_id)
 
     model = kwargs['model']
-    raise ValueError("model", model)
     optim = optim_fact(model=model)
     datasets = _load_datasets(**datasets_p)
     train_loader, eval_loaders = get_classic_dataloaders(datasets, b_sizes, 0)
