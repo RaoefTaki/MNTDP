@@ -255,7 +255,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     def report_to_ray(trainer):
         tune.report(t=t_id,
                     best_val=-1,#best['value'],
-                    iterations=conducted_iterations,
+                    iterations=-1,
                     epochs=conducted_epochs)
 
     @trainer.on(Events.ITERATION_COMPLETED)
