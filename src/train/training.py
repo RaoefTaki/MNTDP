@@ -42,7 +42,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
           select_mode='max', viz=None, device='cpu', lr_scheduler=None, name=None, log_steps=None,
           log_epoch=False, _run=None, prepare_batch=_prepare_batch,
           single_pass=False, n_ep_max=None, tune_report=None, env_url=None, t_id=-1,
-          conducted_iterations=0, conducted_epochs=0):
+          trainer=None, all_metrics=None, best=None):
 
     # print(model)
 
@@ -65,66 +65,71 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         assert n_it_max is None
         max_epoch = n_ep_max
 
-    all_metrics = defaultdict(dict)
-    trainer = create_supervised_trainer(model, optimizer, loss_fn,
-                                        device=device,
-                                        prepare_batch=prepare_batch)
+    if all_metrics is None:
+        all_metrics = defaultdict(dict)
 
-    # Set the new iteration and epoch
-    trainer.state.iteration = conducted_iterations
-    trainer.state.epoch = conducted_epochs
+    trainer_was_none = trainer is None
+    if trainer is None:
+        trainer = create_supervised_trainer(model, optimizer, loss_fn,
+                                            device=device,
+                                            prepare_batch=prepare_batch)
 
-    if hasattr(model, 'new_epoch_hook'):
-        trainer.add_event_handler(Events.EPOCH_STARTED, model.new_epoch_hook)
-    if hasattr(model, 'new_iter_hook'):
-        trainer.add_event_handler(Events.ITERATION_STARTED,
-                                     model.new_iter_hook)
+    # # Set the new iteration and epoch
+    # trainer.state.iteration = conducted_iterations
+    # trainer.state.epoch = conducted_epochs
 
-    trainer.logger.setLevel(logging.WARNING)
+    if trainer_was_none:
+        if hasattr(model, 'new_epoch_hook'):
+            trainer.add_event_handler(Events.EPOCH_STARTED, model.new_epoch_hook)
+        if hasattr(model, 'new_iter_hook'):
+            trainer.add_event_handler(Events.ITERATION_STARTED,
+                                         model.new_iter_hook)
 
-    # trainer output is in the format (x, y, y_pred, loss, optionals)
-    train_loss = RunningAverage(output_transform=lambda out: out[3].item(),
-                                epoch_bound=True)
-    train_loss.attach(trainer, 'Trainer loss')
-    if hasattr(model, 's'):
-        met = Average(output_transform=lambda _: float('nan') if model.s is None else model.s)
-        met.attach(trainer, 'cur_s')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, met.completed, 'cur_s')
+        trainer.logger.setLevel(logging.WARNING)
 
-    if hasattr(model, 'arch_sampler') and model.arch_sampler.distrib_dim > 0:
-        met = Average(output_transform=lambda _: float('nan') if model.cur_split is None else model.cur_split)
-        met.attach(trainer, 'Trainer split')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, met.completed, 'Trainer split')
-        # trainer.add_event_handler(Events.EPOCH_STARTED, met.started)
-        all_ent = Average(
-            output_transform=lambda out: out[-1]['arch_entropy_avg'].item())
-        all_ent.attach(trainer, 'Trainer all entropy')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, all_ent.completed, 'Trainer all entropy')
-        train_ent = Average(
-            output_transform=lambda out: out[-1]['arch_entropy_sample'].item())
-        train_ent.attach(trainer, 'Trainer sampling entropy')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, train_ent.completed, 'Trainer sampling entropy')
-        trainer.add_event_handler(Events.EPOCH_COMPLETED,
-                                  lambda engine: model.check_arch_freezing(
-                                      ent=train_ent.compute(),
-                                      epoch=engine.state.iteration/(epoch_steps*max_epoch))
-                                  )
-        def log_always(engine, name):
-            val = engine.state.output[-1][name]
-            all_metrics[name][engine.state.iteration/epoch_steps] = val.mean().item()
+        # trainer output is in the format (x, y, y_pred, loss, optionals)
+        train_loss = RunningAverage(output_transform=lambda out: out[3].item(),
+                                    epoch_bound=True)
+        train_loss.attach(trainer, 'Trainer loss')
+        if hasattr(model, 's'):
+            met = Average(output_transform=lambda _: float('nan') if model.s is None else model.s)
+            met.attach(trainer, 'cur_s')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, met.completed, 'cur_s')
 
-        def log_always_dict(engine, name):
-            for node, val in engine.state.output[-1][name].items():
-                all_metrics['node {} {}'.format(node, name)][engine.state.iteration/epoch_steps] = val.mean().item()
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always_dict, name='arch_grads')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always_dict, name='arch_probas')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always_dict, name='node_grads')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always, name='task all_loss')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always, name='arch all_loss')
-        trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always, name='entropy all_loss')
+        if hasattr(model, 'arch_sampler') and model.arch_sampler.distrib_dim > 0:
+            met = Average(output_transform=lambda _: float('nan') if model.cur_split is None else model.cur_split)
+            met.attach(trainer, 'Trainer split')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, met.completed, 'Trainer split')
+            # trainer.add_event_handler(Events.EPOCH_STARTED, met.started)
+            all_ent = Average(
+                output_transform=lambda out: out[-1]['arch_entropy_avg'].item())
+            all_ent.attach(trainer, 'Trainer all entropy')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, all_ent.completed, 'Trainer all entropy')
+            train_ent = Average(
+                output_transform=lambda out: out[-1]['arch_entropy_sample'].item())
+            train_ent.attach(trainer, 'Trainer sampling entropy')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, train_ent.completed, 'Trainer sampling entropy')
+            trainer.add_event_handler(Events.EPOCH_COMPLETED,
+                                      lambda engine: model.check_arch_freezing(
+                                          ent=train_ent.compute(),
+                                          epoch=engine.state.iteration/(epoch_steps*max_epoch))
+                                      )
+            def log_always(engine, name):
+                val = engine.state.output[-1][name]
+                all_metrics[name][engine.state.iteration/epoch_steps] = val.mean().item()
 
-    if n_it_max is not None:
-        StopAfterIterations([n_it_max]).attach(trainer)
+            def log_always_dict(engine, name):
+                for node, val in engine.state.output[-1][name].items():
+                    all_metrics['node {} {}'.format(node, name)][engine.state.iteration/epoch_steps] = val.mean().item()
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always_dict, name='arch_grads')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always_dict, name='arch_probas')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always_dict, name='node_grads')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always, name='task all_loss')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always, name='arch all_loss')
+            trainer.add_event_handler(Events.ITERATION_COMPLETED, log_always, name='entropy all_loss')
+
+        if n_it_max is not None:
+            StopAfterIterations([n_it_max]).attach(trainer)
     # epoch_pbar = ProgressBar(bar_format='{l_bar}{bar}{r_bar}', desc=name,
     #                          persist=True, disable=not (_run or viz))
     # epoch_pbar.attach(trainer, metric_names=['Train loss'])
@@ -154,38 +159,36 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             l, *l_details = l
         return l.mean()
 
-    def get_member(x, n=0):
-        if isinstance(x, (list, tuple)):
-            return x[n]
-        return x
-
     eval_metrics = {'loss': Loss(get_loss)}
 
-    for i in range(model.n_out):
-        out_trans = get_attr_transform(i)
-        def extract_ys(out):
-            x, y, y_pred, loss, _ = out
-            return out_trans((y_pred, y))
+    if trainer_was_none:
+        for i in range(model.n_out):
+            out_trans = get_attr_transform(i)
 
-        train_acc = Accuracy(extract_ys)
-        train_acc.attach(trainer, 'Trainer accuracy_{}'.format(i))
-        trainer.add_event_handler(Events.ITERATION_COMPLETED,
-                                  train_acc.completed, 'Trainer accuracy_{}'.format(i))
-        eval_metrics['accuracy_{}'.format(i)] = \
-            Accuracy(output_transform=out_trans)
-        # if isinstance(model, SSNWrapper):
-        #     model.arch_sampler.entropy().mean()
+            def extract_ys(out):
+                x, y, y_pred, loss, _ = out
+                return out_trans((y_pred, y))
+
+            train_acc = Accuracy(extract_ys)
+            train_acc.attach(trainer, 'Trainer accuracy_{}'.format(i))
+            trainer.add_event_handler(Events.ITERATION_COMPLETED,
+                                      train_acc.completed, 'Trainer accuracy_{}'.format(i))
+            eval_metrics['accuracy_{}'.format(i)] = \
+                Accuracy(output_transform=out_trans)
+            # if isinstance(model, SSNWrapper):
+            #     model.arch_sampler.entropy().mean()
 
     evaluator = create_supervised_evaluator(model, metrics=eval_metrics,
                                             device=device,
                                             prepare_batch=prepare_batch)
-    last_iteration = 0
+    last_iteration = trainer.state.iteration
     patience_counter = 0
 
-    best = {'value': float('inf') * 1 if select_mode == 'min' else -1,
-            'iter': -1,
-            'state_dict': None
-            }
+    if best is None:
+        best = {'value': float('inf') * 1 if select_mode == 'min' else -1,
+                'iter': -1,
+                'state_dict': None
+                }
 
     def is_better(new, old):
         if select_mode == 'min':
@@ -359,4 +362,4 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     if hasattr(model, 'iter_per_epoch'):
         model.iter_per_epoch = len(train_loader)
     trainer.run(train_loader, max_epochs=max_epoch)
-    return (trainer.state.iteration, all_metrics, best), model, trainer.state.epoch
+    return (trainer.state.iteration, all_metrics, best), trainer, trainer.state.epoch

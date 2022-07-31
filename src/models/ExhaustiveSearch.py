@@ -166,7 +166,11 @@ class ExhaustiveSearch(nn.Module):
         original_max_epochs = kwargs['n_ep_max']
         kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK
         total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
-        model_trained = None
+        trainer = None
+        model = None
+        all_metrics = None
+        best = None
+
         conducted_iterations = 0
         conducted_epochs = 0
         conducted_iterations_list = []
@@ -180,24 +184,26 @@ class ExhaustiveSearch(nn.Module):
             for path, idx in self.models_idx.items():
                 # Only create the function call for the specific run which we want
                 if idx == model_id_to_use:
-                    if model_trained is None:
+                    if trainer is None:
                         model = self.models[idx]
-                    else:
-                        model = model_trained
                     call = (partial(wrap, model=model, idx=idx,
                                     optim_fact=optim_fact, datasets_p=datasets_p,
                                     b_sizes=b_sizes, env_url=env_url, t_id=t_id, conducted_iterations=conducted_iterations,
-                                    conducted_epochs=conducted_epochs,
+                                    conducted_epochs=conducted_epochs, trainer=trainer, all_metrics=all_metrics, best=best,
                                     *args, **kwargs))
                     call_path = path
 
             # Execute and override the outcomes
             all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
-            model_trained = all_res[0][1]  # Re-use the model_trained now
+            trainer = all_res[0][1]  # Re-use the trainer for the next iteration now
+            all_metrics = all_res[0][0][1]
+            best = all_res[0][0][2]
+
             conducted_iterations = all_res[0][0][0]
             conducted_epochs = all_res[0][2]
             conducted_iterations_list.append(conducted_iterations)
             conducted_epochs_list.append(conducted_epochs)
+
             all_res = [all_res[0][0]]
             run_counter += 1
 
@@ -300,7 +306,7 @@ class ExhaustiveSearch(nn.Module):
 
 
 def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=None, t_id=-1,
-         conducted_iterations=0, conducted_epochs=0, **kwargs):
+         conducted_iterations=0, conducted_epochs=0, trainer=None, all_metrics=None, best=None, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
     #     raise ValueError("INTERCEPT. t_id:", t_id)
@@ -312,9 +318,9 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     if hasattr(model, 'train_loader_wrapper'):
         train_loader = model.train_loader_wrapper(train_loader)
 
-    res, model_trained, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                                              optimizer=optim, env_url=env_url, t_id=t_id,
-                                              conducted_iterations=conducted_iterations, conducted_epochs=conducted_epochs, **kwargs)
+    res, trainer, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
+                                        optimizer=optim, env_url=env_url, t_id=t_id, trainer=None,
+                                        all_metrics=all_metrics, best=best, **kwargs)
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
-    return res, model_trained, trainer_epoch
+    return res, trainer, trainer_epoch
