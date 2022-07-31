@@ -399,16 +399,16 @@ def train_on_tasks(config):
             # 'max_failures': 3}
 
             # Define the scheduler for ASHA
-            # asha_scheduler = ASHAScheduler(
-            #     time_attr='epochs',
-            #     metric='best_val',
-            #     mode='max',
-            #     max_t=config['training-params']['n_ep_max'],
-            #     grace_period=1,
-            #     reduction_factor=3,
-            #     brackets=1)
+            asha_scheduler = ASHAScheduler(
+                time_attr='epochs',
+                metric='best_val',
+                mode='max',
+                max_t=config['training-params']['n_ep_max'],
+                grace_period=1,
+                reduction_factor=3,
+                brackets=1)
 
-            analysis = tune.run(train_t, config=config, **ray_params) # scheduler=asha_scheduler,
+            analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
