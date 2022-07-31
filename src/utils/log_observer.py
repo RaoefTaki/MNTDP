@@ -36,6 +36,8 @@ def flatten_one_level(d):
     return new_d
 
 def initialize_tune_report_arguments(tasks, evaluation_splits):
+    # Create a dictionary with keywords used for tune.report with initialized -1 values. This is needed because the keywords
+    # supplied to the first tune.report call are set in stone and no new ones can be added afterwards, I observed
     accs = {}
     key = 'accuracy'
     # logger.warning(evaluation)
@@ -73,7 +75,6 @@ def initialize_tune_report_arguments(tasks, evaluation_splits):
     other_keyword_dictionary.update(accs)
     other_keyword_dictionary.update(stats)
 
-    raise ValueError(other_keyword_dictionary)
     return other_keyword_dictionary
 
 

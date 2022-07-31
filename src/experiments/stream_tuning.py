@@ -667,6 +667,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     if dropout is not None:
         set_dropout(model, dropout)
 
+    # Create a dictionary with keywords used for tune.report with initialized -1 values. This is needed because the keywords
+    # supplied to the first tune.report call are set in stone and no new ones can be added afterwards, I observed
     evaluation_splits = ['Val', 'Test']
     tune_report_arguments_initialized = initialize_tune_report_arguments(tasks, evaluation_splits)
 
@@ -677,7 +679,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                                                                     batch_sizes, optim_fact,
                                                                     prepare_batch, task,
                                                                     train_loader, eval_loaders,
-                                                                    training_params, env_url, config)
+                                                                    training_params, env_url,
+                                                                    tune_report_arguments_initialized, config)
 
     training_time = time.time() - start2
     start3 = time.time()
@@ -860,7 +863,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
 
 def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
-                task, train_loader, eval_loaders, training_params, env_url, config):
+                task, train_loader, eval_loaders, training_params, env_url, tune_report_arguments_initialized, config):
     if hasattr(model, 'train_func'):
         assert not config, config
         f = model.train_func
@@ -873,6 +876,7 @@ def train_model(model, datasets_p, batch_sizes, optim_fact, prepare_batch,
                                                     split_names=task['split_names'],
                                                     env_url=env_url,
                                                     t_id=task['id'],
+                                                    tune_report_arguments_initialized=tune_report_arguments_initialized,
                                                     # viz=task_vis,
                                                     **training_params)
         rescaled = list(

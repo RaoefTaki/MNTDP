@@ -100,7 +100,7 @@ class ExhaustiveSearch(nn.Module):
     #         self.init_models()
     #     return self.models[self.models_idx[self._selected_path()]].parameters()
 
-    def train_func(self, datasets_p, b_sizes, optim_fact, env_url, t_id, *args, **kwargs):
+    def train_func(self, datasets_p, b_sizes, optim_fact, env_url, t_id, tune_report_arguments_initialized, *args, **kwargs):
         # TODO: use argumenst for t_id etc to report to the tuner
         # if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/1406'):
         if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/2775'):
@@ -188,7 +188,7 @@ class ExhaustiveSearch(nn.Module):
                                     optim_fact=optim_fact, datasets_p=datasets_p,
                                     b_sizes=b_sizes, env_url=env_url, t_id=t_id, conducted_iterations=conducted_iterations,
                                     conducted_epochs=conducted_epochs,
-                                    *args, **kwargs))
+                                    tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
                     call_path = path
 
             # Execute and override the outcomes
@@ -292,7 +292,7 @@ class ExhaustiveSearch(nn.Module):
 
 
 def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=None, t_id=-1,
-         conducted_iterations=0, conducted_epochs=0, **kwargs):
+         conducted_iterations=0, conducted_epochs=0, tune_report_arguments_initialized=None, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
     #     raise ValueError("INTERCEPT. t_id:", t_id)
@@ -306,7 +306,8 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
 
     res, model_trained, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
                                               optimizer=optim, env_url=env_url, t_id=t_id,
-                                              conducted_iterations=conducted_iterations, conducted_epochs=conducted_epochs, **kwargs)
+                                              conducted_iterations=conducted_iterations, conducted_epochs=conducted_epochs,
+                                              tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res, model_trained, trainer_epoch
