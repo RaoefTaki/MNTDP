@@ -401,10 +401,10 @@ def train_on_tasks(config):
 
             # Define the scheduler for ASHA
             asha_scheduler = ASHAScheduler(
-                time_attr='epochs',
+                time_attr='epoch_of_report',
                 metric='best_val',
                 mode='max',
-                max_t=config['training-params']['n_ep_max'],
+                max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
                 grace_period=1,
                 reduction_factor=3,
                 brackets=1)
@@ -830,7 +830,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
                 iteration_of_report=math.inf,  # Infinite, since we just use this as a counter for the scheduler
-                epoch_of_report=math.inf,  # Infinite, same reason
+                epoch_of_report=training_params['n_ep_max'],  # Infinite, same reason
                 avg_acc_val=avg_val,
                 avg_acc_val_so_far=avg_val_so_far,
                 avg_acc_test_so_far=avg_test_so_far,
