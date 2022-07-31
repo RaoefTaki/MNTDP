@@ -319,9 +319,8 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
         train_loader = model.train_loader_wrapper(train_loader)
 
     res, trainer, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                                        optimizer=optim, env_url=env_url, t_id=t_id, trainer=None,
+                                        optimizer=optim, env_url=env_url, t_id=t_id, trainer=trainer,
                                         all_metrics=all_metrics, best=best, **kwargs)
-    raise ValueError("[TEST] ERROR")
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res, trainer, trainer_epoch
