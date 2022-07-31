@@ -194,7 +194,10 @@ class ExhaustiveSearch(nn.Module):
                     call_path = path
 
             # Execute and override the outcomes
-            all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+            try:
+                all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+            except Exception as e:
+                raise ValueError("[TEST] caught error", e)
             trainer = all_res[0][1]  # Re-use the trainer for the next iteration now
             all_metrics = all_res[0][0][1]
             best = all_res[0][0][2]
