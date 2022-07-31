@@ -35,7 +35,6 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
-        self.MAX_EPOCHS_BEFORE_CHECK = 1
 
         self.max_new_blocks = max_new_blocks
 
@@ -180,8 +179,7 @@ class ExhaustiveSearch(nn.Module):
 
         # Execute and override the outcomes
         all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
-        final_epoch = all_res[0][1]
-        all_res = all_res[0][0]
+        all_res = all_res[0]
 
         # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
         #                  "conducted_epochs:", conducted_epochs_list, "run_counter:", run_counter,
@@ -271,7 +269,7 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     if hasattr(model, 'train_loader_wrapper'):
         train_loader = model.train_loader_wrapper(train_loader)
 
-    res, final_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                             optimizer=optim, env_url=env_url, t_id=t_id,
-                             tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
-    return res, final_epoch
+    res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
+                optimizer=optim, env_url=env_url, t_id=t_id,
+                tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
+    return res
