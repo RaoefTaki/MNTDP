@@ -832,7 +832,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     #     raise ValueError("info_training['path']:", info_training['path'])
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
-                iteration_of_report=math.inf,  # Infinite, since we just use this as a counter for the scheduler
+                iteration_of_report=sys.maxsize,  # Infinite, since we just use this as a counter for the scheduler
                 epoch_of_report=training_params['n_ep_max'],  # Infinite, same reason
                 avg_acc_val=avg_val,
                 avg_acc_val_so_far=avg_val_so_far,
