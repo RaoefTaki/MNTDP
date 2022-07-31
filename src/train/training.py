@@ -24,6 +24,8 @@ from pylrpredictor.ensemblecurvemodel import CurveEnsemble
 import numpy as np
 from src.utils.misc import get_env_url
 
+from ray import tune
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +44,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
           select_mode='max', viz=None, device='cpu', lr_scheduler=None, name=None, log_steps=None,
           log_epoch=False, _run=None, prepare_batch=_prepare_batch,
           single_pass=False, n_ep_max=None, tune_report=None, env_url=None, t_id=-1,
-          trainer=None, all_metrics=None, best=None):
+          trainer=None, evaluator=None, all_metrics=None, best=None, epochs_before_check=None):
 
     # print(model)
 
@@ -75,6 +77,11 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         trainer = create_supervised_trainer(model, optimizer, loss_fn,
                                             device=device,
                                             prepare_batch=prepare_batch)
+    
+    tune.report(t=0,
+                best_val=-1,
+                iterations=-1,
+                epochs=-1)
 
     # # Set the new iteration and epoch
     # trainer.state.iteration = conducted_iterations
@@ -84,8 +91,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         if hasattr(model, 'new_epoch_hook'):
             trainer.add_event_handler(Events.EPOCH_STARTED, model.new_epoch_hook)
         if hasattr(model, 'new_iter_hook'):
-            trainer.add_event_handler(Events.ITERATION_STARTED,
-                                         model.new_iter_hook)
+            trainer.add_event_handler(Events.ITERATION_STARTED, model.new_iter_hook)
 
         trainer.logger.setLevel(logging.WARNING)
 
@@ -144,16 +150,18 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     eval_time = Timer(average=False)
     eval_time.pause()
     data_time = Timer(average=False)
-    forward_time = Timer(average=False)
-    forward_time.attach(trainer, start=Events.EPOCH_STARTED,  # TODO
-                        pause=Events.ITERATION_COMPLETED,
-                        resume=Events.ITERATION_STARTED,
-                        step=Events.ITERATION_COMPLETED)
-    epoch_time = Timer(average=False)
-    epoch_time.attach(trainer, start=Events.EPOCH_STARTED,  # TODO
-                      pause=Events.EPOCH_COMPLETED,
-                      resume=Events.EPOCH_STARTED,
-                      step=Events.EPOCH_COMPLETED)
+    if trainer_was_none:
+        forward_time = Timer(average=False)
+        forward_time.attach(trainer, start=Events.EPOCH_STARTED,
+                            pause=Events.ITERATION_COMPLETED,
+                            resume=Events.ITERATION_STARTED,
+                            step=Events.ITERATION_COMPLETED)
+    if trainer_was_none:
+        epoch_time = Timer(average=False)
+        epoch_time.attach(trainer, start=Events.EPOCH_STARTED,
+                          pause=Events.EPOCH_COMPLETED,
+                          resume=Events.EPOCH_STARTED,
+                          step=Events.EPOCH_COMPLETED)
 
     def get_loss(y_pred, y):
         l = loss_fn(y_pred, y)
@@ -161,9 +169,9 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             l, *l_details = l
         return l.mean()
 
-    eval_metrics = {'loss': Loss(get_loss)}
-
     if trainer_was_none:
+        eval_metrics = {'loss': Loss(get_loss)}
+
         for i in range(model.n_out):
             out_trans = get_attr_transform(i)
 
@@ -180,9 +188,9 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # if isinstance(model, SSNWrapper):
             #     model.arch_sampler.entropy().mean()
 
-    evaluator = create_supervised_evaluator(model, metrics=eval_metrics,  # TODO
-                                            device=device,
-                                            prepare_batch=prepare_batch)
+        evaluator = create_supervised_evaluator(model, metrics=eval_metrics,
+                                                device=device,
+                                                prepare_batch=prepare_batch)
     last_iteration = trainer.state.iteration
     patience_counter = 0
 
@@ -253,6 +261,13 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             lc_models.append(temp_lc_model)
         lc_model = CurveEnsemble(lc_models)
         return lc_model
+
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def check_early_stopping(trainer):
+        epoch = trainer.state.epoch if trainer.state else 0
+        if epoch % epochs_before_check == 0:
+            raise ValueError("trainer terminate here")
+            trainer.terminate()
 
     @trainer.on(Events.ITERATION_COMPLETED)
     def log_event(trainer):
@@ -365,4 +380,4 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     if hasattr(model, 'iter_per_epoch'):
         model.iter_per_epoch = len(train_loader)
     trainer.run(train_loader, max_epochs=max_epoch)
-    return (trainer.state.iteration, all_metrics, best), trainer, trainer.state.epoch
+    return (trainer.state.iteration, all_metrics, best), (trainer, evaluator), trainer.state.epoch

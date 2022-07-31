@@ -164,9 +164,9 @@ class ExhaustiveSearch(nn.Module):
         all_res = []
 
         original_max_epochs = kwargs['n_ep_max']
-        kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK
         total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
         trainer = None
+        evaluator = None
         model = None
         all_metrics = None
         best = None
@@ -189,13 +189,15 @@ class ExhaustiveSearch(nn.Module):
                     call = (partial(wrap, model=model, idx=idx,
                                     optim_fact=optim_fact, datasets_p=datasets_p,
                                     b_sizes=b_sizes, env_url=env_url, t_id=t_id, conducted_iterations=conducted_iterations,
-                                    conducted_epochs=conducted_epochs, trainer=trainer, all_metrics=all_metrics, best=best,
+                                    conducted_epochs=conducted_epochs, trainer=trainer, evaluator=evaluator,
+                                    all_metrics=all_metrics, best=best, epochs_before_check=self.MAX_EPOCHS_BEFORE_CHECK,
                                     *args, **kwargs))
                     call_path = path
 
             # Execute and override the outcomes
             all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
-            trainer = all_res[0][1]  # Re-use the trainer for the next iteration now
+            trainer = all_res[0][1][0]  # Re-use the trainer for the next iteration now
+            evaluator = all_res[0][1][1]
             all_metrics = all_res[0][0][1]
             best = all_res[0][0][2]
 
@@ -308,7 +310,8 @@ class ExhaustiveSearch(nn.Module):
 
 
 def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=None, t_id=-1,
-         conducted_iterations=0, conducted_epochs=0, trainer=None, all_metrics=None, best=None, **kwargs):
+         conducted_iterations=0, conducted_epochs=0, trainer=None, evaluator=None, all_metrics=None, best=None,
+         epochs_before_check=None, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
     #     raise ValueError("INTERCEPT. t_id:", t_id)
@@ -321,8 +324,8 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
         train_loader = model.train_loader_wrapper(train_loader)
 
     res, trainer, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                                        optimizer=optim, env_url=env_url, t_id=t_id, trainer=trainer,
-                                        all_metrics=all_metrics, best=best, **kwargs)
+                                        optimizer=optim, env_url=env_url, t_id=t_id, trainer=trainer, evaluator=evaluator,
+                                        all_metrics=all_metrics, best=best, epochs_before_check=epochs_before_check, **kwargs)
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res, trainer, trainer_epoch
