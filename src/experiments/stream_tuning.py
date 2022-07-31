@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 import random
 import shutil
@@ -828,6 +829,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     #     raise ValueError("info_training['path']:", info_training['path'])
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
+                iteration_of_report=math.inf,  # Infinite, since we just use this as a counter for the scheduler
+                epoch_of_report=math.inf,  # Infinite, same reason
                 avg_acc_val=avg_val,
                 avg_acc_val_so_far=avg_val_so_far,
                 avg_acc_test_so_far=avg_test_so_far,

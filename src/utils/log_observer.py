@@ -61,6 +61,8 @@ def initialize_tune_report_arguments(tasks, evaluation_splits):
                                 'duration_postproc': -1,
                                 'duration_eval': -1,
                                 'duration_sum': -1,
+                                'iterations': -1,
+                                'epochs': -1,
                                 'new_params': -1,
                                 'total_params': -1,
                                 'total_steps': -1,

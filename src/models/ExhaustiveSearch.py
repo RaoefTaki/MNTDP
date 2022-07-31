@@ -160,55 +160,28 @@ class ExhaustiveSearch(nn.Module):
         model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
 
         # Repeatedly run the model for x epochs, and at every termination check whether we should run it further using
-        # some criteria
-        all_res = []
-
-        original_max_epochs = kwargs['n_ep_max']
-        # kwargs['n_ep_max'] = self.MAX_EPOCHS_BEFORE_CHECK
-        self.MAX_EPOCHS_BEFORE_CHECK = original_max_epochs
-        total_early_stopping_checks = int(original_max_epochs / self.MAX_EPOCHS_BEFORE_CHECK)
+        # some criteria. This is done inside the train() function
         model_trained = None
-        conducted_iterations = 0
-        # conducted_iterations_list = []
-        conducted_epochs = 0
-        # conducted_epochs_list = []
-        run_counter = 0
-        for i in range(total_early_stopping_checks):
-            # Create the calls inside here, so we can modify them each time if needed
-            call = None
-            call_path = None
-            for path, idx in self.models_idx.items():
-                # Only create the function call for the specific run which we want
-                if idx == model_id_to_use:
-                    if model_trained is None:
-                        model = self.models[idx]
-                    else:
-                        model = model_trained
-                    call = (partial(wrap, model=model, idx=idx,
-                                    optim_fact=optim_fact, datasets_p=datasets_p,
-                                    b_sizes=b_sizes, env_url=env_url, t_id=t_id, conducted_iterations=conducted_iterations,
-                                    conducted_epochs=conducted_epochs,
-                                    tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
-                    call_path = path
+        # Create the calls inside here, so we can modify them each time if needed
+        call = None
+        call_path = None
+        for path, idx in self.models_idx.items():
+            # Only create the function call for the specific run which we want
+            if idx == model_id_to_use:
+                if model_trained is None:
+                    model = self.models[idx]
+                else:
+                    model = model_trained
+                call = (partial(wrap, model=model, idx=idx,
+                                optim_fact=optim_fact, datasets_p=datasets_p,
+                                b_sizes=b_sizes, env_url=env_url, t_id=t_id,
+                                tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
+                call_path = path
 
-            # Execute and override the outcomes
-            all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
-            model_trained = all_res[0][1]  # Re-use the model_trained now
-            conducted_iterations = all_res[0][0][0]
-            conducted_epochs = all_res[0][2]
-            # conducted_epochs_list.append(conducted_epochs)
-            # conducted_iterations_list.append(conducted_iterations)
-            all_res = [all_res[0][0]]
-            run_counter += 1
-
-            # Decide, based on some criteria, whether to continue with learning or not
-            pass  # TODO; some criteria to decide
-
-            # Report the results so far
-            # tune.report(t=t_id,
-            #             best_val=all_res[0][2]['value'],
-            #             iterations=conducted_iterations,
-            #             epochs=conducted_epochs)
+        # Execute and override the outcomes
+        all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        final_epoch = all_res[0][1]
+        all_res = all_res[0][0]
 
         # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
         #                  "conducted_epochs:", conducted_epochs_list, "run_counter:", run_counter,
@@ -217,6 +190,7 @@ class ExhaustiveSearch(nn.Module):
         # Accommodate that this is only run once: let all_res still be of certain length
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
 
+        # Calculate some metrics
         self.res[call_path] = all_res[0]
         all_res = list(map(lambda x: (x[1][2]['value'], x[0]), self.res.items()))
         best_path = max(all_res, key=itemgetter(0))[1]
@@ -238,19 +212,12 @@ class ExhaustiveSearch(nn.Module):
                     best_metrics[f'{s} {i} {m}_all'] = logs[f'{s} {m}']
                     if s == 'Val':
                         all_xs.append(list(logs[f'{s} {m}'].keys()))
-        # print()
+
         max_len = max(map(len, all_xs))
-        # print(all_xs)
         all_xs = [pad_seq(xs, max_len, xs[-1]) for xs in all_xs]
-        # print(all_xs)
-        # print(best_accs)
-        # print(list(zip(*all_xs)))
-        # print(list(zip_longest(*all_xs, fillvalue=0)))
         scaled_xs = [sum(steps) for steps in zip(*all_xs)]
         scaled_ys = pad_seq(best_accs, len(scaled_xs), best_accs[-1])
         new_metric = dict(zip(scaled_xs, scaled_ys))
-        # print(new_metric)
-        # print()
         best_metrics['Val accuracy_0_rescaled'] = new_metric
 
         # raise ValueError("best_metrics", best_metrics)
@@ -292,7 +259,7 @@ class ExhaustiveSearch(nn.Module):
 
 
 def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=None, t_id=-1,
-         conducted_iterations=0, conducted_epochs=0, tune_report_arguments_initialized=None, **kwargs):
+         tune_report_arguments_initialized=None, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
     #     raise ValueError("INTERCEPT. t_id:", t_id)
@@ -304,10 +271,9 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     if hasattr(model, 'train_loader_wrapper'):
         train_loader = model.train_loader_wrapper(train_loader)
 
-    res, model_trained, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                                              optimizer=optim, env_url=env_url, t_id=t_id,
-                                              conducted_iterations=conducted_iterations, conducted_epochs=conducted_epochs,
-                                              tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
+    res, final_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
+                             optimizer=optim, env_url=env_url, t_id=t_id,
+                             tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
-    return res, model_trained, trainer_epoch
+    return res, final_epoch

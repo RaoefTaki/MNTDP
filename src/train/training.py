@@ -44,7 +44,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
           select_mode='max', viz=None, device='cpu', lr_scheduler=None, name=None, log_steps=None,
           log_epoch=False, _run=None, prepare_batch=_prepare_batch,
           single_pass=False, n_ep_max=None, tune_report=None, env_url=None, t_id=-1,
-          conducted_iterations=0, conducted_epochs=0, tune_report_arguments_initialized=None):
+          tune_report_arguments_initialized=None):
 
     # print(model)
 
@@ -71,10 +71,6 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     trainer = create_supervised_trainer(model, optimizer, loss_fn,
                                         device=device,
                                         prepare_batch=prepare_batch)
-
-    # Set the new iteration and epoch
-    trainer.state.iteration = conducted_iterations
-    trainer.state.epoch = conducted_epochs
 
     if hasattr(model, 'new_epoch_hook'):
         trainer.add_event_handler(Events.EPOCH_STARTED, model.new_epoch_hook)
@@ -253,11 +249,13 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
 
     @trainer.on(Events.ITERATION_COMPLETED)
     def report_to_ray(trainer):
+        iteration = trainer.state.iteration if trainer.state else 0
+        epoch = trainer.state.epoch if trainer.state else 0
         tune.report(t=t_id,
                     best_val=best['value'],
                     duration_best_it=best['iter'],
-                    iterations=conducted_iterations,
-                    epochs=conducted_epochs,
+                    iteration_of_report=iteration,
+                    epoch_of_report=epoch,
                     **tune_report_arguments_initialized)
 
     @trainer.on(Events.ITERATION_COMPLETED)
@@ -370,4 +368,4 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     if hasattr(model, 'iter_per_epoch'):
         model.iter_per_epoch = len(train_loader)
     trainer.run(train_loader, max_epochs=max_epoch)
-    return (trainer.state.iteration, all_metrics, best), model, trainer.state.epoch
+    return (trainer.state.iteration, all_metrics, best), trainer.state.epoch
