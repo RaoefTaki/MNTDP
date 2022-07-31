@@ -212,7 +212,7 @@ class ExhaustiveSearch(nn.Module):
             # Decide, based on some criteria, whether to continue with learning or not
             pass  # TODO; some criteria to decide
 
-            raise ValueError("trainer:", trainer, "trainer._is_done():", trainer._is_done())
+            raise ValueError("trainer:", trainer, "trainer._is_done(trainer.state):", trainer._is_done(trainer.state))
 
             # Report the results so far
             tune.report(t=t_id,
