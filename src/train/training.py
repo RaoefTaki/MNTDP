@@ -69,8 +69,6 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         all_metrics = defaultdict(dict)
 
     trainer_was_none = trainer is None
-    if trainer is not None:
-        raise ValueError("trainer.state.iteration:", trainer.state.iteration, "trainer.state.epoch:", trainer.state.epoch)
     if trainer is None:
         trainer = create_supervised_trainer(model, optimizer, loss_fn,
                                             device=device,
