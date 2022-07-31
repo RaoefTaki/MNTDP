@@ -194,10 +194,7 @@ class ExhaustiveSearch(nn.Module):
                     call_path = path
 
             # Execute and override the outcomes
-            try:
-                all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
-            except Exception as e:
-                raise ValueError("[TEST] caught error", e)
+            all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
             trainer = all_res[0][1]  # Re-use the trainer for the next iteration now
             all_metrics = all_res[0][0][1]
             best = all_res[0][0][2]
@@ -324,6 +321,7 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     res, trainer, trainer_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
                                         optimizer=optim, env_url=env_url, t_id=t_id, trainer=None,
                                         all_metrics=all_metrics, best=best, **kwargs)
+    raise ValueError("[TEST] ERROR")
     # TODO: return model and reassign the model
     # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res, trainer, trainer_epoch
