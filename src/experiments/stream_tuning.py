@@ -482,6 +482,9 @@ def train_on_tasks(config):
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
             print("[TEST] Finished task:", t_id)
 
+            print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
+            exit(0)
+
             # print(type(analysis))
             # print(analysis)
             # if task_counter == 1:
