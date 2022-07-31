@@ -69,8 +69,8 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         all_metrics = defaultdict(dict)
 
     trainer_was_none = trainer is None
-    if trainer is not None and trainer.state.iteration > 2:
-        raise ValueError("trainer.state.iteration:", trainer.state.iteration, "trainer.state.epoch:", trainer.state.epoch)
+    # if trainer is not None and trainer.state.iteration > 2:
+    #     raise ValueError("trainer.state.iteration:", trainer.state.iteration, "trainer.state.epoch:", trainer.state.epoch)
     if trainer is None:
         trainer = create_supervised_trainer(model, optimizer, loss_fn,
                                             device=device,
@@ -145,12 +145,12 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     eval_time.pause()
     data_time = Timer(average=False)
     forward_time = Timer(average=False)
-    forward_time.attach(trainer, start=Events.EPOCH_STARTED,
+    forward_time.attach(trainer, start=Events.EPOCH_STARTED,  # TODO
                         pause=Events.ITERATION_COMPLETED,
                         resume=Events.ITERATION_STARTED,
                         step=Events.ITERATION_COMPLETED)
     epoch_time = Timer(average=False)
-    epoch_time.attach(trainer, start=Events.EPOCH_STARTED,
+    epoch_time.attach(trainer, start=Events.EPOCH_STARTED,  # TODO
                       pause=Events.EPOCH_COMPLETED,
                       resume=Events.EPOCH_STARTED,
                       step=Events.EPOCH_COMPLETED)
@@ -180,7 +180,7 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
             # if isinstance(model, SSNWrapper):
             #     model.arch_sampler.entropy().mean()
 
-    evaluator = create_supervised_evaluator(model, metrics=eval_metrics,
+    evaluator = create_supervised_evaluator(model, metrics=eval_metrics,  # TODO
                                             device=device,
                                             prepare_batch=prepare_batch)
     last_iteration = trainer.state.iteration
