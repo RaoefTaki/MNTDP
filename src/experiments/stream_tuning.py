@@ -28,6 +28,7 @@ from src.train.ignite_utils import _prepare_batch
 from src.train.training import train, get_classic_dataloaders
 from src.train.utils import set_dropout, set_optim_params, \
     _load_datasets, evaluate_on_tasks
+from src.utils.log_observer import initialize_tune_report_arguments
 from src.utils.misc import get_env_url, fill_matrix, \
     get_training_vis_conf
 from src.utils.plotting import update_summary, plot_tasks_env_urls, \
@@ -666,6 +667,9 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     if dropout is not None:
         set_dropout(model, dropout)
 
+    evaluation_splits = ['Val', 'Test']
+    tune_report_arguments_initialized = initialize_tune_report_arguments(tasks, evaluation_splits)
+
     assert not config, config
     start2 = time.time()
     # TODO, marker: training of models conducted in this function
@@ -762,7 +766,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # eval_tasks = tasks[:t_id + 1] if stream_setting else tasks
     evaluation = evaluate_on_tasks(eval_tasks, learner, batch_sizes[1],
                                    training_params['device'],
-                                   ['Val', 'Test'], normalize,
+                                   evaluation_splits, normalize,
                                    cur_task=t_id)
     assert evaluation['Val']['accuracy'][t_id] == b_state_dict['value']
 

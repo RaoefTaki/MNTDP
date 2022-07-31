@@ -35,6 +35,47 @@ def flatten_one_level(d):
             new_d[new_key_f.format(out_k, in_k)] = in_v
     return new_d
 
+def initialize_tune_report_arguments(tasks, evaluation_splits):
+    accs = {}
+    key = 'accuracy'
+    # logger.warning(evaluation)
+    for evaluation_split in evaluation_splits:
+        for i in range(len(tasks)):
+            accs['{}_T{}'.format(evaluation_split, i)] = -1
+
+    stats = {'entropy': -1}
+
+    other_keyword_dictionary = {'avg_acc_val': -1,
+                                'avg_acc_val_so_far': 1,
+                                'avg_acc_test_so_far': -1,
+                                'lca': -1,
+                                'avg_acc_test': -1,
+                                'test_acc': -1,
+                                'duration_seconds': -1,
+                                'duration_iterations': -1,
+                                'duration_finish': -1,
+                                'duration_model_creation': -1,
+                                'duration_training': -1,
+                                'duration_postproc': -1,
+                                'duration_eval': -1,
+                                'duration_sum': -1,
+                                'new_params': -1,
+                                'total_params': -1,
+                                'total_steps': -1,
+                                'fw_t': -1,
+                                'data_t': -1,
+                                'epoch_t': -1,
+                                'eval_t': -1,
+                                'total_t': -1,
+                                'env_url': -1,
+                                'path': -1,
+                                'used_architecture_id': -1}
+    other_keyword_dictionary.update(accs)
+    other_keyword_dictionary.update(stats)
+
+    raise ValueError(other_keyword_dictionary)
+    return other_keyword_dictionary
+
 
 class LogObserver(RunObserver):
 
