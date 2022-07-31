@@ -232,8 +232,10 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
                     t.last_result[f'Test_T{t_id}']
                 )
 
+            # Accommodate for trials which do not have a path, i.e. filter these out, since these were stopped by a
+            # scheduler
             best_trial = max(task_an.trials,
-                             key=lambda trial: trial.last_result['avg_acc_val_so_far'])
+                             key=lambda trial: (trial.last_result['path'] != -1, trial.last_result['avg_acc_val_so_far']))
 
             df = task_an.trial_dataframes[best_trial.logdir]
             best_trials_df.append(df)
@@ -241,7 +243,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         return_df = pandas.concat(best_trials_df, ignore_index=True)
         analysis = analysis[-1]
         results = sorted(analysis.trials, reverse=True,
-                         key=lambda trial: trial.last_result['avg_acc_val_so_far'])
+                         key=lambda trial: (trial.last_result['path'] != -1, trial.last_result['avg_acc_val_so_far']))
     else:
         if not ray.is_initialized():
             if local_mode:
