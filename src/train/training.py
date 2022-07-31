@@ -69,6 +69,8 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         all_metrics = defaultdict(dict)
 
     trainer_was_none = trainer is None
+    if trainer is not None:
+        raise ValueError("trainer.state.iteration:", trainer.state.iteration, "trainer.state.epoch:", trainer.state.epoch)
     if trainer is None:
         trainer = create_supervised_trainer(model, optimizer, loss_fn,
                                             device=device,
@@ -354,10 +356,11 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     #                                      e_t, e_t_ps, ev_t, ev_t_ps,
     #                                      total_time.value()))
 
-    data_time.attach(trainer, start=Events.STARTED,
-                     pause=Events.ITERATION_STARTED,
-                     resume=Events.ITERATION_COMPLETED,
-                     step=Events.ITERATION_STARTED)
+    if trainer_was_none:
+        data_time.attach(trainer, start=Events.STARTED,
+                         pause=Events.ITERATION_STARTED,
+                         resume=Events.ITERATION_COMPLETED,
+                         step=Events.ITERATION_STARTED)
 
     if hasattr(model, 'iter_per_epoch'):
         model.iter_per_epoch = len(train_loader)
