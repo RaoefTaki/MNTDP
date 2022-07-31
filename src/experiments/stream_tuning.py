@@ -682,6 +682,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
         # the exhaustive search models load the best state dict after training
         model.load_state_dict(b_state_dict['state_dict'])
 
+    raise ValueError("iterations:", metrics['training_iteration'], "epochs:", metrics['training_epoch'])
     iterations = list(metrics.pop('training_iteration').values())
     epochs = list(metrics.pop('training_epoch').values())
 
