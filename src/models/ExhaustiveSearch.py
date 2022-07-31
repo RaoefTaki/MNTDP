@@ -191,7 +191,7 @@ class ExhaustiveSearch(nn.Module):
         # raise ValueError("calls[model_id_to_use]():", calls[model_id_to_use]())
 
         # Calculate some metrics
-        self.res[call_path] = all_res[0]
+        self.res[call_path] = all_res
         all_res = list(map(lambda x: (x[1][2]['value'], x[0]), self.res.items()))
         best_path = max(all_res, key=itemgetter(0))[1]
         _, best_metrics, best_chkpt = self.res[best_path]
@@ -274,6 +274,4 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
     res, final_epoch = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
                              optimizer=optim, env_url=env_url, t_id=t_id,
                              tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
-    # TODO: return model and reassign the model
-    # logger.warning('{}=Received option {} results'.format(uid, idx))
     return res, final_epoch
