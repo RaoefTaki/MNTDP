@@ -279,6 +279,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         'evaluated_params': [t.evaluated_params for t in results],
         'envs': envs
     }
+    print(summary)
     summary = pandas.DataFrame(summary)
     # pandas.set_option('display.max_colwidth', None)
     # raise ValueError("return_df:", return_df, "return_df.columns:", return_df.columns, "len(return_df.index):", len(return_df.index),
@@ -385,7 +386,7 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            nr_of_architectures = 7 if t_id > 0 else 1
+            nr_of_architectures = 2 if t_id > 0 else 1 # TODO: 7 instead of 2
             config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
