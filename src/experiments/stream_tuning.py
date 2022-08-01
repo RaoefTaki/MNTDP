@@ -407,10 +407,9 @@ def train_on_tasks(config):
                 metric='best_val_T' + str(t_id),
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
-                grace_period=1,
+                grace_period=10,
                 reduction_factor=3,
                 brackets=1)
-            # TODO: reset the asha_scheduler
 
             analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)
             all_analysis.append(analysis)
