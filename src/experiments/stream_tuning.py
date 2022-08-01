@@ -486,6 +486,10 @@ def train_on_tasks(config):
             print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
             print("[TEST] Finished task:", t_id)
 
+            # Try shutdown ray to enable the Scheduler to not carry on in new iterations
+            ray.shutdown()
+            print(ray.is_initialized())
+
             # print(type(analysis))
             # print(analysis)
             # if task_counter == 1:
