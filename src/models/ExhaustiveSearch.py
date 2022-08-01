@@ -164,7 +164,7 @@ class ExhaustiveSearch(nn.Module):
         # Create the calls inside here, so we can modify them each time if needed
         call = None
         call_path = None
-        if t_id == 0:
+        if t_id == 1:
             raise ValueError(len(self.models_idx))
         for path, idx in self.models_idx.items():
             # Only create the function call for the specific run which we want
