@@ -164,10 +164,10 @@ class ExhaustiveSearch(nn.Module):
         # Create the calls inside here, so we can modify them each time if needed
         call = None
         call_path = None
-        if t_id == 1:
-            raise ValueError(len(self.models_idx))
         for path, idx in self.models_idx.items():
             # Only create the function call for the specific run which we want
+            # When t_id == 0, len(self.models_idx) == 1, logically as per MNTDP
+            # When t_id == 0, len(self.models_idx) == 7, as per MNTDP
             if idx == model_id_to_use:
                 if model_trained is None:
                     model = self.models[idx]
