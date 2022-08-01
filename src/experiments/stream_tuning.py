@@ -412,7 +412,7 @@ def train_on_tasks(config):
                 brackets=1)
             # TODO: reset the asha_scheduler
 
-            analysis = tune.run(train_t, config=config, **ray_params)  #, scheduler=asha_scheduler
+            analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
