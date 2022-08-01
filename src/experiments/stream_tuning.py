@@ -385,7 +385,7 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            nr_of_architectures = 2 if t_id > 0 else 1  # TODO: 7 instead of 2
+            nr_of_architectures = 7
             config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
@@ -545,13 +545,20 @@ def train_t(config):
     rescaled, t, metrics, b_state_dict, stats = train_single_task(config=config, learner=learner,
                                                                   **static_params)
 
-    learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
-    # raise ValueError(learner_save_path)
-    torch.save(learner, learner_save_path)
+    # If the results are valid: save them
+    if rescaled != -1 and t != -1 and metrics != -1 and b_state_dict != -1 and stats != -1:
+        learner_save_path = os.path.join(tune.get_trial_dir(), 'learner.pth')
+        # raise ValueError(learner_save_path)
+        torch.save(learner, learner_save_path)
 
 
 def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix,
                       total_steps):
+    # Create a dictionary with keywords used for tune.report with initialized -1 values. This is needed because the keywords
+    # supplied to the first tune.report call are set in stone and no new ones can be added afterwards, I observed
+    evaluation_splits = ['Val', 'Test']
+    tune_report_arguments_initialized = initialize_tune_report_arguments(tasks, evaluation_splits)
+
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
     assert 'model-params' not in config, "Can't have model-specific " \
@@ -569,6 +576,18 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     optim_params = config.pop('optim')
     schedule_mode = training_params.pop('schedule_mode')
     split_optims = training_params.pop('split_optims')
+
+    # optim = set_optim_params(optim_func, optim_params, model, split_optims)
+    optim_fact = partial(set_optim_params,
+                         optim_func=optim_func,
+                         optim_params=optim_params,
+                         split_optims=split_optims)
+
+    # In case it is the first task, we only have 1 unique architecture
+    if t_id == 0:
+        raise ValueError(optim_fact)
+        #optim_fact.keywords['optim_params'][0]['architecture']
+        return -1, -1, -1, -1, -1
 
     dropout = config.pop('dropout') if 'dropout' in config else None
 
@@ -654,11 +673,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # if hasattr(model, 'backward_hook'):
     #     training_params[]
 
-    # optim = set_optim_params(optim_func, optim_params, model, split_optims)
-    optim_fact = partial(set_optim_params,
-                         optim_func=optim_func,
-                         optim_params=optim_params,
-                         split_optims=split_optims)
     # if schedule_mode == 'steps':
     #     lr_scheduler = torch.optim.lr_scheduler.\
     #         MultiStepLR(optim[0], milestones=[25, 40])
@@ -671,11 +685,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     #     raise NotImplementedError()
     if dropout is not None:
         set_dropout(model, dropout)
-
-    # Create a dictionary with keywords used for tune.report with initialized -1 values. This is needed because the keywords
-    # supplied to the first tune.report call are set in stone and no new ones can be added afterwards, I observed
-    evaluation_splits = ['Val', 'Test']
-    tune_report_arguments_initialized = initialize_tune_report_arguments(tasks, evaluation_splits)
 
     assert not config, config
     start2 = time.time()

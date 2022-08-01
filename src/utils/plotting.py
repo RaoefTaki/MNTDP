@@ -551,9 +551,6 @@ def update_rescaled(y, x, name, viz, first):
 
 
 def update_summary(summary, viz, win='global', w_scale=1, h_scale=1):
-    for key, value in summary.items():
-        print("value:", value, "len(value):", len(value))
-    print(summary)
     if not isinstance(summary, pandas.DataFrame):
         summary = pandas.DataFrame(summary)
     data = summary.round(3).to_dict('records')
