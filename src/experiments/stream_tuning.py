@@ -554,11 +554,6 @@ def train_t(config):
 
 def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix,
                       total_steps):
-    # Create a dictionary with keywords used for tune.report with initialized -1 values. This is needed because the keywords
-    # supplied to the first tune.report call are set in stone and no new ones can be added afterwards, I observed
-    evaluation_splits = ['Val', 'Test']
-    tune_report_arguments_initialized = initialize_tune_report_arguments(tasks, evaluation_splits)
-
     training_params = config.pop('training-params')
     learner_params = config.pop('learner-params', {})
     assert 'model-params' not in config, "Can't have model-specific " \
@@ -583,10 +578,19 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                          optim_params=optim_params,
                          split_optims=split_optims)
 
-    # In case it is the first task, we only have 1 unique architecture
-    if t_id == 0:
-        raise ValueError(optim_fact)
-        #optim_fact.keywords['optim_params'][0]['architecture']
+    # Create a dictionary with keywords used for tune.report with initialized -1 values. This is needed because the keywords
+    # supplied to the first tune.report call are set in stone and no new ones can be added afterwards, I observed
+    evaluation_splits = ['Val', 'Test']
+    tune_report_arguments_initialized = initialize_tune_report_arguments(tasks, evaluation_splits)
+
+    # In case it is the first task, we only have 1 unique architecture, so terminate all others
+    if t_id == 0 and optim_fact.keywords['optim_params'][0]['architecture'] != 0:
+        tune.report(t=t_id,
+                    best_val=-1,
+                    duration_best_it=-1,
+                    iteration_of_report=-1,
+                    epoch_of_report=-1,
+                    **tune_report_arguments_initialized)
         return -1, -1, -1, -1, -1
 
     dropout = config.pop('dropout') if 'dropout' in config else None
