@@ -403,8 +403,8 @@ def train_on_tasks(config):
 
             # Define the scheduler for ASHA
             asha_scheduler = ASHAScheduler(
-                time_attr='epoch_of_report',
-                metric='best_val',
+                time_attr='epoch_of_report_T' + str(t_id),
+                metric='best_val_T' + str(t_id),
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
                 grace_period=1,
@@ -485,10 +485,6 @@ def train_on_tasks(config):
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
             print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
             print("[TEST] Finished task:", t_id)
-
-            # Try shutdown ray to enable the Scheduler to not carry on in new iterations
-            ray.shutdown()
-            print(ray.is_initialized())
 
             # print(type(analysis))
             # print(analysis)
@@ -589,11 +585,13 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     # In case it is the first task, we only have 1 unique architecture, so terminate all others
     if t_id == 0 and optim_fact.keywords['optim_params'][0]['architecture'] != 0:
+        current_task_best_val_time_attr = {'best_val_T' + str(t_id): -1, 'epoch_of_report_T' + str(t_id): -1}
         tune.report(t=t_id,
                     best_val=-1,
                     duration_best_it=-1,
                     iteration_of_report=-1,
                     epoch_of_report=-1,
+                    **current_task_best_val_time_attr,
                     **tune_report_arguments_initialized)
         return -1, -1, -1, -1, -1
 
@@ -848,6 +846,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # clean it up so that only the last one remains before plotting.py is ran
     # if t_id > 0:
     #     raise ValueError("info_training['path']:", info_training['path'])
+    current_task_best_val_time_attr = {'best_val_T' + str(t_id): b_state_dict['value'], 'epoch_of_report_T' + str(t_id): training_params['n_ep_max']}
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
                 iteration_of_report=sys.maxsize,  # Infinite, since we just use this as a counter for the scheduler
@@ -882,6 +881,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 # info_training=info_training,
                 path=info_training['path'],
                 used_architecture_id=info_training['params']['architecture'],
+                **current_task_best_val_time_attr,
                 **accs, **stats)
     return rescaled, t, metrics, b_state_dict, stats
 

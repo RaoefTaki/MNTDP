@@ -251,11 +251,13 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
     def report_to_ray(trainer):
         iteration = trainer.state.iteration if trainer.state else 0
         epoch = trainer.state.epoch if trainer.state else 0
+        current_task_best_val_time_attr = {'best_val_T' + str(t_id): best['value'], 'epoch_of_report_T' + str(t_id): epoch}
         tune.report(t=t_id,
                     best_val=best['value'],
                     duration_best_it=best['iter'],
                     iteration_of_report=iteration,
                     epoch_of_report=epoch,
+                    **current_task_best_val_time_attr,
                     **tune_report_arguments_initialized)
 
     @trainer.on(Events.ITERATION_COMPLETED)
