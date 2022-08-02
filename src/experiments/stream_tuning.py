@@ -406,8 +406,8 @@ def train_on_tasks(config):
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
                 mode='max',
-                grace_period=2,
-                check_epoch=1,
+                grace_period=0,
+                check_epoch=30,
                 certainty=0.95)
 
             analysis = tune.run(train_t, config=config, scheduler=lce_scheduler, **ray_params)

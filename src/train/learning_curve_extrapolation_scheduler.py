@@ -131,7 +131,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
 
-        if epoch < self._grace_period:
+        if epoch <= self._grace_period:
             return TrialScheduler.CONTINUE
 
         # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
