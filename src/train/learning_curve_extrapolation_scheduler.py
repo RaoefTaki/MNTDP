@@ -9,6 +9,12 @@ from ray.tune.result import DEFAULT_METRIC
 from ray.tune.trial import Trial
 from ray.tune.schedulers.trial_scheduler import FIFOScheduler, TrialScheduler
 
+from pylrpredictor.curvefunctions import model_defaults, vap, pow3, loglog_linear, dr_hill_zero_background, \
+    log_power, pow4, mmf, exp4, janoschek, weibull, ilog2
+from pylrpredictor.curvemodels import MCMCCurveModel
+from pylrpredictor.ensemblecurvemodel import CurveEnsemble
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +70,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "inf")
             self._compare_op = max if self._mode == "max" else min
 
-        self._best_extrapolated_results = (None, self._worst)  # Stores a tuple of (Trial, extrapolated_performance)
+        self._best_obtained_value = (None, self._worst)  # Stores a tuple of (Trial, obtained_performance)
         self._obtained_values = {}  # Stores per trial a dict of obtained values per reported epoch number
         self._time_attr = time_attr
         self._last_pause = collections.defaultdict(lambda: float("-inf"))
@@ -117,8 +123,10 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         epoch = result[self._time_attr]
         resulting_val = result[self._metric]
 
-        # Update the obtained values
+        # Update the obtained values and the best obtained value so far
         self._obtained_values[trial.trial_id][epoch] = resulting_val
+        if resulting_val > self._best_obtained_value[1]:
+            self._best_obtained_value = (trial, resulting_val)
 
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
@@ -128,96 +136,44 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
         # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
         # strictly worse than the current best extrapolated or actually obtained performance, at epoch 300
-        raise ValueError(result, self._obtained_values)  # Check to see what is in result exactly
         if epoch % self._check_epoch == 0:
-            # Do LC extrapolation
-            pass
-
-            # Depending on the extrapolated performance, either stop or continue
-            if False:
+            # Depending on the expectation of surpassing, either stop or continue
+            if not self._lce_surpass(trial, epoch):
                 action = TrialScheduler.STOP
             else:
                 action = TrialScheduler.CONTINUE
         else:
             action = TrialScheduler.CONTINUE
 
-        # If a best performance was obtained, either extrapolated or real, save it
-        # self._best_extrapolated_results
-
         return action
 
-        # TODO: just to see if it works, try stopping every trial at 1 epoch
-        # TODO: then in next github push only resuming the single best trial
+    def _lce_surpass(self, trial, epoch):
+        # Build the LC extrapolator model from scratch and check whether with 95% certainty we will not reach the
+        # maximum atained performance so far. Outputs whether it will surpass (True) the best obtained result so far or
+        # not (False)
+        # First collect the obtained performance metrics for this model
+        metric_list = list(self._obtained_values[trial.trial_id].values())
 
-        # if result[self._metric] == -1:
-        #     return action
-        #
-        # # Pause each trial if it's at a check epoch, and update the best found trial if applicable
-        # epoch = result[self._time_attr]
-        # resulting_val = result[self._metric]
-        # if epoch % self._check_epoch == 0:
-        #     # Update if applicable
-        #     if self._compare_op(resulting_val, self._best_trial[1]) == resulting_val:
-        #         self._best_trial = (trial, resulting_val)
-        #
-        #     # Set the action to pause
-        #     action = TrialScheduler.PAUSE  # TODO: STOP
-        #
-        # return action
+        x_values = np.array(list(range(1, epoch + 1)))
+        y_values = np.array(metric_list)
 
-        # # In case all trials have been paused, perform the LC extrapolation
-        # if all(trial.status == Trial.PAUSED for trial in trial_runner.get_trials()):
-        #     # LCE for each trial
-        #     # TODO: stop the others and resume the best one
-        #     pass
-        # else:
-        #     return action
-        #
-        # # TODO: clean self._trials if new epochs starts etc
-        #
-        # trial_runner.trial_executor.unpause_trial(trial)
-        #
-        # if trial in self._stopped_trials:
-        #     assert not self._hard_stop
-        #     # Fall back to FIFO
-        #     return TrialScheduler.CONTINUE
-        #
-        # time = result[self._time_attr]
-        # self._results[trial].append(result)
-        #
-        # if time < self._grace_period:
-        #     return TrialScheduler.CONTINUE
-        #
-        # trials = self._trials_beyond_time(time)
-        # trials.remove(trial)
-        #
-        # # if len(trials) < self._min_samples_required:
-        # #     action = self._on_insufficient_samples(trial_runner, trial, time)
-        # #     if action == TrialScheduler.PAUSE:
-        # #         self._last_pause[trial] = time
-        # #         action_str = "Yielding time to other trials."
-        # #     else:
-        # #         action_str = "Continuing anyways."
-        # #     logger.debug(
-        # #         "MedianStoppingRule: insufficient samples={} to evaluate "
-        # #         "trial {} at t={}. {}".format(
-        # #             len(trials), trial.trial_id, time, action_str))
-        # #     return action
-        #
-        # median_result = self._median_result(trials, time)
-        # best_result = self._best_result(trial)
-        # logger.debug("Trial {} best res={} vs median res={} at t={}".format(
-        #     trial, best_result, median_result, time))
-        #
-        # if self._compare_op(median_result, best_result) != best_result:
-        #     logger.debug("LearningCurveExtrapolationScheduler: early stopping {}".format(trial))
-        #     self._stopped_trials.add(trial)
-        #     if self._hard_stop:
-        #         return TrialScheduler.STOP
-        #     else:
-        #         return TrialScheduler.PAUSE
-        # else:
-        #     return TrialScheduler.CONTINUE
+        # Fit the LC model
+        lc_model = self._initialize_lc_extrapolation_model()
+        lc_model.fit(x_values, y_values)
+
+        # Extrapolate and calculate the probabilities
+        current_end_posterior_prob = lc_model.posterior_prob_x_greater_than(self._extrapolated_epoch, self._best_obtained_value[1])
+        return not(current_end_posterior_prob <= 1 - self._certainty)
+
+    def _initialize_lc_extrapolation_model(self):
+        lc_functions = {'pow4': pow4}
+        lc_models = []
+        for key, value in lc_functions.items():
+            temp_lc_model = MCMCCurveModel(function=lc_functions[key],
+                                           default_vals=model_defaults[key])
+            lc_models.append(temp_lc_model)
+        lc_model = CurveEnsemble(lc_models)
+        return lc_model
 
     def on_trial_complete(self, trial_runner: "trial_runner.TrialRunner",
                           trial: Trial, result: Dict):

@@ -236,17 +236,6 @@ def train(model, train_loader, eval_loaders, optimizer, loss_fn,
         interpolate_list[nans] = np.interp(x(nans), x(~nans), interpolate_list[~nans])
         return interpolate_list
 
-    def initialize_lc_extrapolation_model():
-        lc_functions = {'pow4': pow4}
-
-        lc_models = []
-        for key, value in lc_functions.items():
-            temp_lc_model = MCMCCurveModel(function=lc_functions[key],
-                                           default_vals=model_defaults[key])
-            lc_models.append(temp_lc_model)
-        lc_model = CurveEnsemble(lc_models)
-        return lc_model
-
     @trainer.on(Events.ITERATION_COMPLETED)
     def report_to_ray(trainer):
         iteration = trainer.state.iteration if trainer.state else 0
