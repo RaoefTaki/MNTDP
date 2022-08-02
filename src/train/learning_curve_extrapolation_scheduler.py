@@ -119,22 +119,23 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         # TODO: just to see if it works, try stopping every trial at 1 epoch
         # TODO: then in next github push only resuming the single best trial
         action = TrialScheduler.STOP
-
-        if result[self._metric] == -1:
-            return action
-
-        # Pause each trial if it's at a check epoch, and update the best found trial if applicable
-        epoch = result[self._time_attr]
-        resulting_val = result[self._metric]
-        if epoch % self._check_epoch == 0:
-            # Update if applicable
-            if self._compare_op(resulting_val, self._best_trial[1]) == resulting_val:
-                self._best_trial = (trial, resulting_val)
-
-            # Set the action to pause
-            action = TrialScheduler.PAUSE  # TODO: STOP
-        
         return action
+        
+        # if result[self._metric] == -1:
+        #     return action
+        #
+        # # Pause each trial if it's at a check epoch, and update the best found trial if applicable
+        # epoch = result[self._time_attr]
+        # resulting_val = result[self._metric]
+        # if epoch % self._check_epoch == 0:
+        #     # Update if applicable
+        #     if self._compare_op(resulting_val, self._best_trial[1]) == resulting_val:
+        #         self._best_trial = (trial, resulting_val)
+        #
+        #     # Set the action to pause
+        #     action = TrialScheduler.PAUSE  # TODO: STOP
+        #
+        # return action
 
         # # In case all trials have been paused, perform the LC extrapolation
         # if all(trial.status == Trial.PAUSED for trial in trial_runner.get_trials()):
