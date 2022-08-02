@@ -406,7 +406,7 @@ def train_on_tasks(config):
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
                 mode='max',
-                grace_period=1,
+                grace_period=0,
                 check_epoch=1,
                 certainty=0.95)
 
