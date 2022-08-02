@@ -220,15 +220,16 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         return self._trials_nr_of_checks[trial.trial_id] == self._nr_of_checks
 
     def choose_trial_to_run(
-            self, trial_runner_obj: "trial_runner.TrialRunner") -> Optional[Trial]:
-        for trial in trial_runner_obj.get_trials():
+            self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
+        for trial in trial_runner.get_trials():
             if (trial.status == Trial.PENDING
-                    and trial_runner_obj.has_resources(trial.resources)):
+                    and trial_runner.has_resources(trial.resources)):
                 return trial
-        for trial in trial_runner_obj.get_trials():
+        for trial in trial_runner.get_trials():
             if (trial.status == Trial.PAUSED
-                    and trial_runner_obj.has_resources(trial.resources)):
+                    and trial_runner.has_resources(trial.resources)):
                 return trial
+        raise ValueError("[TEST] ERROR")
         return None
 
     # def choose_trial_to_run(
