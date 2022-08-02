@@ -19,7 +19,7 @@ from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.logger import JsonLogger, CSVLogger
 import ray.tune.utils
-from ray.tune.schedulers import LearningCurveExtrapolationScheduler
+from src.train.learning_curve_extrapolation_scheduler import LearningCurveExtrapolationScheduler
 from torchvision.transforms import transforms
 
 from src.experiments.base_experiment import BaseExperiment
