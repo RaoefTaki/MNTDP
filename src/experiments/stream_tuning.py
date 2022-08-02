@@ -172,7 +172,7 @@ def tune_learner_on_stream(learner, learner_name, task_level_tuning,
         return learner_name
         # return '{}_{}'.format(learner_name, trial.trial_id)
 
-    reporter = CLIReporter(max_progress_rows=10, max_report_frequency=60)
+    reporter = CLIReporter(max_progress_rows=10, max_report_frequency=5)
     # reporter.add_metric_column('avg_acc_val')
     reporter.add_metric_column('avg_acc_val_so_far', 'avg_val')
     reporter.add_metric_column('avg_acc_test_so_far', 'avg_test')
