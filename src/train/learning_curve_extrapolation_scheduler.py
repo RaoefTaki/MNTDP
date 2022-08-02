@@ -8,12 +8,12 @@ from ray.tune import trial_runner
 from ray.tune.result import DEFAULT_METRIC
 from ray.tune.trial import Trial
 from ray.tune.schedulers.trial_scheduler import FIFOScheduler, TrialScheduler
-from src.train.ray_schedulers import FIFOCheckWaitScheduler
+from src.train.ray_schedulers import FIFOScheduler
 
 logger = logging.getLogger(__name__)
 
 
-class LearningCurveExtrapolationScheduler(FIFOCheckWaitScheduler):
+class LearningCurveExtrapolationScheduler(FIFOScheduler):
     """Implements a scheduler based on learning curve extrapolation as described in this paper:
 
     https://www.ijcai.org/Proceedings/15/Papers/487.pdf
