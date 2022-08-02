@@ -104,7 +104,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
         self._trials_nr_of_checks[trial.trial_id] = 0
 
-        super(LearningCurveExtrapolationScheduler, self).on_trial_add(trial_runner, trial)
+        # super(LearningCurveExtrapolationScheduler, self).on_trial_add(trial_runner, trial)
 
     def on_trial_result(self, trial_runner: "trial_runner.TrialRunner",
                         trial: Trial, result: Dict) -> str:
@@ -218,6 +218,18 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
     def _can_proceed_next_run(self, trial):
         # Check to see if all trials have been processed, and whether this trial is thus ready to proceed
         return self._trials_nr_of_checks[trial.trial_id] == self._nr_of_checks
+
+    def choose_trial_to_run(
+            self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
+        for trial in trial_runner.get_trials():
+            if (trial.status == Trial.PENDING
+                    and trial_runner.has_resources(trial.resources)):
+                return trial
+        for trial in trial_runner.get_trials():
+            if (trial.status == Trial.PAUSED
+                    and trial_runner.has_resources(trial.resources)):
+                return trial
+        return None
 
     # def choose_trial_to_run(
     #         self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
