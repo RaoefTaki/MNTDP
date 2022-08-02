@@ -43,13 +43,15 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                  time_attr: str = "time_total_s",
                  metric: Optional[str] = None,
                  mode: Optional[str] = None,
-                 grace_period: float = 0,
+                 grace_period: float = 1,
                  check_epoch: int = 30,
+                 extrapolated_epoch: int = 300,
                  certainty: float = 0.95):
         FIFOScheduler.__init__(self)
         self._stopped_trials = set()
         self._grace_period = grace_period
         self._check_epoch = check_epoch
+        self._extrapolated_epoch = extrapolated_epoch
         self._certainty = certainty
         self._metric = metric
         self._worst = 0
@@ -63,6 +65,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
             self._compare_op = max if self._mode == "max" else min
 
         self._best_trial = (None, self._worst)  # Stores a tuple of (Trial, performance)
+        self._trials_previous_statuses = {}  # Stores trial IDs and their running/pause/stop statuses of the previous on_trial_result call
         self._time_attr = time_attr
         self._last_pause = collections.defaultdict(lambda: float("-inf"))
         self._results = collections.defaultdict(list)
@@ -98,6 +101,8 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "to `tune.run()`".format(self.__class__.__name__, self._metric,
                                          self._mode))
 
+        self._trials_previous_statuses[trial.trial_id] = TrialScheduler.CONTINUE
+
         super(LearningCurveExtrapolationScheduler, self).on_trial_add(trial_runner, trial)
 
     def on_trial_result(self, trial_runner: "trial_runner.TrialRunner",
@@ -113,18 +118,22 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
             return TrialScheduler.CONTINUE
         # TODO: just to see if it works, try stopping every trial at 1 epoch
         # TODO: then in next github push only resuming the single best trial
-        action = None
+        action = TrialScheduler.STOP
 
-        # Pause each trial if it's at a check epoch, and update the best found trial if applicable
-        epoch = result[self._time_attr]
-        if epoch % self._check_epoch == 0:
-            # Update if applicable
-            if result[self._metric] > self._best_trial[1]:
-                self._best_trial = (trial, result[self._metric])
+        if self._trials_previous_statuses[trial.trial_id] != TrialScheduler.PAUSE:
+            # Pause each trial if it's at a check epoch, and update the best found trial if applicable
+            epoch = result[self._time_attr]
+            if epoch % self._check_epoch == 0:
+                # Update if applicable
+                if result[self._metric] > self._best_trial[1]:
+                    self._best_trial = (trial, result[self._metric])
 
-            # Set the action to pause
-            action = TrialScheduler.PAUSE  # TODO: STOP
+                # Set the action to pause
+                action = TrialScheduler.PAUSE  # TODO: STOP
+        elif self._trials_previous_statuses[trial.trial_id] != TrialScheduler.CONTINUE:
+            action = TrialScheduler.CONTINUE
 
+        self._trials_previous_statuses[trial.trial_id] = action
         return action
 
         # # In case all trials have been paused, perform the LC extrapolation
@@ -185,40 +194,14 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                           trial: Trial, result: Dict):
         self._results[trial].append(result)
 
-    def debug_string(self) -> str:
-        return "Using LearningCurveExtrapolationScheduler: num_stopped={}.".format(
-            len(self._stopped_trials))
-
-    # def _on_insufficient_samples(self,
-    #                              trial_runner: "trial_runner.TrialRunner",
-    #                              trial: Trial, time: float) -> str:
-    #     pause = time - self._last_pause[trial] > self._min_time_slice
-    #     pause = pause and [
-    #         t for t in trial_runner.get_trials()
-    #         if t.status in (Trial.PENDING, Trial.PAUSED)
-    #     ]
-    #     return TrialScheduler.PAUSE if pause else TrialScheduler.CONTINUE
-
-    def _trials_beyond_time(self, time: float) -> List[Trial]:
-        trials = [
-            trial for trial in self._results
-            if self._results[trial][-1][self._time_attr] >= time
-        ]
-        return trials
-
-    def _median_result(self, trials: List[Trial], time: float):
-        return np.median([self._running_mean(trial, time) for trial in trials])
-
-    def _running_mean(self, trial: Trial, time: float) -> np.ndarray:
-        results = self._results[trial]
-        # TODO(ekl) we could do interpolation to be more precise, but for now
-        # assume len(results) is large and the time diffs are roughly equal
-        scoped_results = [
-            r for r in results
-            if self._grace_period <= r[self._time_attr] <= time
-        ]
-        return np.mean([r[self._metric] for r in scoped_results])
-
-    def _best_result(self, trial):
-        results = self._results[trial]
-        return self._compare_op([r[self._metric] for r in results])
+    # def choose_trial_to_run(
+    #         self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
+    #     for trial in trial_runner.get_trials():
+    #         if (trial.status == Trial.PENDING
+    #                 and trial_runner.has_resources(trial.resources)):
+    #             return trial
+    #     for trial in trial_runner.get_trials():
+    #         if (trial.status == Trial.PAUSED
+    #                 and trial_runner.has_resources(trial.resources)):
+    #             return trial
+    #     return None
