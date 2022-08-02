@@ -52,7 +52,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         self._check_epoch = check_epoch
         self._certainty = certainty
         self._metric = metric
-        self._best_trial = (None, None)  # Stores a tuple of (Trial, performance)
+        self._worst = 0
         self._compare_op = None
 
         self._mode = mode
@@ -62,6 +62,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "inf")
             self._compare_op = max if self._mode == "max" else min
 
+        self._best_trial = (None, self._worst)  # Stores a tuple of (Trial, performance)
         self._time_attr = time_attr
         self._last_pause = collections.defaultdict(lambda: float("-inf"))
         self._results = collections.defaultdict(list)
