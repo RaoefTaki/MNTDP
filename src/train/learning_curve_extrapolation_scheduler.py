@@ -41,19 +41,11 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
     def __init__(self,
                  time_attr: str = "time_total_s",
-                 reward_attr: Optional[str] = None,
                  metric: Optional[str] = None,
                  mode: Optional[str] = None,
-                 grace_period: float = 60.0,
+                 grace_period: float = 0,
                  check_epoch: int = 30,
                  certainty: float = 0.95):
-        if reward_attr is not None:
-            mode = "max"
-            metric = reward_attr
-            logger.warning(
-                "`reward_attr` is deprecated and will be removed in a future "
-                "version of Tune. "
-                "Setting `metric={}` and `mode=max`.".format(reward_attr))
         FIFOScheduler.__init__(self)
         self._stopped_trials = set()
         self._grace_period = grace_period

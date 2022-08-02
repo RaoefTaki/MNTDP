@@ -406,10 +406,9 @@ def train_on_tasks(config):
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
                 mode='max',
-                max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
                 grace_period=0,
-                reduction_factor=3,
-                brackets=1)
+                check_epoch=1,
+                certainty=0.95)
 
             analysis = tune.run(train_t, config=config, scheduler=lce_scheduler, **ray_params)
             all_analysis.append(analysis)
