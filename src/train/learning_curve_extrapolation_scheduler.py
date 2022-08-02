@@ -65,7 +65,8 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
             self._compare_op = max if self._mode == "max" else min
 
         self._best_trial = (None, self._worst)  # Stores a tuple of (Trial, performance)
-        self._trials_previous_statuses = {}  # Stores trial IDs and their running/pause/stop statuses of the previous on_trial_result call
+        self._trials_nr_of_checks = {}  # Stores the number of checks performed, in this scheduler, for each trial
+        self._nr_of_checks = 0
         self._time_attr = time_attr
         self._last_pause = collections.defaultdict(lambda: float("-inf"))
         self._results = collections.defaultdict(list)
@@ -101,7 +102,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "to `tune.run()`".format(self.__class__.__name__, self._metric,
                                          self._mode))
 
-        self._trials_previous_statuses[trial.trial_id] = TrialScheduler.CONTINUE
+        self._trials_nr_of_checks[trial.trial_id] = 0
 
         super(LearningCurveExtrapolationScheduler, self).on_trial_add(trial_runner, trial)
 
@@ -117,15 +118,28 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
 
-        action = None
-        if result[self._metric] <= 0.1:
-            action = TrialScheduler.STOP
+        # Stop if not found. Apparently something went wrong
+        if trial.trial_id not in self._trials_nr_of_checks:
+            return TrialScheduler.STOP
+
+        # Pause each trial if it's at a check epoch, and update the best found trial if applicable
+        epoch = result[self._time_attr]
+        resulting_val = result[self._metric]
+        if epoch % self._check_epoch == 0:
+            self._trials_nr_of_checks[trial.trial_id] += 1
+            action = TrialScheduler.PAUSE
         else:
             action = TrialScheduler.CONTINUE
+
+        # Check if all trials have been checked the same number of times. If so, update the global check counter
+        current_nr_of_checks = self._trials_nr_of_checks[trial.trial_id]
+        if all(self._trials_nr_of_checks[trial.trial_id] == current_nr_of_checks for trial in trial_runner.get_trials()):
+            self._nr_of_checks += 1
+
+        return action
+
         # TODO: just to see if it works, try stopping every trial at 1 epoch
         # TODO: then in next github push only resuming the single best trial
-        # action = TrialScheduler.STOP
-        return action
 
         # if result[self._metric] == -1:
         #     return action
@@ -201,14 +215,16 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                           trial: Trial, result: Dict):
         self._results[trial].append(result)
 
-    # def choose_trial_to_run(
-    #         self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
-    #     for trial in trial_runner.get_trials():
-    #         if (trial.status == Trial.PENDING
-    #                 and trial_runner.has_resources(trial.resources)):
-    #             return trial
-    #     for trial in trial_runner.get_trials():
-    #         if (trial.status == Trial.PAUSED
-    #                 and trial_runner.has_resources(trial.resources)):
-    #             return trial
-    #     return None
+    def _can_proceed_next_run(self, trial):
+        # Check to see if all trials have been processed, and whether this trial is thus ready to proceed
+        return self._trials_nr_of_checks[trial.trial_id] == self._nr_of_checks
+
+    def choose_trial_to_run(
+            self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
+        for trial in trial_runner.get_trials():
+            if trial.status == Trial.PENDING and trial_runner.has_resources(trial.resources) and self._can_proceed_next_run(trial):
+                return trial
+        for trial in trial_runner.get_trials():
+            if trial.status == Trial.PAUSED and trial_runner.has_resources(trial.resources) and self._can_proceed_next_run(trial):
+                return trial
+        return None
