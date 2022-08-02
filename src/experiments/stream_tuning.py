@@ -19,7 +19,7 @@ from ray import tune
 from ray.tune import CLIReporter
 from ray.tune.logger import JsonLogger, CSVLogger
 import ray.tune.utils
-from ray.tune.schedulers import ASHAScheduler
+from ray.tune.schedulers import LearningCurveExtrapolationScheduler
 from torchvision.transforms import transforms
 
 from src.experiments.base_experiment import BaseExperiment
@@ -402,16 +402,16 @@ def train_on_tasks(config):
             # 'max_failures': 3}
 
             # Define the scheduler for ASHA
-            asha_scheduler = ASHAScheduler(
+            lce_scheduler = LearningCurveExtrapolationScheduler(
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
-                grace_period=10,
+                grace_period=0,
                 reduction_factor=3,
                 brackets=1)
 
-            analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)
+            analysis = tune.run(train_t, config=config, scheduler=lce_scheduler, **ray_params)
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
