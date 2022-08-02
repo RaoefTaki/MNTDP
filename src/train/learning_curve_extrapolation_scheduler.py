@@ -117,8 +117,8 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
 
-        action = TrialScheduler.STOP
-        if result[self._metric] < 0.05:
+        action = None
+        if result[self._metric] <= 0.1:
             action = TrialScheduler.STOP
         else:
             action = TrialScheduler.CONTINUE
