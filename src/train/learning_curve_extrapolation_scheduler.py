@@ -64,9 +64,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "inf")
             self._compare_op = max if self._mode == "max" else min
 
-        self._best_trial = (None, self._worst)  # Stores a tuple of (Trial, performance)
-        self._trials_nr_of_checks = {}  # Stores the number of checks performed, in this scheduler, for each trial
-        self._nr_of_checks = 0
+        self._best_extrapolated_results = (None, self._worst)  # Stores a tuple of (Trial, extrapolated_performance)
         self._time_attr = time_attr
         self._last_pause = collections.defaultdict(lambda: float("-inf"))
         self._results = collections.defaultdict(list)
@@ -102,8 +100,6 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "to `tune.run()`".format(self.__class__.__name__, self._metric,
                                          self._mode))
 
-        self._trials_nr_of_checks[trial.trial_id] = 0
-
         super(LearningCurveExtrapolationScheduler, self).on_trial_add(trial_runner, trial)
 
     def on_trial_result(self, trial_runner: "trial_runner.TrialRunner",
@@ -115,26 +111,32 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         It is asynchronous, i.e. it completes all trials until a certain epoch X before performing the LC extrapolation
         and removing bad ones based on the best value obtained thus far.
         """
+        epoch = result[self._time_attr]
+        resulting_val = result[self._metric]
+
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
 
-        # Stop if not found. Apparently something went wrong
-        if trial.trial_id not in self._trials_nr_of_checks:
-            return TrialScheduler.STOP
+        if epoch < self._grace_period:
+            return TrialScheduler.CONTINUE
 
-        # Pause each trial if it's at a check epoch, and update the best found trial if applicable
-        epoch = result[self._time_attr]
-        resulting_val = result[self._metric]
+        # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
+        # strictly worse than the current best extrapolated or actually obtained performance, at epoch 300
+        raise ValueError(result)  # Check to see what is in result exactly
         if epoch % self._check_epoch == 0:
-            self._trials_nr_of_checks[trial.trial_id] += 1
-            action = TrialScheduler.PAUSE
+            # Do LC extrapolation
+            pass
+
+            # Depending on the extrapolated performance, either stop or continue
+            if False:
+                action = TrialScheduler.STOP
+            else:
+                action = TrialScheduler.CONTINUE
         else:
             action = TrialScheduler.CONTINUE
 
-        # Check if all trials have been checked the same number of times. If so, update the global check counter
-        current_nr_of_checks = self._trials_nr_of_checks[trial.trial_id]
-        if all(self._trials_nr_of_checks[trial.trial_id] == current_nr_of_checks for trial in trial_runner.get_trials()):
-            self._nr_of_checks += 1
+        # If a best performance was obtained, either extrapolated or real, save it
+        # self._best_extrapolated_results
 
         return action
 
@@ -214,23 +216,6 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
     def on_trial_complete(self, trial_runner: "trial_runner.TrialRunner",
                           trial: Trial, result: Dict):
         self._results[trial].append(result)
-
-    def _can_proceed_next_run(self, trial):
-        # Check to see if all trials have been processed, and whether this trial is thus ready to proceed
-        return self._trials_nr_of_checks[trial.trial_id] == self._nr_of_checks
-
-    def choose_trial_to_run(
-            self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
-        for trial in trial_runner.get_trials():
-            raise ValueError("[TEST] ERROR:", trial, trial_runner.get_trials(), len(trial_runner.get_trials()))
-            if (trial.status == Trial.PENDING
-                    and trial_runner.has_resources(trial.resources)):
-                return trial
-        for trial in trial_runner.get_trials():
-            if (trial.status == Trial.PAUSED
-                    and trial_runner.has_resources(trial.resources)):
-                return trial
-        return None
 
     # def choose_trial_to_run(
     #         self, trial_runner: "trial_runner.TrialRunner") -> Optional[Trial]:
