@@ -116,11 +116,17 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         """
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
+
+        action = TrialScheduler.STOP
+        if result[self._metric] < 0.05:
+            action = TrialScheduler.STOP
+        else:
+            action = TrialScheduler.CONTINUE
         # TODO: just to see if it works, try stopping every trial at 1 epoch
         # TODO: then in next github push only resuming the single best trial
-        action = TrialScheduler.STOP
+        # action = TrialScheduler.STOP
         return action
-        
+
         # if result[self._metric] == -1:
         #     return action
         #
