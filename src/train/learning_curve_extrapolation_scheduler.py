@@ -229,5 +229,5 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 if trial.status == Trial.PAUSED and trial_runner.has_resources(trial.resources) and self._can_proceed_next_run(trial):
                     return trial
         except:
-            raise ValueError(trial_runner, type(trial_runner), trial_runner.get_trials(), trial_runner.has_resources(trial_runner.get_trials()[0].resources))
+            raise ValueError(trial_runner, type(trial_runner), trial_runner.get_trials())
         return None
