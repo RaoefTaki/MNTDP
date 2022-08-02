@@ -65,6 +65,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
             self._compare_op = max if self._mode == "max" else min
 
         self._best_extrapolated_results = (None, self._worst)  # Stores a tuple of (Trial, extrapolated_performance)
+        self._obtained_values = {}  # Stores per trial a dict of obtained values per reported epoch number
         self._time_attr = time_attr
         self._last_pause = collections.defaultdict(lambda: float("-inf"))
         self._results = collections.defaultdict(list)
@@ -100,6 +101,8 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
                 "to `tune.run()`".format(self.__class__.__name__, self._metric,
                                          self._mode))
 
+        self._obtained_values[trial.trial_id] = {}
+
         super(LearningCurveExtrapolationScheduler, self).on_trial_add(trial_runner, trial)
 
     def on_trial_result(self, trial_runner: "trial_runner.TrialRunner",
@@ -114,6 +117,9 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         epoch = result[self._time_attr]
         resulting_val = result[self._metric]
 
+        # Update the obtained values
+        self._obtained_values[trial.trial_id][epoch] = resulting_val
+
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
 
@@ -122,7 +128,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
         # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
         # strictly worse than the current best extrapolated or actually obtained performance, at epoch 300
-        raise ValueError(result)  # Check to see what is in result exactly
+        raise ValueError(result, self._obtained_values)  # Check to see what is in result exactly
         if epoch % self._check_epoch == 0:
             # Do LC extrapolation
             pass
