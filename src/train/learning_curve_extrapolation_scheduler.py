@@ -134,6 +134,8 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         if epoch <= self._grace_period:
             return TrialScheduler.CONTINUE
 
+        print("[TEST] LCE SCHEDULER")
+
         # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
         # strictly worse than the current best extrapolated or actually obtained performance, at epoch 300
         if epoch % self._check_epoch == 0:
