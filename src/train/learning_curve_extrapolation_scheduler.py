@@ -127,6 +127,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         self._obtained_values[trial.trial_id][epoch] = resulting_val
         if resulting_val > self._best_obtained_value[1]:
             self._best_obtained_value = (trial, resulting_val)
+            print("[TEST] LCE SCHEDULER: self._best_obtained_value[1]:", self._best_obtained_value[1])
 
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
@@ -134,15 +135,16 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         if epoch <= self._grace_period:
             return TrialScheduler.CONTINUE
 
-        print("[TEST] LCE SCHEDULER")
-
         # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
         # strictly worse than the current best extrapolated or actually obtained performance, at epoch 300
         if epoch % self._check_epoch == 0:
+            print("[TEST] LCE SCHEDULER: Check epoch:", epoch)
             # Depending on the expectation of surpassing, either stop or continue
             if not self._lce_surpass(trial, epoch):
+                print("[TEST] LCE SCHEDULER: Stop because of _lce_surpass")
                 action = TrialScheduler.STOP
             else:
+                print("[TEST] LCE SCHEDULER: Continue because of _lce_surpass")
                 action = TrialScheduler.CONTINUE
         else:
             action = TrialScheduler.CONTINUE
@@ -158,6 +160,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
         x_values = np.array(list(range(1, epoch + 1)))
         y_values = np.array(metric_list)
+        print("[TEST] LCE SCHEDULER: len(x_values):", len(x_values), "len(y_values):", len(y_values))
 
         # Fit the LC model
         lc_model = self._initialize_lc_extrapolation_model()
@@ -165,6 +168,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
         # Extrapolate and calculate the probabilities
         current_end_posterior_prob = lc_model.posterior_prob_x_greater_than(self._extrapolated_epoch, self._best_obtained_value[1])
+        print("[TEST] LCE SCHEDULER: current_end_posterior_prob:", current_end_posterior_prob)
         return not(current_end_posterior_prob <= 1 - self._certainty)
 
     def _initialize_lc_extrapolation_model(self):
