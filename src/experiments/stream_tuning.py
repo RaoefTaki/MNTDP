@@ -428,10 +428,10 @@ def train_on_tasks(config):
             total_iterations_for_this_task = 0
             # TODO: does this also consider stopped trials?
             for trial in analysis.trials:
-                print(trial.trial_id)
-                print(trial.status)
-                print(trial.last_result['iteration_of_report'])
-                print("---")
+                # print(trial.trial_id)
+                # print(trial.status)
+                # print(trial.last_result['iteration_of_report'])
+                # print("---")
                 if trial != best_trial:
                     trial_path = trial.logdir
                     shutil.rmtree(trial_path)
