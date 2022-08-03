@@ -438,7 +438,6 @@ def train_on_tasks(config):
                 total_iterations_for_this_task += trial.last_result['iteration_of_report']
             nr_of_iterations_to_add = total_iterations_so_far_per_task[t_id - 1] + total_iterations_for_this_task if t_id >= 1 else total_iterations_for_this_task
             total_iterations_so_far_per_task.append(nr_of_iterations_to_add)
-            print("total_iterations_for_this_task:", total_iterations_for_this_task)
             # am = np.argmax(list(map(get_key, analysis.trials)))
             # print("BEST IS {}: {}".format(am, best_trial.last_result['avg_acc_val']))
 
