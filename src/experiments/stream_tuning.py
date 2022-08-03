@@ -407,8 +407,8 @@ def train_on_tasks(config):
                 metric='best_val_T' + str(t_id),
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
-                grace_period=30,
-                reduction_factor=4,
+                grace_period=10,
+                reduction_factor=3,
                 brackets=1)
 
             analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)
@@ -426,13 +426,19 @@ def train_on_tasks(config):
             best_trial = max(analysis.trials, key=get_key)
             # Changed the total nr of iterations to accommodate for this new approach
             total_iterations_for_this_task = 0
+            # TODO: does this also consider stopped trials?
             for trial in analysis.trials:
+                print(trial.trial_id)
+                print(trial.status)
+                print(trial.last_result['iteration_of_report'])
+                print("---")
                 if trial != best_trial:
                     trial_path = trial.logdir
                     shutil.rmtree(trial_path)
-                total_iterations_for_this_task += trial.last_result['duration_iterations']
+                total_iterations_for_this_task += trial.last_result['iteration_of_report']
             nr_of_iterations_to_add = total_iterations_so_far_per_task[t_id - 1] + total_iterations_for_this_task if t_id >= 1 else total_iterations_for_this_task
             total_iterations_so_far_per_task.append(nr_of_iterations_to_add)
+            print("total_iterations_for_this_task:", total_iterations_for_this_task)
             # am = np.argmax(list(map(get_key, analysis.trials)))
             # print("BEST IS {}: {}".format(am, best_trial.last_result['avg_acc_val']))
 
@@ -588,7 +594,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
         tune.report(t=t_id,
                     best_val=-1,
                     duration_best_it=-1,
-                    iteration_of_report=-1,
+                    iteration_of_report=0,
                     epoch_of_report=-1,
                     **current_task_best_val_time_attr,
                     **tune_report_arguments_initialized)
@@ -848,7 +854,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     current_task_best_val_time_attr = {'best_val_T' + str(t_id): b_state_dict['value'], 'epoch_of_report_T' + str(t_id): training_params['n_ep_max']}
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
-                iteration_of_report=sys.maxsize,  # Infinite, since we just use this as a counter for the scheduler
+                iteration_of_report=t,  # Infinite, since we just use this as a counter for the scheduler
                 epoch_of_report=training_params['n_ep_max'],  # Infinite, same reason
                 avg_acc_val=avg_val,
                 avg_acc_val_so_far=avg_val_so_far,
