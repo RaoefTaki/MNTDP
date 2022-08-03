@@ -1,5 +1,6 @@
 import collections
 import logging
+import time
 from typing import Dict, List, Optional
 
 import numpy as np
@@ -127,7 +128,7 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
         self._obtained_values[trial.trial_id][epoch] = resulting_val
         if resulting_val > self._best_obtained_value[1]:
             self._best_obtained_value = (trial, resulting_val)
-            print("[TEST] LCE SCHEDULER: self._best_obtained_value[1]:", self._best_obtained_value[1])
+            print("[TEST] LCE SCHEDULER: new best obtained value:", self._best_obtained_value[1])
 
         if self._time_attr not in result or self._metric not in result:
             return TrialScheduler.CONTINUE
@@ -137,14 +138,16 @@ class LearningCurveExtrapolationScheduler(FIFOScheduler):
 
         # Pause each trial if it's at a check epoch, and see if the expected extrapolated performance is, with 95% certainty,
         # strictly worse than the current best extrapolated or actually obtained performance, at epoch 300
+        start_time = time.time()
         if epoch % self._check_epoch == 0 and epoch < self._extrapolated_epoch:
-            print("[TEST] LCE SCHEDULER: Check epoch:", epoch)
+            print("[TEST] LCE SCHEDULER: Performing LCE check at epoch:", epoch)
             # Depending on the expectation of surpassing, either stop or continue
-            if not self._lce_surpass(trial, epoch):
-                print("[TEST] LCE SCHEDULER: Stop because of _lce_surpass")
+            # If the current value is equal to the best value, don't perform the check. Would be a time waste
+            if resulting_val != self._best_obtained_value[1] and not self._lce_surpass(trial, epoch):
+                print("[TEST] LCE SCHEDULER: Stopping this trial, because of _lce_surpass(). This check took", time.time() - start_time, " seconds")
                 action = TrialScheduler.STOP
             else:
-                print("[TEST] LCE SCHEDULER: Continue because of _lce_surpass")
+                print("[TEST] LCE SCHEDULER: Continuing this trial, because of _lce_surpass(). This check took", time.time() - start_time, " seconds")
                 action = TrialScheduler.CONTINUE
         else:
             action = TrialScheduler.CONTINUE
