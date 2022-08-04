@@ -164,6 +164,7 @@ class ExhaustiveSearch(nn.Module):
         # Create the calls inside here, so we can modify them each time if needed
         call = None
         call_path = None
+        paths = []
         for path, idx in self.models_idx.items():
             # Only create the function call for the specific run which we want
             # When t_id == 0, len(self.models_idx) == 1, logically as per MNTDP
@@ -178,6 +179,9 @@ class ExhaustiveSearch(nn.Module):
                                 b_sizes=b_sizes, env_url=env_url, t_id=t_id,
                                 tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
                 call_path = path
+            paths.append(path)
+        if t_id > 0:
+            raise ValueError(paths)
 
         # Execute and override the outcomes
         all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
