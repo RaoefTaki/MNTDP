@@ -179,6 +179,11 @@ class ExhaustiveSearch(nn.Module):
                                 tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
                 call_path = path
 
+        if t_id > 0:
+            for path, idx in self.models_idx.items():
+                print("idx:", idx, "path:", path)
+            exit(0)
+
         # Execute and override the outcomes
         all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
         all_res = all_res[0]
