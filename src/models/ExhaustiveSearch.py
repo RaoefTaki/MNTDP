@@ -180,8 +180,12 @@ class ExhaustiveSearch(nn.Module):
                 call_path = path
 
         if t_id > 0:
+            idx_list = []
+            path_list = []
             for path, idx in self.models_idx.items():
-                print("idx:", idx, "path:", path)
+                idx_list.append(idx)
+                path_list.append(path)
+            raise ValueError("idx_list:", idx_list, "path_list:", path_list)
             exit(0)
 
         # Execute and override the outcomes
