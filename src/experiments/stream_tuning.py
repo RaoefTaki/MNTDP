@@ -390,7 +390,7 @@ def train_on_tasks(config):
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
 
             # Next define the amount of parallelism, as per the original MNTDP program
-            division_factor = 4.0
+            division_factor = 8.0
             config['division_factor'] = division_factor
             ray_params['resources_per_trial'] = {'cpu': 0.5, 'gpu': 0.25}  # TODO: somehow this changes per run if set dynamically?
             # raise ValueError(ray_params)
@@ -519,6 +519,7 @@ def train_t(config):
     # Occasionally, you may run into GPU memory issues when running a new trial.
     # This may be due to the previous trial not cleaning up its GPU state fast enough. Use this:
     division_factor = config.pop('division_factor')
+    raise ValueError(ray.get_gpu_ids())
     tune.utils.wait_for_gpu(target_util=1-(1/division_factor))
 
     # This function does not allow for printing to be seen in the output files
