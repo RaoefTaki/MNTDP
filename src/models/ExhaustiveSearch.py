@@ -156,7 +156,7 @@ class ExhaustiveSearch(nn.Module):
 
         # Change the model ID to use depending on the ID of the task
         # At the first task, there is only 1 model so this needs to be 0 ofc
-        model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
+        model_id_to_use = 6 if t_id > 0 else 0
 
         # Repeatedly run the model for x epochs, and at every termination check whether we should run it further using
         # some criteria. This is done inside the train() function
@@ -178,15 +178,6 @@ class ExhaustiveSearch(nn.Module):
                                 b_sizes=b_sizes, env_url=env_url, t_id=t_id,
                                 tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
                 call_path = path
-
-        if t_id > 0:
-            idx_list = []
-            path_list = []
-            for path, idx in self.models_idx.items():
-                idx_list.append(idx)
-                path_list.append(path)
-            raise ValueError("idx_list:", idx_list, "path_list:", path_list)
-            exit(0)
 
         # Execute and override the outcomes
         all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
