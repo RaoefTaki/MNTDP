@@ -1,0 +1,856 @@
+# In order to easily visualize, and to obtain the number of parameters and the number of operations required for one forward pass, for the base architecture used by MNTDP, insert this Caffe Prototxt code into: http://dgschwend.github.io/netscope/#/editor (Accessed on 4 May 2022)
+# Note that the definition of the network below is based on the input of one sample RGB image of size 32x32 and on the output of one vector of size 10, i.e. the number of classes for each considered dataset, as per MNTDP
+# Furthermore, note that in the network definition below indications of the individual (trainable) modules are given, including indications of their constituting blocks of layers, for clarity
+
+
+
+name: "MNTDP base architecture"
+
+# =============================
+# === Input - Start
+# =============================
+layer {
+    name: "input"
+    type: "Input"
+    top: "input"
+    input_param { shape: { dim: 1 dim: 3 dim: 32 dim: 32 } }
+}
+# =============================
+# === Input - End
+# =============================
+
+
+
+# =============================
+# === Module 1 - Start
+# =============================
+layer {
+    name: "conv1"
+    type: "Convolution"
+    bottom: "input"
+    top: "conv1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv1"
+    type: "BatchNorm"
+    bottom: "conv1"
+    top: "conv1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv1"
+    type: "Scale"
+    bottom: "conv1"
+    top: "conv1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv1"
+    type: "ReLU"
+    bottom: "conv1"
+    top: "conv1"
+}
+# =============================
+# === Module 1 - End
+# =============================
+
+
+
+# =============================
+# === Module 2 - Start
+# =============================
+# --- Module 2, Block 1 - Start
+layer {
+    name: "conv2_1_1"
+    type: "Convolution"
+    bottom: "conv1"
+    top: "conv2_1_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv2_1_1"
+    type: "BatchNorm"
+    bottom: "conv2_1_1"
+    top: "conv2_1_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv2_1_1"
+    type: "Scale"
+    bottom: "conv2_1_1"
+    top: "conv2_1_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv2_1_1"
+    type: "ReLU"
+    bottom: "conv2_1_1"
+    top: "conv2_1_1"
+}
+layer {
+    name: "conv2_1_2"
+    type: "Convolution"
+    bottom: "conv2_1_1"
+    top: "conv2_1_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv2_1_2"
+    type: "BatchNorm"
+    bottom: "conv2_1_1"
+    top: "conv2_1_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv2_1_2"
+    type: "Scale"
+    bottom: "conv2_1_1"
+    top: "conv2_1_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 2, Block 1 - End
+# --- Module 2, Block 2 - Start
+layer {
+    name: "conv2_2_1"
+    type: "Convolution"
+    bottom: "conv2_1_1"
+    top: "conv2_2_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv2_2_1"
+    type: "BatchNorm"
+    bottom: "conv2_2_1"
+    top: "conv2_2_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv2_2_1"
+    type: "Scale"
+    bottom: "conv2_2_1"
+    top: "conv2_2_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv2_2_1"
+    type: "ReLU"
+    bottom: "conv2_2_1"
+    top: "conv2_2_1"
+}
+layer {
+    name: "conv2_2_2"
+    type: "Convolution"
+    bottom: "conv2_2_1"
+    top: "conv2_2_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv2_2_2"
+    type: "BatchNorm"
+    bottom: "conv2_2_1"
+    top: "conv2_2_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv2_2_2"
+    type: "Scale"
+    bottom: "conv2_2_1"
+    top: "conv2_2_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 2, Block 2 - End
+# =============================
+# === Module 2 - End
+# =============================
+
+
+
+# =============================
+# === Module 3 - Start
+# =============================
+# --- Module 3, Block 1 - Start
+layer {
+    name: "conv3_1_1"
+    type: "Convolution"
+    bottom: "conv2_2_1"
+    top: "conv3_1_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 2
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv3_1_1"
+    type: "BatchNorm"
+    bottom: "conv3_1_1"
+    top: "conv3_1_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv3_1_1"
+    type: "Scale"
+    bottom: "conv3_1_1"
+    top: "conv3_1_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv3_1_1"
+    type: "ReLU"
+    bottom: "conv3_1_1"
+    top: "conv3_1_1"
+}
+layer {
+    name: "conv3_1_2"
+    type: "Convolution"
+    bottom: "conv3_1_1"
+    top: "conv3_1_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv3_1_2"
+    type: "BatchNorm"
+    bottom: "conv3_1_1"
+    top: "conv3_1_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv3_1_2"
+    type: "Scale"
+    bottom: "conv3_1_1"
+    top: "conv3_1_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 3, Block 1, Downsample - Start
+layer {
+    name: "conv3_d"
+    type: "Convolution"
+    bottom: "conv2_2_1"
+    top: "conv3_d"
+    convolution_param {
+        num_output: 64
+        kernel_size: 1
+        stride: 2
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv3_d"
+    type: "BatchNorm"
+    bottom: "conv3_d"
+    top: "conv3_d"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv3_d"
+    type: "Scale"
+    bottom: "conv3_d"
+    top: "conv3_d"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 3, Block 1, Downsample - End
+layer {
+    bottom: "conv3_1_1"
+    bottom: "conv3_d"
+    top: "eltwise3"
+    name: "eltwise3"
+    type: "Eltwise"
+    eltwise_param {
+        operation: SUM
+    }
+}
+# --- Module 3, Block 1 - End
+# --- Module 3, Block 2 - Start
+layer {
+    name: "conv3_2_1"
+    type: "Convolution"
+    bottom: "eltwise3"
+    top: "conv3_2_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv3_2_1"
+    type: "BatchNorm"
+    bottom: "conv3_2_1"
+    top: "conv3_2_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv3_2_1"
+    type: "Scale"
+    bottom: "conv3_2_1"
+    top: "conv3_2_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv3_2_1"
+    type: "ReLU"
+    bottom: "conv3_2_1"
+    top: "conv3_2_1"
+}
+layer {
+    name: "conv3_2_2"
+    type: "Convolution"
+    bottom: "conv3_2_1"
+    top: "conv3_2_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv3_2_2"
+    type: "BatchNorm"
+    bottom: "conv3_2_1"
+    top: "conv3_2_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv3_2_2"
+    type: "Scale"
+    bottom: "conv3_2_1"
+    top: "conv3_2_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 3, Block 2 - End
+# =============================
+# === Module 3 - End
+# =============================
+
+
+
+# =============================
+# === Module 4 - Start
+# =============================
+# --- Module 4, Block 1 - Start
+layer {
+    name: "conv4_1_1"
+    type: "Convolution"
+    bottom: "conv3_2_1"
+    top: "conv4_1_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 2
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv4_1_1"
+    type: "BatchNorm"
+    bottom: "conv4_1_1"
+    top: "conv4_1_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv4_1_1"
+    type: "Scale"
+    bottom: "conv4_1_1"
+    top: "conv4_1_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv4_1_1"
+    type: "ReLU"
+    bottom: "conv4_1_1"
+    top: "conv4_1_1"
+}
+layer {
+    name: "conv4_1_2"
+    type: "Convolution"
+    bottom: "conv4_1_1"
+    top: "conv4_1_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv4_1_2"
+    type: "BatchNorm"
+    bottom: "conv4_1_1"
+    top: "conv4_1_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv4_1_2"
+    type: "Scale"
+    bottom: "conv4_1_1"
+    top: "conv4_1_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 4, Block 1, Downsample - Start
+layer {
+    name: "conv4_d"
+    type: "Convolution"
+    bottom: "conv3_2_1"
+    top: "conv4_d"
+    convolution_param {
+        num_output: 64
+        kernel_size: 1
+        stride: 2
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv4_d"
+    type: "BatchNorm"
+    bottom: "conv4_d"
+    top: "conv4_d"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv4_d"
+    type: "Scale"
+    bottom: "conv4_d"
+    top: "conv4_d"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 4, Block 1, Downsample - End
+layer {
+    bottom: "conv4_1_1"
+    bottom: "conv4_d"
+    top: "eltwise4"
+    name: "eltwise4"
+    type: "Eltwise"
+    eltwise_param {
+        operation: SUM
+    }
+}
+# --- Module 4, Block 1 - End
+# --- Module 4, Block 2 - Start
+layer {
+    name: "conv4_2_1"
+    type: "Convolution"
+    bottom: "eltwise4"
+    top: "conv4_2_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv4_2_1"
+    type: "BatchNorm"
+    bottom: "conv4_2_1"
+    top: "conv4_2_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv4_2_1"
+    type: "Scale"
+    bottom: "conv4_2_1"
+    top: "conv4_2_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv4_2_1"
+    type: "ReLU"
+    bottom: "conv4_2_1"
+    top: "conv4_2_1"
+}
+layer {
+    name: "conv4_2_2"
+    type: "Convolution"
+    bottom: "conv4_2_1"
+    top: "conv4_2_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv4_2_2"
+    type: "BatchNorm"
+    bottom: "conv4_2_1"
+    top: "conv4_2_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv4_2_2"
+    type: "Scale"
+    bottom: "conv4_2_1"
+    top: "conv4_2_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 4, Block 2 - End
+# =============================
+# === Module 4 - End
+# =============================
+
+
+
+# =============================
+# === Module 5 - Start
+# =============================
+layer {
+    name: "conv5_1"
+    type: "Convolution"
+    bottom: "conv4_2_1"
+    top: "conv5_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 2
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv5_1"
+    type: "BatchNorm"
+    bottom: "conv5_1"
+    top: "conv5_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv5_1"
+    type: "Scale"
+    bottom: "conv5_1"
+    top: "conv5_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv5_1"
+    type: "ReLU"
+    bottom: "conv5_1"
+    top: "conv5_1"
+}
+layer {
+    name: "conv5_2"
+    type: "Convolution"
+    bottom: "conv5_1"
+    top: "conv5_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv5_2"
+    type: "BatchNorm"
+    bottom: "conv5_1"
+    top: "conv5_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv5_2"
+    type: "Scale"
+    bottom: "conv5_1"
+    top: "conv5_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 5, Downsample - Start
+layer {
+    name: "conv5_d"
+    type: "Convolution"
+    bottom: "conv4_2_1"
+    top: "conv5_d"
+    convolution_param {
+        num_output: 64
+        kernel_size: 1
+        stride: 2
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv5_d"
+    type: "BatchNorm"
+    bottom: "conv5_d"
+    top: "conv5_d"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv5_d"
+    type: "Scale"
+    bottom: "conv5_d"
+    top: "conv5_d"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 5, Downsample - End
+layer {
+    bottom: "conv5_1"
+    bottom: "conv5_d"
+    top: "eltwise5"
+    name: "eltwise5"
+    type: "Eltwise"
+    eltwise_param {
+        operation: SUM
+    }
+}
+# =============================
+# === Module 5 - End
+# =============================
+
+
+
+# =============================
+# === Module 6 - Start
+# =============================
+layer {
+    name: "conv6_1"
+    type: "Convolution"
+    bottom: "eltwise5"
+    top: "conv6_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv6_1"
+    type: "BatchNorm"
+    bottom: "conv6_1"
+    top: "conv6_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv6_1"
+    type: "Scale"
+    bottom: "conv6_1"
+    top: "conv6_1"
+    scale_param {
+        bias_term: true
+    }
+}
+layer {
+    name: "relu_conv6_1"
+    type: "ReLU"
+    bottom: "conv6_1"
+    top: "conv6_1"
+}
+layer {
+    name: "conv6_2"
+    type: "Convolution"
+    bottom: "conv6_1"
+    top: "conv6_1"
+    convolution_param {
+        num_output: 64
+        kernel_size: 3
+        stride: 1
+        pad: 1
+        bias_term: false
+    }
+}
+layer {
+    name: "bn_conv6_2"
+    type: "BatchNorm"
+    bottom: "conv6_1"
+    top: "conv6_1"
+    batch_norm_param {
+        moving_average_fraction: 0.9
+        eps: 0.00001
+    }
+}
+layer {
+    name: "scale_conv6_2"
+    type: "Scale"
+    bottom: "conv6_1"
+    top: "conv6_1"
+    scale_param {
+        bias_term: true
+    }
+}
+# --- Module 6, Block 1, Pooling - Start
+layer {
+    name: "relu6_2_a"
+    type: "ReLU"
+    bottom: "conv6_1"
+    top: "relu6_2_a"
+}
+layer {
+    name: "pool6_2_a"
+    type: "Pooling"
+    bottom: "relu6_2_a"
+    top: "relu6_2_a"
+    pooling_param {
+        kernel_size: 4
+        stride: 1
+        pool: AVE
+    }
+}
+# --- Module 6, Block 1, Pooling - End
+# =============================
+# === Module 6 - End
+# =============================
+
+
+
+# =============================
+# === Module 7 - Start
+# =============================
+layer {
+    name: "flatten"
+    type: "Flatten"
+    bottom: "relu6_2_a"
+    top: "outputlayer"
+}
+layer {
+    name: "linear"
+    type: "InnerProduct"
+    bottom: "outputlayer"
+    top: "outputlayer"
+    inner_product_param {
+      	num_output: 10
+    }
+}
+# =============================
+# === Module 7 - End
+# =============================
