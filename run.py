@@ -39,6 +39,10 @@ logging.basicConfig(level=logging.INFO, stream=TqdmStream)
 
 
 def init_and_run(experiment, modules, datasets, optimizers={}, _run=None, _rnd=None):
+    import multiprocessing
+    print(multiprocessing.cpu_count())
+    exit(0)
+
     # initializing datasets
 
     dsets = {}
