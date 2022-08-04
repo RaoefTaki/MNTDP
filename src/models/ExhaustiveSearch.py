@@ -156,7 +156,6 @@ class ExhaustiveSearch(nn.Module):
 
         # Change the model ID to use depending on the ID of the task
         # At the first task, there is only 1 model so this needs to be 0 ofc
-        model_id_to_use = 6 if t_id > 0 else 0
 
         # Repeatedly run the model for x epochs, and at every termination check whether we should run it further using
         # some criteria. This is done inside the train() function
@@ -164,12 +163,16 @@ class ExhaustiveSearch(nn.Module):
         # Create the calls inside here, so we can modify them each time if needed
         call = None
         call_path = None
-        paths = []
         for path, idx in self.models_idx.items():
             # Only create the function call for the specific run which we want
             # When t_id == 0, len(self.models_idx) == 1, logically as per MNTDP
             # When t_id == 0, len(self.models_idx) == 7, as per MNTDP
-            if idx == model_id_to_use:
+            is_independent_path = True  # Only used for the independent model
+            for node in path:
+                if node[0] != t_id:
+                    is_independent_path = False
+                    break
+            if is_independent_path:
                 if model_trained is None:
                     model = self.models[idx]
                 else:
@@ -179,9 +182,15 @@ class ExhaustiveSearch(nn.Module):
                                 b_sizes=b_sizes, env_url=env_url, t_id=t_id,
                                 tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
                 call_path = path
-            paths.append(path)
-        if t_id > 0:
-            raise ValueError(paths)
+        # For s_out the order of paths is very strange:
+        # ValueError: [
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 0, 'b'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 0, 'b'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 0, 'b'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 0, 'b'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 0, 'b'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT'))]
 
         # Execute and override the outcomes
         all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
