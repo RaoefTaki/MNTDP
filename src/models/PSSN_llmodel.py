@@ -617,12 +617,17 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         if task_id < len(self.fixed_graphs):
             sub_graph = self.fixed_graphs[task_id]
+            if task_id > 0:
+                raise ValueError("In first run of this function, enters upper if statement. sub_graph:", sub_graph)
         else:
             active_nodes = self.get_used_nodes(task_id)
             if active_nodes:
                 sub_graph = self.graph.subgraph(active_nodes).copy()
             else:
                 sub_graph = None
+            if task_id > 0:
+                raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
+                                 "active_nodes:", active_nodes)
 
         if sub_graph:
             in_node = (task_id, self.IN_NODE)
