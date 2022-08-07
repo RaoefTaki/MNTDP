@@ -335,9 +335,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         in_size = sizes[0]
         # for depth, out_size in enumerate(sizes[1:], start=1):
-        f_connections_list = []
-        backward_connections_list = []
-        new_modules_list = []
         for depth in range(1, self.n_modules+1):
             # Start from 1 because input (depth 0) is already connected.
             # assert out_size == sizes[depth]
@@ -351,20 +348,20 @@ class MNTDP(LifelongLearningModel, ModularModel):
                                                       candidate_nodes,
                                                       is_last_layer)
             out_activations = not is_last_layer
-            new_modules = self.add_layer(f_connections, backward_connections,
+            new_modules = self.add_layer(f_connections, backward_connections,  # TODO: investigate what everything means
                                          depth, new_col_id, out_activations,
                                          in_size, out_size)
 
-            f_connections_list.append(f_connections)
-            backward_connections_list.append(backward_connections)
-            new_modules_list.append(new_modules)
-            
             in_size = out_size
             self.columns[-1][depth] = new_modules
 
-        if new_col_id > 0:
-            raise ValueError("f_connections_list:", f_connections_list, "backward_connections_list:", backward_connections_list,
-                             "new_modules_list:", new_modules_list)
+        # if new_col_id > 0:
+        #     raise ValueError("f_connections_list:", f_connections_list, "backward_connections_list:", backward_connections_list,
+        #                      "new_modules_list:", new_modules_list)
+        # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
+        # 'backward_connections_list:', [{}, {}, {}, {}, {}, {}],
+        # 'new_modules_list:', [{(1, 1, 'w'): Sequential(...}, {(1, 2, 'w'): Sequential(...}, {(1, 2, 0, 'f'): Sequential(...}
+        # TODO: what does 'w' and 'f' exactly mean and where does it create these?
 
         # Add output
         out_nodes = self.connect_new_output(new_col_id, candidate_nodes)
