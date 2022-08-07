@@ -351,8 +351,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             new_modules = self.add_layer(f_connections, backward_connections,
                                          depth, new_col_id, out_activations,
                                          in_size, out_size)
-            raise ValueError("f_connections:", f_connections, "backward_connections:", backward_connections,
-                             "new_modules:", new_modules)
+            if new_col_id > 0:
+                raise ValueError("f_connections:", f_connections, "backward_connections:", backward_connections,
+                                 "new_modules:", new_modules)
             in_size = out_size
             self.columns[-1][depth] = new_modules
 
