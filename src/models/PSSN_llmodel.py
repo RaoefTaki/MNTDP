@@ -330,6 +330,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         in_nodes = self.connect_new_input(new_col_id, candidate_nodes)
         self.columns[new_col_id][self.IN_NODE] = in_nodes
 
+        raise ValueError("list(range(1, self.n_modules+1)):", list(range(1, self.n_modules+1)))
+
         in_size = sizes[0]
         # for depth, out_size in enumerate(sizes[1:], start=1):
         for depth in range(1, self.n_modules+1):
@@ -613,15 +615,17 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #                                                self.n_source_models,
             #                                             candidate_models))
             candidate_nodes = self.get_nodes_from_models(candidate_models)
-            if task_id > 0:
-                raise ValueError("candidate_nodes:", candidate_nodes)
+            # if task_id > 0:
+            #     raise ValueError("candidate_nodes:", candidate_nodes)
+            # ValueError: ('candidate_nodes:', {(0, 1), (0, 'INs'), (0, 3, 'w'), (0, 6, 'w'), (0, 4), (0, 4, 'w'),
+            # (0, 'OUT'), (0, 0), (0, 3), (0, 'OUT', 0), (0, 6), (0, 2), (0, 'INs', 0), (0, 5), (0, 5, 'w'),
+            # (0, 1, 'w'), (0, 2, 'w')})
+            # Add a new column for the current task
             self.add_column(sizes, candidate_nodes)
 
         if task_id < len(self.fixed_graphs):
             sub_graph = self.fixed_graphs[task_id]
-            # if task_id > 0:
-            #     raise ValueError("In first run of this function, enters upper if statement. sub_graph:", sub_graph,
-            #                      "task_id:", task_id)
+            # It doesn't reach here for the first run of this function for task_id == 1
         else:
             active_nodes = self.get_used_nodes(task_id)
             if active_nodes:
@@ -730,6 +734,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
     def get_used_nodes(self, col):
         candidate_nodes = []
+        # Get all columns up to and until the current task
         for column in self.columns[:col + 1]:
             for lay in column.values():
                 candidate_nodes.extend(lay.keys())
