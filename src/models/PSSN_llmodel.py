@@ -613,13 +613,15 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #                                                self.n_source_models,
             #                                             candidate_models))
             candidate_nodes = self.get_nodes_from_models(candidate_models)
+            if task_id > 0:
+                raise ValueError("candidate_nodes:", candidate_nodes)
             self.add_column(sizes, candidate_nodes)
 
         if task_id < len(self.fixed_graphs):
             sub_graph = self.fixed_graphs[task_id]
-            if task_id > 0:
-                raise ValueError("In first run of this function, enters upper if statement. sub_graph:", sub_graph,
-                                 "task_id:", task_id)
+            # if task_id > 0:
+            #     raise ValueError("In first run of this function, enters upper if statement. sub_graph:", sub_graph,
+            #                      "task_id:", task_id)
         else:
             active_nodes = self.get_used_nodes(task_id)
             if active_nodes:
@@ -735,8 +737,15 @@ class MNTDP(LifelongLearningModel, ModularModel):
         input = (col, self.IN_NODE)
         last_node = (col, self.OUT_NODE)
 
-        if col > 0:
-            raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
+        # if col > 0:
+        #     raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
+        # ValueError: ('candidate_nodes:', [(0, 0), (0, 'INs'), (0, 'INs', 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'),
+        # (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (0, 'OUT'),
+        # (0, 'OUT', 0), (1, 0), (1, 'INs'), (1, 'INs', 0), (1, 'INs', 1), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2),
+        # (1, 2, 0, 'f'), (1, 3, 'w'), (1, 3), (1, 3, 0, 'f'), (1, 4, 'w'), (1, 4), (1, 4, 0, 'f'), (1, 5, 'w'), (1, 5),
+        # (1, 5, 0, 'f'), (1, 6, 'w'), (1, 6), (1, 6, 0, 'f'), (1, 'OUT'), (1, 'OUT', 0), (1, 'OUT', 1)],
+        # 'self.columns:', [{0: {(0, 0): DummyBlock()}, 'INs': {(0, 'INs'): DummyBlock(), (0, 'INs', 0): DummyBlock()},
+        # 1: {(0, 1, 'w'): Sequential( (0): Conv2
 
         return _get_used_nodes(self.graph, candidate_nodes, input, last_node)
 
