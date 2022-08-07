@@ -735,7 +735,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         input = (col, self.IN_NODE)
         last_node = (col, self.OUT_NODE)
 
-        raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
+        if col > 0:
+            raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
 
         return _get_used_nodes(self.graph, candidate_nodes, input, last_node)
 
