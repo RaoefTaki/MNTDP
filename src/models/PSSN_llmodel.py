@@ -626,9 +626,15 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 sub_graph = self.graph.subgraph(active_nodes).copy()
             else:
                 sub_graph = None
-            if task_id > 0:
-                raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
-                                 "active_nodes:", active_nodes, "task_id:", task_id)
+            # if task_id > 0:
+            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
+            #                      "active_nodes:", active_nodes, "task_id:", task_id)
+            # ValueError: ('In first run of this function, enters lower if statement. sub_graph:', <networkx.classes.digraph.DiGraph object at 0x7f67241fd130>,
+            # 'active_nodes:', {(1, 'INs'), (1, 5, 0, 'f'), (1, 2, 'w'), (1, 4, 'w'), (1, 6, 0, 'f'), (0, 2), (0, 5),
+            # (1, 0), (1, 6), (1, 'OUT', 0), (1, 3), (1, 6, 'w'), (1, 2, 0, 'f'), (0, 1, 'w'), (1, 3, 0, 'f'),
+            # (0, 3, 'w'), (1, 'OUT'), (1, 4, 0, 'f'), (1, 3, 'w'), (0, 1), (1, 1, 'w'), (1, 2), (0, 4), (0, 5, 'w'),
+            # (1, 5), (1, 'INs', 1), (1, 5, 'w'), (0, 0), (1, 1), (0, 3), (0, 2, 'w'), (0, 4, 'w'), (1, 4), (0, 6),
+            # (0, 6, 'w'), (1, 'OUT', 1), (1, 'INs', 0)}, 'task_id:', 1)
 
         if sub_graph:
             in_node = (task_id, self.IN_NODE)
@@ -728,6 +734,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         input = (col, self.IN_NODE)
         last_node = (col, self.OUT_NODE)
+
+        raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
 
         return _get_used_nodes(self.graph, candidate_nodes, input, last_node)
 
