@@ -330,7 +330,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         in_nodes = self.connect_new_input(new_col_id, candidate_nodes)
         self.columns[new_col_id][self.IN_NODE] = in_nodes
 
-        raise ValueError("list(range(1, self.n_modules+1)):", list(range(1, self.n_modules+1)))
+        # raise ValueError("list(range(1, self.n_modules+1)):", list(range(1, self.n_modules+1)))
+        # ValueError: ('list(range(1, self.n_modules+1)):', [1, 2, 3, 4, 5, 6])
 
         in_size = sizes[0]
         # for depth, out_size in enumerate(sizes[1:], start=1):
@@ -350,6 +351,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             new_modules = self.add_layer(f_connections, backward_connections,
                                          depth, new_col_id, out_activations,
                                          in_size, out_size)
+            raise ValueError("f_connections:", f_connections, "backward_connections:", backward_connections,
+                             "new_modules:", new_modules)
             in_size = out_size
             self.columns[-1][depth] = new_modules
 
