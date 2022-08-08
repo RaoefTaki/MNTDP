@@ -361,7 +361,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             new_modules_list.append(list(new_modules.keys()))
 
             in_size = out_size
-            self.columns[-1][depth] = new_modules
+            self.columns[-1][depth] = new_modules  # TODO: does the last column need the
 
         if new_col_id > 0:
             raise ValueError("new_modules_list keys:", new_modules_list)
@@ -661,6 +661,12 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 sub_graph = self.graph.subgraph(active_nodes).copy()
             else:
                 sub_graph = None
+
+            if task_id > 0:
+                architectures = list(nx.all_simple_paths(self.graph, self.columns[task_id][self.IN_NODE],
+                                                         self.columns[task_id][self.OUT_NODE]))
+                raise ValueError("architectures:", architectures)
+
             # if task_id > 0:
             #     raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
             #                      "active_nodes:", active_nodes, "task_id:", task_id)
