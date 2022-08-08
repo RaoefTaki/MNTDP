@@ -489,11 +489,13 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             # Also add a reverse node to allow for leftbranching too. Later on in the code restrict so that you can only either
             # rightbranch once or leftbranch once
-            proj_name_left_branch = (source_column, depth, col_id, 'f')
-            source = (source_column, depth - 1)
+            node_left = source_column
+            node_right = col_id
+            proj_name_left_branch = (node_left, depth, node_right, 'f')
+            source = (node_right, depth - 1)
             self.graph.add_node(proj_name_left_branch, module=mod)
             self.graph.add_edge(source, proj_name_left_branch)
-            self.graph.add_edge(proj_name_left_branch, lateral_out_node)
+            self.graph.add_edge(proj_name_left_branch, (node_left, depth))
             added_fw_leftbranching_modules[proj_name_left_branch] = mod
 
             # raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
