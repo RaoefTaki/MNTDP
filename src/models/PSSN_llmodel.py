@@ -339,6 +339,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         # raise ValueError("list(range(1, self.n_modules+1)):", list(range(1, self.n_modules+1)))
         # ValueError: ('list(range(1, self.n_modules+1)):', [1, 2, 3, 4, 5, 6])
 
+        new_modules_list = []
         in_size = sizes[0]
         # for depth, out_size in enumerate(sizes[1:], start=1):
         for depth in range(1, self.n_modules+1):
@@ -357,13 +358,13 @@ class MNTDP(LifelongLearningModel, ModularModel):
             new_modules = self.add_layer(f_connections, backward_connections,  # TODO: investigate what everything means
                                          depth, new_col_id, out_activations,
                                          in_size, out_size)
+            new_modules_list.append(list(new_modules.keys()))
 
             in_size = out_size
             self.columns[-1][depth] = new_modules
 
-        # if new_col_id > 0:
-        #     raise ValueError("f_connections_list:", f_connections_list, "backward_connections_list:", backward_connections_list,
-        #                      "new_modules_list:", new_modules_list)
+        if new_col_id > 0:
+            raise ValueError("new_modules_list keys:", new_modules_list)
         # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
         # 'backward_connections_list:', [{}, {}, {}, {}, {}, {}],
         # 'new_modules_list:', [{(1, 1, 'w'): Sequential(...}, {(1, 2, 'w'): Sequential(...}, {(1, 2, 0, 'f'): Sequential(...}
