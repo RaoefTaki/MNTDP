@@ -310,6 +310,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # This is the first "real" layer, forward connection would be
             # identical to the (col_id, depth, 'w') layer
             return lateral_connections
+
+        # Loop over all columns in the MNTDP network, including the last column (newly added, still empty, to be initialized,
+        # hpo tuned, and trained etc)
         for src_col_id, src_col in enumerate(self.columns[:col_id]):
             # if src_col_id not in columns:
             #     continue
@@ -320,6 +323,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 repr_size = repr_size[depth - 1] \
                     if len(repr_size) >= depth else -1
                 lateral_connections[src_col_id] = repr_size
+                raise ValueError("src_col_id:", src_col_id, "src_col:", src_col, "src_layer:", src_layer, "depth:", depth,
+                                 "repr_size:", repr_size, "self.column_repr_sizes:", self.column_repr_sizes,
+                                 "lateral_connections:", lateral_connections)
         return lateral_connections
 
     def add_column(self, sizes, candidate_nodes):
@@ -340,7 +346,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # assert out_size == sizes[depth]
             out_size = sizes[depth] if depth < len(sizes) else None
             f_connections = \
-                self.get_forward_lateral_connections(new_col_id, depth,
+                self.get_forward_lateral_connections(new_col_id, depth,  # TODO:
                                                      candidate_nodes)
             is_last_layer = depth == self.n_modules
             backward_connections = \
