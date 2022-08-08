@@ -323,9 +323,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 repr_size = repr_size[depth - 1] \
                     if len(repr_size) >= depth else -1
                 lateral_connections[src_col_id] = repr_size
-                raise ValueError("src_col_id:", src_col_id, "src_col:", src_col, "src_layer:", src_layer, "depth:", depth,
-                                 "repr_size:", repr_size, "self.column_repr_sizes:", self.column_repr_sizes,
-                                 "lateral_connections:", lateral_connections)
+                # raise ValueError("src_col_id:", src_col_id, "src_col:", src_col, "src_layer:", src_layer, "depth:", depth,
+                #                  "repr_size:", repr_size, "self.column_repr_sizes:", self.column_repr_sizes,
+                #                  "lateral_connections:", lateral_connections)
         return lateral_connections
 
     def add_column(self, sizes, candidate_nodes):
@@ -346,7 +346,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # assert out_size == sizes[depth]
             out_size = sizes[depth] if depth < len(sizes) else None
             f_connections = \
-                self.get_forward_lateral_connections(new_col_id, depth,  # TODO:
+                self.get_forward_lateral_connections(new_col_id, depth,
                                                      candidate_nodes)
             is_last_layer = depth == self.n_modules
             backward_connections = \
@@ -485,6 +485,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(proj_name, lateral_out_node)
 
             added_modules[proj_name] = mod
+
+            raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
+                             "source:", source, "len(added_modules):", len(added_modules))
 
         if f_connections and self.use_adapters:
             # Add the second layer of the non linear lateral connection
