@@ -483,11 +483,20 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_node(proj_name, module=mod)
             self.graph.add_edge(source, proj_name)
             self.graph.add_edge(proj_name, lateral_out_node)
-
             added_modules[proj_name] = mod
 
-            raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
-                             "source:", source, "len(added_modules):", len(added_modules))
+            # Also add a reverse node to allow for leftbranching too. Later on in the code restrict so that you can only either
+            # rightbranch once or leftbranch once
+            proj_name_left_branch = (source_column, depth, col_id, 'f')
+            source = (source_column, depth - 1)
+            self.graph.add_node(proj_name_left_branch, module=mod)
+            self.graph.add_edge(source, proj_name_left_branch)
+            self.graph.add_edge(proj_name_left_branch, lateral_out_node)
+            added_modules[proj_name_left_branch] = mod
+
+            # raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
+            #                  "source:", source, "len(added_modules):", len(added_modules))
+            # ValueError: ('proj_name:', (1, 2, 0, 'f'), 'col_id:', 1, 'depth:', 2, 'source_column:', 0, 'source:', (0, 1), 'len(added_modules):', 3)
 
         if f_connections and self.use_adapters:
             # Add the second layer of the non linear lateral connection
