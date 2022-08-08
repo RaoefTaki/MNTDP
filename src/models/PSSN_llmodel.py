@@ -64,6 +64,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                  n_source_models=-1, entropy_coef=None, *args, **kwargs):
         super(MNTDP, self).__init__(*args, **kwargs)
         self.columns = []
+        self.temporary_fw_lb_modules = []
 
         self.column_repr_sizes = []
         self.fixed_columns = set()
@@ -339,7 +340,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
         # raise ValueError("list(range(1, self.n_modules+1)):", list(range(1, self.n_modules+1)))
         # ValueError: ('list(range(1, self.n_modules+1)):', [1, 2, 3, 4, 5, 6])
 
-        new_modules_list = []
         in_size = sizes[0]
         # for depth, out_size in enumerate(sizes[1:], start=1):
         for depth in range(1, self.n_modules+1):
@@ -355,16 +355,16 @@ class MNTDP(LifelongLearningModel, ModularModel):
                                                       candidate_nodes,
                                                       is_last_layer)
             out_activations = not is_last_layer
-            new_modules = self.add_layer(f_connections, backward_connections,  # TODO: investigate what everything means
-                                         depth, new_col_id, out_activations,
-                                         in_size, out_size)
-            new_modules_list.append(list(new_modules.keys()))
+            new_modules, new_fw_lb_modules = self.add_layer(f_connections, backward_connections,
+                                                            depth, new_col_id, out_activations,
+                                                            in_size, out_size)
 
             in_size = out_size
-            self.columns[-1][depth] = new_modules  # TODO: does the last column need the
+            self.columns[-1][depth] = new_modules
+            self.temporary_fw_lb_modules = new_fw_lb_modules
 
-        if new_col_id > 0:
-            raise ValueError("new_modules_list keys:", new_modules_list)
+        # if new_col_id > 0:
+        #     raise ValueError("new_modules_list keys:", new_modules_list)
         # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
         # 'backward_connections_list:', [{}, {}, {}, {}, {}, {}],
         # 'new_modules_list:', [{(1, 1, 'w'): Sequential(...}, {(1, 2, 'w'): Sequential(...}, {(1, 2, 0, 'f'): Sequential(...}
@@ -460,6 +460,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         self.graph.add_edge(w_name, h_name)
 
         added_modules = {w_name: w, h_name: h}
+        added_fw_leftbranching_modules = {}
 
         # Create forward lateral connections
         u_name = (col_id, depth, 'u')
@@ -493,7 +494,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_node(proj_name_left_branch, module=mod)
             self.graph.add_edge(source, proj_name_left_branch)
             self.graph.add_edge(proj_name_left_branch, lateral_out_node)
-            added_modules[proj_name_left_branch] = mod
+            added_fw_leftbranching_modules[proj_name_left_branch] = mod
 
             # raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
             #                  "source:", source, "len(added_modules):", len(added_modules))
@@ -543,7 +544,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(src_node, r_name)
             added_modules[r_name] = r
 
-        return added_modules
+        return added_modules, added_fw_leftbranching_modules
 
     def get_module(self, in_size, out_size, depth, is_adapter=False):
         if self.residual:
@@ -662,6 +663,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             else:
                 sub_graph = None
 
+            # New modules now stored in: self.temporary_fw_lb_modules
             if task_id > 0:
                 architectures = list(nx.all_simple_paths(self.graph, self.columns[task_id][self.IN_NODE],
                                                          self.columns[task_id][self.OUT_NODE]))
