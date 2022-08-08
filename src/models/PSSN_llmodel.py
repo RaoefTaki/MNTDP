@@ -665,8 +665,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             # New modules now stored in: self.temporary_fw_lb_modules
             if task_id > 0:
-                architectures = list(nx.all_simple_paths(self.graph, self.columns[task_id][self.IN_NODE],
-                                                         self.columns[task_id][self.OUT_NODE]))
+                architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
                 raise ValueError("architectures:", architectures)
 
             # if task_id > 0:
