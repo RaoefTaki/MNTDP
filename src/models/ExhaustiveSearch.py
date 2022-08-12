@@ -41,6 +41,9 @@ class ExhaustiveSearch(nn.Module):
     def init_models(self, iteration=None):
         archs = list(nx.all_simple_paths(self.graph, self.in_node,
                                          self.out_node))
+        if iteration > 0:
+            raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
+
         for path in archs:
             new_model = FrozenSequential()
             last = None
@@ -108,7 +111,6 @@ class ExhaustiveSearch(nn.Module):
             p = Path('../../understood/')
             p.mkdir(parents=True, exist_ok=True)
 
-        # TODO: pull this forward if possible (if it helps speed at all), i.e. calculate the possible models earlier
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
