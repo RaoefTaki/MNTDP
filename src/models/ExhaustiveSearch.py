@@ -41,14 +41,15 @@ class ExhaustiveSearch(nn.Module):
     def init_models(self, iteration=None):
         archs = list(nx.all_simple_paths(self.graph, self.in_node,
                                          self.out_node))
-        if iteration is not None and iteration > 0:
-            raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
+        # if iteration is not None and iteration > 0:
+        #     raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
 
         for path in archs:
             new_model = FrozenSequential()
             last = None
             i = 0
             n_new_blocks = 0
+            lateral_fw_connections_count = 0
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -63,11 +64,21 @@ class ExhaustiveSearch(nn.Module):
                     n_new_blocks += 1
                     # else:
                     #     nn_module.load_state_dict(self.block_inits[node])
+
+                # Check if this node is a lateral forward connection
+                if len(node) == 4 and node[4] == 'f':
+                    lateral_fw_connections_count += 1
+
                 i += 1
 
             if n_new_blocks > self.max_new_blocks and len(archs) > 1:
                 # print('Skipping {}'.format(path))
                 continue
+
+            # Skip this TODO in case there are multiple lateral FW connections
+            if lateral_fw_connections_count > 1:
+                continue
+
             # print('Adding {}'.format(path))
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
@@ -113,6 +124,9 @@ class ExhaustiveSearch(nn.Module):
 
         if not self.models:
             archs = self.init_models(iteration=t_id)
+
+        if t_id is not None and t_id > 0:
+            raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
 
         # raise ValueError(optim_fact)
         # ValueError: functools.partial(<function set_optim_params at 0x7f80c9f9fd30>,
