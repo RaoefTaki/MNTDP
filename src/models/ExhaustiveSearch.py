@@ -66,7 +66,7 @@ class ExhaustiveSearch(nn.Module):
                     #     nn_module.load_state_dict(self.block_inits[node])
 
                 # Check if this node is a lateral forward connection
-                if len(node) == 4 and node[4] == 'f':
+                if len(node) == 4 and node[3] == 'f':
                     lateral_fw_connections_count += 1
 
                 i += 1
