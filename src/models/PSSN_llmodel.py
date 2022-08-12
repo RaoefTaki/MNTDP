@@ -360,8 +360,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
                                                             in_size, out_size)
 
             in_size = out_size
-            modules_to_add = new_modules.update(new_fw_lb_modules)
-            self.columns[-1][depth] = modules_to_add #new_modules
+            new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
+            self.columns[-1][depth] = new_modules
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
         # if new_col_id > 0:
