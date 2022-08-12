@@ -757,7 +757,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
         node_lay = node[1]
         logger.debug('Pruning {}'.format(node))
         self.graph.remove_node(node)
-        del self.columns[node_col][node_lay][node]
+        try:
+            del self.columns[node_col][node_lay][node]
+        except:
+            raise ValueError("node:", node, "self.columns:", self.columns)
 
         for i, arch_sampler in enumerate(self.arch_samplers[node_col:]):
             if node in arch_sampler.var_names:
