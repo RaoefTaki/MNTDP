@@ -670,8 +670,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # TODO: filter out 'wrong' paths (earlier/later on, since now we only observe what we currently have)
             # TODO: with more than 1 either right or leftbranching thing. also restrict
             # TODO: right/leftbranching to first/last 3 modules?, to save memory. Perhaps incorporate kNn measure too
-            if task_id > 0:
-                raise ValueError("active_nodes:", active_nodes, "sub_graph.nodes():", sub_graph.nodes(), "sub_graph.nodes()._nodes:", sub_graph.nodes()._nodes)
+            # if task_id > 0:
+            #     raise ValueError("active_nodes:", active_nodes, "sub_graph.nodes():", sub_graph.nodes(), "sub_graph.nodes()._nodes:", sub_graph.nodes()._nodes)
 
             # if task_id > 0:
             #     architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
