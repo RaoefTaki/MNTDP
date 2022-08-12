@@ -759,8 +759,11 @@ class MNTDP(LifelongLearningModel, ModularModel):
         self.graph.remove_node(node)
         try:
             del self.columns[node_col][node_lay][node]
-        except:
-            raise ValueError("node:", node, "self.columns:", self.columns)
+        except KeyError:
+            # In case it was not found, it could probably mean that it is a left branching lateral forward (FW) connection
+            # Thus, we search for the other column
+            node_col = node[2]
+            del self.columns[node_col][node_lay][node]
 
         for i, arch_sampler in enumerate(self.arch_samplers[node_col:]):
             if node in arch_sampler.var_names:
