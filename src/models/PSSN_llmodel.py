@@ -786,8 +786,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         input = (col, self.IN_NODE)
         last_node = (col, self.OUT_NODE)
 
-        # if col > 0:
-        #     raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
+        if col > 0:
+            raise ValueError("candidate_nodes:", candidate_nodes, "self.columns:", self.columns)
         # ValueError: ('candidate_nodes:', [(0, 0), (0, 'INs'), (0, 'INs', 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'),
         # (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (0, 'OUT'),
         # (0, 'OUT', 0), (1, 0), (1, 'INs'), (1, 'INs', 0), (1, 'INs', 1), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2),
