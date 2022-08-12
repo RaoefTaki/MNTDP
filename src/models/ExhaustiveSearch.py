@@ -126,7 +126,11 @@ class ExhaustiveSearch(nn.Module):
             archs = self.init_models(iteration=t_id)
 
         if t_id is not None and t_id > 0:
-            raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
+            paths_value_error = []
+            for path, idx in self.models_idx.items():
+                paths_value_error.append(path)
+            raise ValueError("len(paths_value_error):", len(paths_value_error),
+                             "paths_value_error:", paths_value_error)
 
         # raise ValueError(optim_fact)
         # ValueError: functools.partial(<function set_optim_params at 0x7f80c9f9fd30>,
