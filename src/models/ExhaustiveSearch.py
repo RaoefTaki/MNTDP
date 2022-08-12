@@ -41,7 +41,7 @@ class ExhaustiveSearch(nn.Module):
     def init_models(self, iteration=None):
         archs = list(nx.all_simple_paths(self.graph, self.in_node,
                                          self.out_node))
-        if iteration > 0:
+        if iteration is not None and iteration > 0:
             raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
 
         for path in archs:
