@@ -358,7 +358,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             out_activations = not is_last_layer
             new_modules, new_fw_lb_modules = self.add_layer(f_connections, backward_connections,
                                                             depth, new_col_id, out_activations,
-                                                            in_size, out_size)
+                                                            in_size, out_size, candidate_nodes)
 
             in_size = out_size
             new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
@@ -442,7 +442,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         return input_connections
 
     def add_layer(self, f_connections, b_connections, depth, col_id, out_act,
-                  in_size, out_size):
+                  in_size, out_size, candidate_nodes):
         """ Add a layer to the 'col_id' column
         :returns the modules created for this block
         """
@@ -484,6 +484,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 # Connect directly to the current col, depth out node
                 mod = self.get_module(size, out_size, depth - 1)
                 lateral_out_node = h_name
+
+            if col_id > 1:
+                raise ValueError("candidate_nodes:", candidate_nodes)
 
             proj_name = (col_id, depth, source_column, 'f')
             source = (source_column, depth - 1)
