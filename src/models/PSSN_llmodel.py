@@ -871,7 +871,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
                     except KeyError:
                         pass
                     graph.remove_node(node)
-                    raise ValueError("After remove:", )
                 else:
                     logger.debug('Was supposed to remove {}, but no'
                                  .format(node))
