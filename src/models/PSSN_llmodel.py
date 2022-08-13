@@ -712,14 +712,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
             frozen_modules = []
             stoch_nodes = []
 
-            if task_id > 0:
-                # Print the nodes and modules in layer 3, just to see what is in there. To rightly select trainable
-                # and frozen modules
-                raise ValueError(self.columns[task_id].values()[3])
-
             # Add trainable modules
             for layer in self.columns[task_id].values():
                 for node, mod in layer.items():
+                    # This should only include the latest added nodes, e.g. (1, 3), (1, 3, 0, 'f'), (0, 3, 1, 'f') etc
                     trainable_modules.append(mod)
                     if len(node) > 2:
                         stoch_nodes.append(node)
@@ -839,6 +835,16 @@ class MNTDP(LifelongLearningModel, ModularModel):
         additional_results = {}
 
         model = self.get_model(task_id)
+        # if task_id > 1:
+        #     raise ValueError("model.graph.nodes():", model.graph.nodes(), "model.models_idx:", model.models_idx)
+        # ValueError: ('model.graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'), (0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
+        # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
+        # (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'), (2, 5), (2, 5, 'w'),
+        # (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 0, 'f'), (0, 6, 2, 'f'), (2, 'OUT'), (2, 'OUT', 0),
+        # (2, 'OUT', 2))), 'model.models_idx:', {})
+        # It's logical that model.models_idx is empty, since we constructed a new ExhaustiveSearch object
+
         weights = model.get_weights()
         stoch_nodes = model.get_stoch_nodes()
         if hasattr(model, 'arch_sampler'):
@@ -863,25 +869,30 @@ class MNTDP(LifelongLearningModel, ModularModel):
         #              (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
         #              (2, 5, 'w'), (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6, 'w'), (0, 6, 2, 'f'), (2, 'OUT', 0),
         #              (0, 6, 'w')])
+        # Manually calculated, this leaves the following nodes left:
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3),
+        # (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (2, 6, 0, 'f'), (0, 6), (2, 'OUT', 2), (2, 'OUT'), (2, 0), (2, 1),
+        # (2, 2), (2, 3), (2, 4), (2, 5), (2, 6))
         for node in stoch_nodes:
             if node in nodes_to_remove:
                 # Also include leftbranching nodes
-                    if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
-                        self.remove_node(node)
-                        try:
-                            plot_graph.node[node]['color'] = 'red'
-                        except KeyError:
-                            pass
+                if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
+                    self.remove_node(node)
+                    previous_graph_nodes = graph.nodes()
+                    if node in plot_graph.node:
+                        plot_graph.node[node]['color'] = 'red'
+                    try:
                         graph.remove_node(node)
-                        raise ValueError("After remove:", )
-                    else:
-                        logger.debug('Was supposed to remove {}, but no'
-                                     .format(node))
-                        plot_graph.node[node]['color'] = 'orange'
-                        graph.remove_node(node)
-                        if hasattr(model, 'arch_sampler') and \
-                                node in model.arch_sampler.var_names:
-                            model.arch_sampler.remove_var(node)
+                    except:
+                        raise ValueError("previous_graph_nodes:", previous_graph_nodes)
+                else:
+                    logger.debug('Was supposed to remove {}, but no'
+                                 .format(node))
+                    plot_graph.node[node]['color'] = 'orange'
+                    graph.remove_node(node)
+                    if hasattr(model, 'arch_sampler') and \
+                            node in model.arch_sampler.var_names:
+                        model.arch_sampler.remove_var(node)
             else:
                 plot_graph.node[node]['color'] = 'blue'
 
