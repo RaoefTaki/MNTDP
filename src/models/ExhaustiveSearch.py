@@ -190,6 +190,7 @@ class ExhaustiveSearch(nn.Module):
         # Change the model ID to use depending on the ID of the task
         # At the first task, there is only 1 model so this needs to be 0 ofc
         model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
+        model_id_to_use = 2 if t_id == 1 else model_id_to_use # TODO: remove, only for testing
 
         # Repeatedly run the model for x epochs, and at every termination check whether we should run it further using
         # some criteria. This is done inside the train() function

@@ -857,8 +857,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
         graph = model.get_graph()
         plot_graph = graph.copy()
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
-        # if task_id == 2:
-        #     raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
+        if task_id == 2:
+            raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
+        # Find out what graph nodes there are, for task 2, when task 1 right branches off task 0 at the last few nodes
         # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
         # (0, 3, 'w'),(0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
         # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
@@ -885,6 +886,11 @@ class MNTDP(LifelongLearningModel, ModularModel):
                         graph.remove_node(node)
                     except:
                         raise ValueError("previous_graph_nodes:", previous_graph_nodes)
+                        # ValueError: ('previous_graph_nodes:', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2),
+                        # (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 5, 0, 'f'), (1, 6),
+                        # (1, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5),
+                        # (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT'),
+                        # (2, 'OUT', 1), (2, 'OUT', 2))))
                 else:
                     logger.debug('Was supposed to remove {}, but no'
                                  .format(node))
