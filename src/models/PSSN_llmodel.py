@@ -712,14 +712,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
             frozen_modules = []
             stoch_nodes = []
 
-            if task_id > 0:
-                # Print the nodes and modules in layer 3, just to see what is in there. To rightly select trainable
-                # and frozen modules
-                raise ValueError("self.columns[task_id].values():", self.columns[task_id].values())
-
             # Add trainable modules
             for layer in self.columns[task_id].values():
                 for node, mod in layer.items():
+                    # This should only include the latest added nodes, e.g. (1, 3), (1, 3, 0, 'f'), (0, 3, 1, 'f') etc
                     trainable_modules.append(mod)
                     if len(node) > 2:
                         stoch_nodes.append(node)
@@ -839,6 +835,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         additional_results = {}
 
         model = self.get_model(task_id)
+        if task_id > 1:
+            raise ValueError("model.graph.nodes():", model.graph.nodes(), "self.models_idx:", self.models_idx)
         weights = model.get_weights()
         stoch_nodes = model.get_stoch_nodes()
         if hasattr(model, 'arch_sampler'):
