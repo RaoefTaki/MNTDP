@@ -279,7 +279,7 @@ modules:
                     split_training: True
             ray_resources:
                 cpu: 2
-                gpu: 1
+                gpu: 0
 
 #        PSSN-Alex-search-6-fw:
 #            _name: pssn-alexnet
