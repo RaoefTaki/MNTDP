@@ -828,6 +828,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         graph = model.get_graph()
         plot_graph = graph.copy()
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
+        if task_id == 2:
+            raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
         for node in stoch_nodes:
             if node in nodes_to_remove:
                 # Also include leftbranching nodes
