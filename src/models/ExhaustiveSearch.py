@@ -125,6 +125,9 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
+        if t_id == 2:
+            raise ValueError("archs:", archs, "self.models_idx:", self.models_idx)
+
         # if t_id is not None and t_id > 0:
         #     paths_value_error = []
         #     for path, idx in self.models_idx.items():
