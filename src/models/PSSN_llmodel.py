@@ -831,7 +831,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         for node in stoch_nodes:
             if node in nodes_to_remove:
                 # Also include leftbranching nodes
-                if node[0] == task_id or (node[3] == 'f' and node[0] < node[2] == task_id):
+                if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
                     self.remove_node(node)
                     plot_graph.node[node]['color'] = 'red'
                     graph.remove_node(node)
@@ -870,7 +870,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         for n in node_to_remove:
             graph.remove_node(n)
             # Also include leftbranching nodes
-            if n[0] == task_id or (n[3] == 'f' and n[0] < n[2] == task_id):
+            if n[0] == task_id or (len(n) == 4 and n[3] == 'f' and n[0] < n[2] == task_id):
                 self.remove_node(n)
             elif n in stoch_nodes and hasattr(model, 'arch_sampler'):
                 model.arch_sampler.remove_var(n)
