@@ -456,7 +456,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         # Check whether the candidate path has left or rightbranched to reach this specific node, in the previous edge
         branch_direction = None
         current_node = None
-        if depth >= 2:
+        if depth >= 2 and len(candidate_nodes):
             current_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth][0]
             previous_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth-1][0]
             if current_node[0] > previous_node[0]:
