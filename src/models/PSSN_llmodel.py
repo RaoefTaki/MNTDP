@@ -367,7 +367,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
         if new_col_id == 2:
-            raise ValueError("new_modules_list keys:", new_modules_keys_list)
+            raise ValueError("new_modules_list keys:", new_modules_keys_list, "candidate_nodes:", candidate_nodes)
         # if new_col_id > 0:
         #     raise ValueError("new_modules_list keys:", new_modules_list)
         # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
@@ -485,8 +485,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 mod = self.get_module(size, out_size, depth - 1)
                 lateral_out_node = h_name
 
-            if col_id > 1:
-                raise ValueError("candidate_nodes:", candidate_nodes)
+            # if col_id > 1:
+            #     raise ValueError("candidate_nodes:", candidate_nodes)
 
             proj_name = (col_id, depth, source_column, 'f')
             source = (source_column, depth - 1)
