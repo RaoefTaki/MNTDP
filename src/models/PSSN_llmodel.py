@@ -366,8 +366,16 @@ class MNTDP(LifelongLearningModel, ModularModel):
             new_modules_keys_list.append(new_modules.keys())
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
-        if new_col_id == 2:
-            raise ValueError("new_modules_list keys:", new_modules_keys_list, "candidate_nodes:", candidate_nodes)
+        # if new_col_id == 2:
+        #     raise ValueError("new_modules_list keys:", new_modules_keys_list, "candidate_nodes:", candidate_nodes)
+        # After change try:
+        # ValueError: ('new_modules_list keys:', [dict_keys([(2, 1, 'w'), (2, 1)]), dict_keys([(2, 2, 'w'), (2, 2),
+        # (2, 2, 0, 'f'), (0, 2, 2, 'f')]), dict_keys([(2, 3, 'w'), (2, 3), (2, 3, 0, 'f'), (0, 3, 2, 'f')]),
+        # dict_keys([(2, 4, 'w'), (2, 4), (2, 4, 0, 'f'), (0, 4, 2, 'f')]), dict_keys([(2, 5, 'w'), (2, 5),
+        # (2, 5, 0, 'f'), (1, 5, 2, 'f')]), dict_keys([(2, 6, 'w'), (2, 6), (2, 6, 1, 'f'), (1, 6, 2, 'f')])],
+        # 'candidate_nodes:', {(0, 1), (0, 4), (0, 0), (1, 'INs'), (1, 5), (1, 'OUT'), (0, 3), (1, 6, 'w'),
+        # (1, 'OUT', 1), (1, 5, 0, 'f'), (0, 1, 'w'), (1, 'INs', 0), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 4, 'w'),
+        # (1, 6)})
         # ValueError: ('new_modules_list keys:', [dict_keys([(2, 1, 'w'), (2, 1)]), dict_keys([(2, 2, 'w'), (2, 2),
         # (2, 2, 0, 'f'), (0, 2, 2, 'f')]), dict_keys([(2, 3, 'w'), (2, 3), (2, 3, 0, 'f'), (0, 3, 2, 'f')]),
         # dict_keys([(2, 4, 'w'), (2, 4), (2, 4, 0, 'f'), (0, 4, 2, 'f')]), dict_keys([(2, 5, 'w'), (2, 5),
