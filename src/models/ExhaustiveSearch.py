@@ -41,11 +41,15 @@ class ExhaustiveSearch(nn.Module):
     def init_models(self, iteration=None):
         archs = list(nx.all_simple_paths(self.graph, self.in_node,
                                          self.out_node))
+        # if iteration is not None and iteration > 0:
+        #     raise ValueError("len(archs):", len(archs), "archs:", '\n'.join(map(str, archs)))
+
         for path in archs:
             new_model = FrozenSequential()
             last = None
             i = 0
             n_new_blocks = 0
+            lateral_fw_connections_count = 0
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -60,11 +64,21 @@ class ExhaustiveSearch(nn.Module):
                     n_new_blocks += 1
                     # else:
                     #     nn_module.load_state_dict(self.block_inits[node])
+
+                # Check if this node is a lateral forward connection
+                if len(node) == 4 and node[3] == 'f':
+                    lateral_fw_connections_count += 1
+
                 i += 1
 
             if n_new_blocks > self.max_new_blocks and len(archs) > 1:
                 # print('Skipping {}'.format(path))
                 continue
+
+            # Skip this TODO in case there are multiple lateral FW connections
+            if lateral_fw_connections_count > 1:
+                continue
+
             # print('Adding {}'.format(path))
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
@@ -108,9 +122,28 @@ class ExhaustiveSearch(nn.Module):
             p = Path('../../understood/')
             p.mkdir(parents=True, exist_ok=True)
 
-        # TODO: pull this forward if possible (if it helps speed at all), i.e. calculate the possible models earlier
         if not self.models:
             archs = self.init_models(iteration=t_id)
+
+        # if t_id is not None and t_id > 0:
+        #     paths_value_error = []
+        #     for path, idx in self.models_idx.items():
+        #         paths_value_error.append(path)
+        #     raise ValueError("len(paths_value_error):", len(paths_value_error),
+        #                      "paths_value_error:", paths_value_error)
+        # ValueError: ('len(paths_value_error):', 12, 'paths_value_error:', [
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (1, 6, 0, 'f'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (1, 5, 0, 'f'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (1, 4, 0, 'f'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (1, 3, 0, 'f'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (1, 2, 0, 'f'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (1, 6, 'w'), (1, 6), (1, 'OUT', 1), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (1, 5, 'w'), (1, 5), (0, 6, 1, 'f'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (1, 4, 'w'), (1, 4), (0, 5, 1, 'f'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (1, 3, 'w'), (1, 3), (0, 4, 1, 'f'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (1, 2, 'w'), (1, 2), (0, 3, 1, 'f'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')),
+        # ((1, 'INs'), (1, 'INs', 1), (1, 0), (1, 1, 'w'), (1, 1), (0, 2, 1, 'f'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT'))])
 
         # raise ValueError(optim_fact)
         # ValueError: functools.partial(<function set_optim_params at 0x7f80c9f9fd30>,

@@ -298,8 +298,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if targ_col_id not in candidate_nodes:
             #     continue
             targ_layer = targ_col.get(targ_depth)
-            if targ_layer and (targ_col_id, targ_depth) in targ_layer\
-                and (targ_col_id, targ_depth) in candidate_nodes:
+            if targ_layer and (targ_col_id, targ_depth) in targ_layer \
+                    and (targ_col_id, targ_depth) in candidate_nodes:
                 repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
                 lateral_connections[targ_col_id] = repr_size
         return lateral_connections
@@ -318,8 +318,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if src_col_id not in columns:
             #     continue
             src_layer = src_col.get(depth - 1)
-            if src_layer and (src_col_id, depth - 1) in src_layer and\
-                (src_col_id, depth-1) in candidate_nodes:
+            if src_layer and (src_col_id, depth - 1) in src_layer and \
+                    (src_col_id, depth-1) in candidate_nodes:
                 repr_size = self.column_repr_sizes[src_col_id]
                 repr_size = repr_size[depth - 1] \
                     if len(repr_size) >= depth else -1
@@ -360,6 +360,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                                                             in_size, out_size)
 
             in_size = out_size
+            new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
             self.columns[-1][depth] = new_modules
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
@@ -385,10 +386,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # last_layer_depth_old = len(self.hidden_size) + 1
             src_layer = self.columns[prev_col_id].get(last_layer_depth)
             last_node = (prev_col_id, last_layer_depth)
-            if not src_layer or last_node not in src_layer\
+            if not src_layer or last_node not in src_layer \
                     or last_node not in \
                     candidate_nodes | {(col_id, last_layer_depth)}:
-                    # or prev_col_id not in (columns + [col_id]):
+                # or prev_col_id not in (columns + [col_id]):
                 continue
             if self.learn_in_and_out:
                 conn_name = (col_id, self.OUT_NODE, prev_col_id)
@@ -420,9 +421,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
         for prev_col_id in range(col_id + 1):
             in_layer = self.columns[prev_col_id].get(0)
             target_node = (prev_col_id, 0)
-            if not in_layer or target_node not in in_layer\
+            if not in_layer or target_node not in in_layer \
                     or target_node not in candidate_nodes | {(col_id, 0)}:
-                    # or prev_col_id not in columns + [col_id]:
+                # or prev_col_id not in columns + [col_id]:
                 continue
 
             if self.learn_in_and_out:
@@ -629,7 +630,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if self.split_last:
             #     sizes[-self.n_new_layers-1:-1] = \
             #         [sizes[-self.n_new_layers-2]] * self.n_new_layers
-                # sizes[-2] = sizes[-3]
+            # sizes[-2] = sizes[-3]
             self.column_repr_sizes.append(sizes)
             if task_id > 0:
                 desrc = task_infos['descriptor']
@@ -666,9 +667,15 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 sub_graph = None
 
             # New modules now stored in: self.temporary_fw_lb_modules
-            if task_id > 0:
-                architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
-                raise ValueError("architectures:", architectures)
+            # TODO: filter out 'wrong' paths (earlier/later on, since now we only observe what we currently have)
+            # TODO: with more than 1 either right or leftbranching thing. also restrict
+            # TODO: right/leftbranching to first/last 3 modules?, to save memory. Perhaps incorporate kNn measure too
+            # if task_id > 0:
+            #     raise ValueError("active_nodes:", active_nodes, "sub_graph.nodes():", sub_graph.nodes(), "sub_graph.nodes()._nodes:", sub_graph.nodes()._nodes)
+
+            # if task_id > 0:
+            #     architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
+            #     raise ValueError("architectures:", '\n'.join(map(str, architectures)))
 
             # if task_id > 0:
             #     raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
@@ -750,7 +757,13 @@ class MNTDP(LifelongLearningModel, ModularModel):
         node_lay = node[1]
         logger.debug('Pruning {}'.format(node))
         self.graph.remove_node(node)
-        del self.columns[node_col][node_lay][node]
+        try:
+            del self.columns[node_col][node_lay][node]
+        except KeyError:
+            # In case it was not found, it could probably mean that it is a left branching lateral forward (FW) connection
+            # Thus, we search for the other column
+            node_col = node[2]
+            del self.columns[node_col][node_lay][node]
 
         for i, arch_sampler in enumerate(self.arch_samplers[node_col:]):
             if node in arch_sampler.var_names:
