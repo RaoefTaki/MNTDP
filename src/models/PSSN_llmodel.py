@@ -368,6 +368,13 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         if new_col_id == 2:
             raise ValueError("new_modules_list keys:", new_modules_keys_list, "candidate_nodes:", candidate_nodes)
+        # ValueError: ('new_modules_list keys:', [dict_keys([(2, 1, 'w'), (2, 1)]), dict_keys([(2, 2, 'w'), (2, 2),
+        # (2, 2, 0, 'f'), (0, 2, 2, 'f')]), dict_keys([(2, 3, 'w'), (2, 3), (2, 3, 0, 'f'), (0, 3, 2, 'f')]),
+        # dict_keys([(2, 4, 'w'), (2, 4), (2, 4, 0, 'f'), (0, 4, 2, 'f')]), dict_keys([(2, 5, 'w'), (2, 5),
+        # (2, 5, 0, 'f'), (0, 5, 2, 'f')]), dict_keys([(2, 6, 'w'), (2, 6), (2, 6, 1, 'f'), (1, 6, 2, 'f')])],
+        # 'candidate_nodes:', {(0, 1), (1, 6, 'w'), (0, 1, 'w'), (0, 4), (0, 2, 'w'), (0, 0), (0, 3, 'w'),
+        # (1, 'INs', 0), (1, 5), (0, 3), (0, 4, 'w'), (1, 'INs'), (1, 'OUT'), (0, 2), (1, 5, 0, 'f'), (1, 'OUT', 1),
+        # (1, 6)})
         # if new_col_id > 0:
         #     raise ValueError("new_modules_list keys:", new_modules_list)
         # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
@@ -446,6 +453,17 @@ class MNTDP(LifelongLearningModel, ModularModel):
         """ Add a layer to the 'col_id' column
         :returns the modules created for this block
         """
+        # Check whether the candidate path has left or rightbranched to reach this specific node, in the previous edge
+        branch_direction = None
+        current_node = None
+        if depth >= 2:
+            current_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth][0]
+            previous_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth-1][0]
+            if current_node[0] > previous_node[0]:
+                branch_direction = 'right'
+            elif current_node[0] < previous_node[0]:
+                branch_direction = 'left'
+
         # Create node corresponding to current depth and column id
         h_name = (col_id, depth)
         # h = Add_Block(activation=out_act)
@@ -487,7 +505,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             # if col_id > 1:
             #     raise ValueError("candidate_nodes:", candidate_nodes)
-
             proj_name = (col_id, depth, source_column, 'f')
             source = (source_column, depth - 1)
             self.graph.add_node(proj_name, module=mod)
@@ -497,7 +514,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             # Also add a reverse node to allow for leftbranching too. Later on in the code restrict so that you can only either
             # rightbranch once or leftbranch once
-            node_left = source_column
+            if branch_direction == 'right' or branch_direction == 'left':
+                node_left = current_node[0]
+            else:
+                node_left = source_column
             node_right = col_id
             proj_name_left_branch = (node_left, depth, node_right, 'f')
             source = (node_right, depth - 1)
@@ -505,6 +525,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(source, proj_name_left_branch)
             self.graph.add_edge(proj_name_left_branch, (node_left, depth))
             added_fw_leftbranching_modules[proj_name_left_branch] = mod
+
+            # {(0, 1), (1, 6, 'w'), (0, 1, 'w'), (0, 4), (0, 2, 'w'), (0, 0), (0, 3, 'w'),
+            # (1, 'INs', 0), (1, 5), (0, 3), (0, 4, 'w'), (1, 'INs'), (1, 'OUT'), (0, 2), (1, 5, 0, 'f'), (1, 'OUT', 1),
+            # (1, 6)}
 
             # raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
             #                  "source:", source, "len(added_modules):", len(added_modules))
