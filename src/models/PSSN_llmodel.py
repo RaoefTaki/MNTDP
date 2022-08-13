@@ -361,7 +361,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             in_size = out_size
             new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
-            self.columns[-1][depth] = new_modules
+            self.columns[-1][depth] = new_modules  # Includes lateral left branching FW connections
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
         # if new_col_id > 0:
@@ -677,9 +677,25 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #     architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
             #     raise ValueError("architectures:", '\n'.join(map(str, architectures)))
 
-            if task_id > 0:
-                raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
-                                 "active_nodes:", active_nodes, "task_id:", task_id)
+            # if task_id > 0:
+            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
+            #                      "active_nodes:", active_nodes, "task_id:", task_id)
+            # ValueError: ('In first run of this function, enters lower if statement. sub_graph.nodes():',
+            #              NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4),
+            #                        (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (1, 'INs'), (1, 0),
+            #                        (1, 'INs', 0), (1, 'INs', 1), (1, 1), (1, 1, 'w'), (1, 2), (1, 2, 'w'),
+            #                        (1, 2, 0, 'f'), (0, 2, 1, 'f'), (1, 3), (1, 3, 'w'), (1, 3, 0, 'f'),
+            #                        (0, 3, 1, 'f'), (1, 4), (1, 4, 'w'), (1, 4, 0, 'f'), (0, 4, 1, 'f'),
+            #                        (1, 5), (1, 5, 'w'), (1, 5, 0, 'f'), (0, 5, 1, 'f'), (1, 6), (1, 6, 'w'),
+            #                        (1, 6, 0, 'f'), (0, 6, 1, 'f'), (1, 'OUT'), (1, 'OUT', 0), (1, 'OUT', 1))),
+            #              'active_nodes:', {(1, 'OUT'), (1, 3, 'w'), (0, 2), (0, 5, 'w'), (0, 5), (1, 'OUT', 1),
+            #                                (1, 0), (1, 6), (1, 1, 'w'), (1, 3), (0, 2, 1, 'f'), (1, 5, 'w'),
+            #                                (1, 5, 0, 'f'), (1, 'INs', 1), (1, 6, 0, 'f'), (0, 2, 'w'), (0, 1),
+            #                                (0, 4, 'w'), (1, 2), (0, 4), (0, 6, 'w'), (1, 'OUT', 0), (1, 5),
+            #                                (0, 4, 1, 'f'), (1, 2, 0, 'f'), (0, 5, 1, 'f'), (1, 3, 0, 'f'),
+            #                                (1, 'INs', 0), (1, 2, 'w'), (0, 6, 1, 'f'), (1, 4, 0, 'f'), (1, 4, 'w'),
+            #                                (1, 'INs'), (0, 0), (0, 3, 1, 'f'), (1, 1), (0, 3), (1, 4), (0, 6),
+            #                                (1, 6, 'w'), (0, 1, 'w'), (0, 3, 'w')}, 'task_id:', 1)
             # ValueError: ('In first run of this function, enters lower if statement. sub_graph:', <networkx.classes.digraph.DiGraph object at 0x7f67241fd130>,
             # 'active_nodes:', {(1, 'INs'), (1, 5, 0, 'f'), (1, 2, 'w'), (1, 4, 'w'), (1, 6, 0, 'f'), (0, 2), (0, 5),
             # (1, 0), (1, 6), (1, 'OUT', 0), (1, 3), (1, 6, 'w'), (1, 2, 0, 'f'), (0, 1, 'w'), (1, 3, 0, 'f'),
@@ -696,12 +712,19 @@ class MNTDP(LifelongLearningModel, ModularModel):
             frozen_modules = []
             stoch_nodes = []
 
+            if task_id > 0:
+                # Print the nodes and modules in layer 3, just to see what is in there. To rightly select trainable
+                # and frozen modules
+                raise ValueError(self.columns[task_id].values()[3])
+
+            # Add trainable modules
             for layer in self.columns[task_id].values():
                 for node, mod in layer.items():
                     trainable_modules.append(mod)
                     if len(node) > 2:
                         stoch_nodes.append(node)
 
+            # Add frozen modules
             for column in self.columns[:task_id]:
                 for layer in column.values():
                     for node, mod in layer.items():
