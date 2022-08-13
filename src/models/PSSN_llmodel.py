@@ -715,7 +715,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             if task_id > 0:
                 # Print the nodes and modules in layer 3, just to see what is in there. To rightly select trainable
                 # and frozen modules
-                raise ValueError(self.columns[task_id].values()[3])
+                raise ValueError("self.columns[task_id].values():", self.columns[task_id].values())
 
             # Add trainable modules
             for layer in self.columns[task_id].values():
