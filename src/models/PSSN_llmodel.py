@@ -677,9 +677,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #     architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
             #     raise ValueError("architectures:", '\n'.join(map(str, architectures)))
 
-            # if task_id > 0:
-            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
-            #                      "active_nodes:", active_nodes, "task_id:", task_id)
+            if task_id > 0:
+                raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
+                                 "active_nodes:", active_nodes, "task_id:", task_id)
             # ValueError: ('In first run of this function, enters lower if statement. sub_graph:', <networkx.classes.digraph.DiGraph object at 0x7f67241fd130>,
             # 'active_nodes:', {(1, 'INs'), (1, 5, 0, 'f'), (1, 2, 'w'), (1, 4, 'w'), (1, 6, 0, 'f'), (0, 2), (0, 5),
             # (1, 0), (1, 6), (1, 'OUT', 0), (1, 3), (1, 6, 'w'), (1, 2, 0, 'f'), (0, 1, 'w'), (1, 3, 0, 'f'),
@@ -850,6 +850,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                         except KeyError:
                             pass
                         graph.remove_node(node)
+                        raise ValueError("After remove:", )
                     else:
                         logger.debug('Was supposed to remove {}, but no'
                                      .format(node))
