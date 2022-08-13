@@ -835,8 +835,16 @@ class MNTDP(LifelongLearningModel, ModularModel):
         additional_results = {}
 
         model = self.get_model(task_id)
-        if task_id > 1:
-            raise ValueError("model.graph.nodes():", model.graph.nodes(), "self.models_idx:", model.models_idx)
+        # if task_id > 1:
+        #     raise ValueError("model.graph.nodes():", model.graph.nodes(), "model.models_idx:", model.models_idx)
+        # ValueError: ('model.graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'), (0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
+        # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
+        # (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'), (2, 5), (2, 5, 'w'),
+        # (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 0, 'f'), (0, 6, 2, 'f'), (2, 'OUT'), (2, 'OUT', 0),
+        # (2, 'OUT', 2))), 'model.models_idx:', {})
+        # It's logical that model.models_idx is empty, since we constructed a new ExhaustiveSearch object
+
         weights = model.get_weights()
         stoch_nodes = model.get_stoch_nodes()
         if hasattr(model, 'arch_sampler'):
@@ -861,16 +869,22 @@ class MNTDP(LifelongLearningModel, ModularModel):
         #              (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
         #              (2, 5, 'w'), (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6, 'w'), (0, 6, 2, 'f'), (2, 'OUT', 0),
         #              (0, 6, 'w')])
+        # Manually calculated, this leaves the following nodes left:
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3),
+        # (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (2, 6, 0, 'f'), (0, 6), (2, 'OUT', 2), (2, 'OUT'), (2, 0), (2, 1),
+        # (2, 2), (2, 3), (2, 4), (2, 5), (2, 6))
         for node in stoch_nodes:
             if node in nodes_to_remove:
                 # Also include leftbranching nodes
                 if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
                     self.remove_node(node)
-                    try:
+                    previous_graph_nodes = graph.nodes()
+                    if node in plot_graph.node:
                         plot_graph.node[node]['color'] = 'red'
-                    except KeyError:
-                        pass
-                    graph.remove_node(node)
+                    try:
+                        graph.remove_node(node)
+                    except:
+                        raise ValueError("previous_graph_nodes:", previous_graph_nodes)
                 else:
                     logger.debug('Was supposed to remove {}, but no'
                                  .format(node))
