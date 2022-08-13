@@ -847,9 +847,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
                         self.remove_node(node)
                         try:
                             plot_graph.node[node]['color'] = 'red'
-                        except KeyError:
+                            graph.remove_node(node)
+                        except:
                             pass
-                        graph.remove_node(node)
                     else:
                         logger.debug('Was supposed to remove {}, but no'
                                      .format(node))
