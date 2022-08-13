@@ -836,7 +836,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         model = self.get_model(task_id)
         if task_id > 1:
-            raise ValueError("model.graph.nodes():", model.graph.nodes(), "self.models_idx:", self.models_idx)
+            raise ValueError("model.graph.nodes():", model.graph.nodes(), "self.models_idx:", model.models_idx)
         weights = model.get_weights()
         stoch_nodes = model.get_stoch_nodes()
         if hasattr(model, 'arch_sampler'):
