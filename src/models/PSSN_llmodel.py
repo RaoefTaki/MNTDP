@@ -828,15 +828,27 @@ class MNTDP(LifelongLearningModel, ModularModel):
         graph = model.get_graph()
         plot_graph = graph.copy()
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
-        if task_id == 2:
-            raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
+        # if task_id == 2:
+        #     raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
+        # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'),(0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
+        # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
+        # (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'), (2, 5), (2, 5, 'w'),
+        # (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 0, 'f'), (0, 6, 2, 'f'), (2, 'OUT'),
+        # (2, 'OUT', 0), (2, 'OUT', 2))),
+        #              'nodes_to_remove:', [(2, 'INs', 2), (2, 1, 'w'), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'),
+        #              (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        #              (2, 5, 'w'), (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6, 'w'), (0, 6, 2, 'f'), (2, 'OUT', 0),
+        #              (0, 6, 'w')])
         for node in stoch_nodes:
             if node in nodes_to_remove:
                 # Also include leftbranching nodes
-                try:
                     if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
                         self.remove_node(node)
-                        plot_graph.node[node]['color'] = 'red'
+                        try:
+                            plot_graph.node[node]['color'] = 'red'
+                        except KeyError:
+                            pass
                         graph.remove_node(node)
                     else:
                         logger.debug('Was supposed to remove {}, but no'
@@ -846,9 +858,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
                         if hasattr(model, 'arch_sampler') and \
                                 node in model.arch_sampler.var_names:
                             model.arch_sampler.remove_var(node)
-                except KeyError:
-                    pass
-
             else:
                 plot_graph.node[node]['color'] = 'blue'
 
