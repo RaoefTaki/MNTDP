@@ -534,6 +534,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(proj_name_left_branch, (node_left, depth))
             added_fw_leftbranching_modules[proj_name_left_branch] = mod
 
+            if depth == 1 and col_id == 2:
+                raise ValueError("[TEST]:", proj_name, (source_column, depth - 1), proj_name_left_branch, (node_right, depth - 1))
+
             # {(0, 1), (1, 6, 'w'), (0, 1, 'w'), (0, 4), (0, 2, 'w'), (0, 0), (0, 3, 'w'),
             # (1, 'INs', 0), (1, 5), (0, 3), (0, 4, 'w'), (1, 'INs'), (1, 'OUT'), (0, 2), (1, 5, 0, 'f'), (1, 'OUT', 1),
             # (1, 6)}
