@@ -298,8 +298,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if targ_col_id not in candidate_nodes:
             #     continue
             targ_layer = targ_col.get(targ_depth)
-            if targ_layer and (targ_col_id, targ_depth) in targ_layer\
-                and (targ_col_id, targ_depth) in candidate_nodes:
+            if targ_layer and (targ_col_id, targ_depth) in targ_layer \
+                    and (targ_col_id, targ_depth) in candidate_nodes:
                 repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
                 lateral_connections[targ_col_id] = repr_size
         return lateral_connections
@@ -318,8 +318,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if src_col_id not in columns:
             #     continue
             src_layer = src_col.get(depth - 1)
-            if src_layer and (src_col_id, depth - 1) in src_layer and\
-                (src_col_id, depth-1) in candidate_nodes:
+            if src_layer and (src_col_id, depth - 1) in src_layer and \
+                    (src_col_id, depth-1) in candidate_nodes:
                 repr_size = self.column_repr_sizes[src_col_id]
                 repr_size = repr_size[depth - 1] \
                     if len(repr_size) >= depth else -1
@@ -361,7 +361,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             in_size = out_size
             new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
-            self.columns[-1][depth] = new_modules
+            self.columns[-1][depth] = new_modules  # Includes lateral left branching FW connections
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
         # if new_col_id > 0:
@@ -386,10 +386,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # last_layer_depth_old = len(self.hidden_size) + 1
             src_layer = self.columns[prev_col_id].get(last_layer_depth)
             last_node = (prev_col_id, last_layer_depth)
-            if not src_layer or last_node not in src_layer\
+            if not src_layer or last_node not in src_layer \
                     or last_node not in \
                     candidate_nodes | {(col_id, last_layer_depth)}:
-                    # or prev_col_id not in (columns + [col_id]):
+                # or prev_col_id not in (columns + [col_id]):
                 continue
             if self.learn_in_and_out:
                 conn_name = (col_id, self.OUT_NODE, prev_col_id)
@@ -421,9 +421,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
         for prev_col_id in range(col_id + 1):
             in_layer = self.columns[prev_col_id].get(0)
             target_node = (prev_col_id, 0)
-            if not in_layer or target_node not in in_layer\
+            if not in_layer or target_node not in in_layer \
                     or target_node not in candidate_nodes | {(col_id, 0)}:
-                    # or prev_col_id not in columns + [col_id]:
+                # or prev_col_id not in columns + [col_id]:
                 continue
 
             if self.learn_in_and_out:
@@ -630,7 +630,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if self.split_last:
             #     sizes[-self.n_new_layers-1:-1] = \
             #         [sizes[-self.n_new_layers-2]] * self.n_new_layers
-                # sizes[-2] = sizes[-3]
+            # sizes[-2] = sizes[-3]
             self.column_repr_sizes.append(sizes)
             if task_id > 0:
                 desrc = task_infos['descriptor']
@@ -678,8 +678,24 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #     raise ValueError("architectures:", '\n'.join(map(str, architectures)))
 
             # if task_id > 0:
-            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph:", sub_graph,
+            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
             #                      "active_nodes:", active_nodes, "task_id:", task_id)
+            # ValueError: ('In first run of this function, enters lower if statement. sub_graph.nodes():',
+            #              NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4),
+            #                        (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (1, 'INs'), (1, 0),
+            #                        (1, 'INs', 0), (1, 'INs', 1), (1, 1), (1, 1, 'w'), (1, 2), (1, 2, 'w'),
+            #                        (1, 2, 0, 'f'), (0, 2, 1, 'f'), (1, 3), (1, 3, 'w'), (1, 3, 0, 'f'),
+            #                        (0, 3, 1, 'f'), (1, 4), (1, 4, 'w'), (1, 4, 0, 'f'), (0, 4, 1, 'f'),
+            #                        (1, 5), (1, 5, 'w'), (1, 5, 0, 'f'), (0, 5, 1, 'f'), (1, 6), (1, 6, 'w'),
+            #                        (1, 6, 0, 'f'), (0, 6, 1, 'f'), (1, 'OUT'), (1, 'OUT', 0), (1, 'OUT', 1))),
+            #              'active_nodes:', {(1, 'OUT'), (1, 3, 'w'), (0, 2), (0, 5, 'w'), (0, 5), (1, 'OUT', 1),
+            #                                (1, 0), (1, 6), (1, 1, 'w'), (1, 3), (0, 2, 1, 'f'), (1, 5, 'w'),
+            #                                (1, 5, 0, 'f'), (1, 'INs', 1), (1, 6, 0, 'f'), (0, 2, 'w'), (0, 1),
+            #                                (0, 4, 'w'), (1, 2), (0, 4), (0, 6, 'w'), (1, 'OUT', 0), (1, 5),
+            #                                (0, 4, 1, 'f'), (1, 2, 0, 'f'), (0, 5, 1, 'f'), (1, 3, 0, 'f'),
+            #                                (1, 'INs', 0), (1, 2, 'w'), (0, 6, 1, 'f'), (1, 4, 0, 'f'), (1, 4, 'w'),
+            #                                (1, 'INs'), (0, 0), (0, 3, 1, 'f'), (1, 1), (0, 3), (1, 4), (0, 6),
+            #                                (1, 6, 'w'), (0, 1, 'w'), (0, 3, 'w')}, 'task_id:', 1)
             # ValueError: ('In first run of this function, enters lower if statement. sub_graph:', <networkx.classes.digraph.DiGraph object at 0x7f67241fd130>,
             # 'active_nodes:', {(1, 'INs'), (1, 5, 0, 'f'), (1, 2, 'w'), (1, 4, 'w'), (1, 6, 0, 'f'), (0, 2), (0, 5),
             # (1, 0), (1, 6), (1, 'OUT', 0), (1, 3), (1, 6, 'w'), (1, 2, 0, 'f'), (0, 1, 'w'), (1, 3, 0, 'f'),
@@ -696,12 +712,19 @@ class MNTDP(LifelongLearningModel, ModularModel):
             frozen_modules = []
             stoch_nodes = []
 
+            if task_id > 0:
+                # Print the nodes and modules in layer 3, just to see what is in there. To rightly select trainable
+                # and frozen modules
+                raise ValueError(self.columns[task_id].values()[3])
+
+            # Add trainable modules
             for layer in self.columns[task_id].values():
                 for node, mod in layer.items():
                     trainable_modules.append(mod)
                     if len(node) > 2:
                         stoch_nodes.append(node)
 
+            # Add frozen modules
             for column in self.columns[:task_id]:
                 for layer in column.values():
                     for node, mod in layer.items():
@@ -828,12 +851,29 @@ class MNTDP(LifelongLearningModel, ModularModel):
         graph = model.get_graph()
         plot_graph = graph.copy()
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
+        # if task_id == 2:
+        #     raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
+        # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'),(0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
+        # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
+        # (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'), (2, 5), (2, 5, 'w'),
+        # (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 0, 'f'), (0, 6, 2, 'f'), (2, 'OUT'),
+        # (2, 'OUT', 0), (2, 'OUT', 2))),
+        #              'nodes_to_remove:', [(2, 'INs', 2), (2, 1, 'w'), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'),
+        #              (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        #              (2, 5, 'w'), (2, 5, 0, 'f'), (0, 5, 2, 'f'), (2, 6, 'w'), (0, 6, 2, 'f'), (2, 'OUT', 0),
+        #              (0, 6, 'w')])
         for node in stoch_nodes:
             if node in nodes_to_remove:
-                if node[0] == task_id:
+                # Also include leftbranching nodes
+                if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
                     self.remove_node(node)
-                    plot_graph.node[node]['color'] = 'red'
+                    try:
+                        plot_graph.node[node]['color'] = 'red'
+                    except KeyError:
+                        pass
                     graph.remove_node(node)
+                    raise ValueError("After remove:", )
                 else:
                     logger.debug('Was supposed to remove {}, but no'
                                  .format(node))
@@ -842,7 +882,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
                     if hasattr(model, 'arch_sampler') and \
                             node in model.arch_sampler.var_names:
                         model.arch_sampler.remove_var(node)
-
             else:
                 plot_graph.node[node]['color'] = 'blue'
 
@@ -868,7 +907,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         node_to_remove = clean_graph(graph, model.in_node, model.out_node)
         for n in node_to_remove:
             graph.remove_node(n)
-            if n[0] == task_id:
+            # Also include leftbranching nodes
+            if n[0] == task_id or (len(n) == 4 and n[3] == 'f' and n[0] < n[2] == task_id):
                 self.remove_node(n)
             elif n in stoch_nodes and hasattr(model, 'arch_sampler'):
                 model.arch_sampler.remove_var(n)
