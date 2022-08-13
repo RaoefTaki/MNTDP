@@ -341,6 +341,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         # ValueError: ('list(range(1, self.n_modules+1)):', [1, 2, 3, 4, 5, 6])
 
         in_size = sizes[0]
+        new_modules_keys_list = []
         # for depth, out_size in enumerate(sizes[1:], start=1):
         for depth in range(1, self.n_modules+1):
             # Start from 1 because input (depth 0) is already connected.
@@ -362,8 +363,11 @@ class MNTDP(LifelongLearningModel, ModularModel):
             in_size = out_size
             new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
             self.columns[-1][depth] = new_modules  # Includes lateral left branching FW connections
+            new_modules_keys_list.append(new_modules.keys())
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
+        if new_col_id == 2:
+            raise ValueError("new_modules_list keys:", new_modules_keys_list)
         # if new_col_id > 0:
         #     raise ValueError("new_modules_list keys:", new_modules_list)
         # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
@@ -859,7 +863,24 @@ class MNTDP(LifelongLearningModel, ModularModel):
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
         if task_id == 2:
             raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
-        # Find out what graph nodes there are, for task 2, when task 1 right branches off task 0 at the last few nodes
+        # Find out what graph nodes there are, for task 2, when task 1 right branches off task 0 at the last few nodes:
+        # -> this is the results:
+        # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 5, 0, 'f'), (1, 6), (1, 6, 'w'), (2, 'INs'), (2, 0),
+        # (2, 'INs', 0), (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'),
+        # (2, 3), (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        # (2, 5), (2, 5, 'w'), (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT'),
+        # (2, 'OUT', 1), (2, 'OUT', 2))),
+        # TODO: The above needs (1, 5, 2, 'f') added
+        # 'nodes_to_remove:', [(2, 'INs', 2), (2, 1, 'w'), (2, 2, 'w'), (2, 2, 0, 'f'),
+        # (0, 2, 2, 'f'), (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        # (2, 5, 'w'), (0, 5, 2, 'f'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT', 1), (1, 5, 0, 'f'), (1, 6, 'w')])
+        # TODO: The above (possibly) needs (1, 5, 2, 'f') added and (0, 5, 2, 'f') removed, because it doesnt exist.
+        # Manually calculated, this leaves the following nodes left:
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        #  (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 6), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4),
+        #  (2, 5), (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 'OUT'), (2, 'OUT', 2))
+        # Normal results:
         # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
         # (0, 3, 'w'),(0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
         # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
