@@ -125,9 +125,9 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
-        if t_id == 2:
-            raise ValueError("len(archs):", len(archs), "archs:", archs,
-                             "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)
+        # if t_id == 2:
+        #     raise ValueError("len(archs):", len(archs), "archs:", archs,
+        #                      "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)
         # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 0,
         # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (2, 6, 0, 'f'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 1,
         # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (2, 5, 0, 'f'), (2, 5), (2, 6, 'w'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 2,
