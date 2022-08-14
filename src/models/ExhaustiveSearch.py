@@ -50,8 +50,7 @@ class ExhaustiveSearch(nn.Module):
             i = 0
             n_new_blocks = 0
             newly_added_lateral_fw_connections_count = 0
-            has_early_or_late_lateral_fw_connection = False
-            i_values = []
+            has_wrong_early_or_late_lateral_fw_connection = False
             for node in path:
                 i_values.append(i)
                 assert node == self.in_node \
@@ -71,18 +70,22 @@ class ExhaustiveSearch(nn.Module):
                 # Check if this node is a lateral forward connection
                 if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
                     newly_added_lateral_fw_connections_count += 1
-                    if False:
-                        has_early_or_late_lateral_fw_connection = True
+                    # Only if it's a left lateral fw connection within the first 3 layers, we accept, and
+                    # Only if it's a right lateral fw connection within the last 3 layers, we accept
+                    is_left_lateral_fw_connection = node[2] > node[0]
+                    is_right_lateral_fw_connection = node[0] > node[2]
+                    if (is_left_lateral_fw_connection and node[1] > 3) or (is_right_lateral_fw_connection and node[1] < 3):
+                        has_wrong_early_or_late_lateral_fw_connection = True
 
                 i += 1
-            raise ValueError("i_values:", i_values)
 
             if n_new_blocks > self.max_new_blocks and len(archs) > 1:
                 # print('Skipping {}'.format(path))
                 continue
 
             # Skip this in case there are multiple NEWLY ADDED lateral FW connections
-            if newly_added_lateral_fw_connections_count > 1:
+            # Or when there is a too late left or too early right branching lateral fw connection
+            if newly_added_lateral_fw_connections_count > 1 or has_wrong_early_or_late_lateral_fw_connection:
                 continue
 
             # print('Adding {}'.format(path))
