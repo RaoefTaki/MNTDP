@@ -35,6 +35,7 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
+        self.early_or_late_layer = 4
 
         self.max_new_blocks = max_new_blocks
 
@@ -73,7 +74,8 @@ class ExhaustiveSearch(nn.Module):
                     # Only if it's a right lateral fw connection within the last 3 layers, we accept
                     is_left_lateral_fw_connection = node[2] > node[0]
                     is_right_lateral_fw_connection = node[0] > node[2]
-                    if (is_left_lateral_fw_connection and node[1] > 3) or (is_right_lateral_fw_connection and node[1] < 3):
+                    if (is_left_lateral_fw_connection and node[1] > self.early_or_late_layer) or\
+                            (is_right_lateral_fw_connection and node[1] < self.early_or_late_layer):
                         has_wrong_early_or_late_lateral_fw_connection = True
 
                 i += 1
