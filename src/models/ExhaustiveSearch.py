@@ -50,7 +50,10 @@ class ExhaustiveSearch(nn.Module):
             i = 0
             n_new_blocks = 0
             newly_added_lateral_fw_connections_count = 0
+            has_early_or_late_lateral_fw_connection = False
+            i_values = []
             for node in path:
+                i_values.append(i)
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
                 nn_module = self.graph.nodes[node]['module']
@@ -68,8 +71,11 @@ class ExhaustiveSearch(nn.Module):
                 # Check if this node is a lateral forward connection
                 if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
                     newly_added_lateral_fw_connections_count += 1
+                    if False:
+                        has_early_or_late_lateral_fw_connection = True
 
                 i += 1
+            raise ValueError("i_values:", i_values)
 
             if n_new_blocks > self.max_new_blocks and len(archs) > 1:
                 # print('Skipping {}'.format(path))
