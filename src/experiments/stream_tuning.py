@@ -851,6 +851,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # clean it up so that only the last one remains before plotting.py is ran
     # if t_id > 0:
     #     raise ValueError("info_training['path']:", info_training['path'])
+    raise ValueError("learner.arch_scores:", learner.arch_scores)
     current_task_best_val_time_attr = {'best_val_T' + str(t_id): b_state_dict['value'], 'epoch_of_report_T' + str(t_id): training_params['n_ep_max']}
     tune.report(t=t_id,
                 best_val=b_state_dict['value'],
