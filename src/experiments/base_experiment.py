@@ -97,7 +97,7 @@ class BaseExperiment(object):
         else:
             assert isinstance(ref_params_id, int)
             self.ref_params_path = os.path.join(log_dir, str(ref_params_id),
-                                      'model_initializations', 'ref.pth')
+                                                'model_initializations', 'ref.pth')
 
         self.visdom_traces_folder = os.path.join(visdom_traces_folder,
                                                  self.exp_name)
@@ -161,7 +161,7 @@ class BaseExperiment(object):
         self.n_params = [[] for _ in self.ll_models]
 
     def run(self):
-       raise NotImplementedError()
+        raise NotImplementedError()
 
     def init_tasks(self):
         for i in range(self.n_tasks):
@@ -232,8 +232,8 @@ class BaseExperiment(object):
             t = self.task_gen.task_pool[0]
             if self.ref_params_path is None:
                 first_mod = ref_learner.get_model(task_id=t.id, x_dim=t.x_dim,
-                                               n_classes=t.n_classes.tolist(),
-                                               descriptor=t.name)
+                                                  n_classes=t.n_classes.tolist(),
+                                                  descriptor=t.name)
                 prune = not isinstance(ref_learner, HATLLModel)
                 ref_params = normalize_params_names(first_mod.state_dict(),
                                                     prune_names=prune)
@@ -370,7 +370,7 @@ class BaseExperiment(object):
     def save_traces(self):
         logger.warning('Archiving traces folder ...')
         with tempfile.TemporaryDirectory() as dir:
-            archive_name = os.path.join('/home/TUE/s167139/', re.sub("/", "", dir, count=1), '{}_traces'.format(self.exp_name))
+            archive_name = os.path.join('/home/rtaki/', re.sub("/", "", dir, count=1), '{}_traces'.format(self.exp_name))
             shutil.make_archive(archive_name, 'zip', self.visdom_traces_folder)
             self.sacred_run.add_artifact('{}.zip'.format(archive_name))
         shutil.rmtree(self.visdom_traces_folder)

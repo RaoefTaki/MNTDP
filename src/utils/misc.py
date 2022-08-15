@@ -131,13 +131,13 @@ def replay_run(run, viz, args, mongo_path, logger):
     object = gridfs.get(selected_artifact['file_id'])
 
     # with tempfile.TemporaryDirectory() as dir:
-    with tempfile.TemporaryDirectory(dir='/home/TUE/s167139/local/veniat') as dir:
+    with tempfile.TemporaryDirectory(dir='/home/rtaki/local/veniat') as dir:
         file_path = os.path.join(dir, selected_artifact['name'])
         with open(file_path, 'wb') as file:
             file.write(object.read())
 
         n_replayed, main_env = replay_from_path(file_path, viz, run['_id'],
-                                            args.all_envs)
+                                                args.all_envs)
     tot_time = time.time() - start_time
     logger.info('Replayed {} envs in {:.3f} seconds.'.format(n_replayed,
                                                              tot_time))

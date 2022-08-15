@@ -2,9 +2,9 @@ global_exp : &global
     cuda: True
 
 lifelong_exp: &lifelong_exp
-#    log_dir: /local/veniat/lileb/ray_results
-#    log_dir: /net/blackorpheus/veniat/lileb/ray_results
-    log_dir: /home/TUE/s167139/data/veniat/lileb/ray_results
+    #    log_dir: /local/veniat/lileb/ray_results
+    #    log_dir: /net/blackorpheus/veniat/lileb/ray_results
+    log_dir: /home/rtaki/data/veniat/lileb/ray_results
     smoke_test: false
 
     name: ll
@@ -32,20 +32,20 @@ lifelong_exp: &lifelong_exp
     n_tasks: 50
 
     patience: 100
-#    visdom_traces_folder: /local/veniat/lileb/visdom_traces
-#    visdom_traces_folder: /net/blackorpheus/veniat/lileb/visdom_traces
-    visdom_traces_folder: /home/TUE/s167139/data/veniat/lileb/visdom_traces
+    #    visdom_traces_folder: /local/veniat/lileb/visdom_traces
+    #    visdom_traces_folder: /net/blackorpheus/veniat/lileb/visdom_traces
+    visdom_traces_folder: /home/rtaki/data/veniat/lileb/visdom_traces
     batch_sizes: [512, 1024]  # Train and Eval batch sizes
     norm_models: []
-#    norm_models: [0-0-0-inde, inde-upper-bound]
+    #    norm_models: [0-0-0-inde, inde-upper-bound]
 
     log_steps: [1, 2, 3, 4, 5]
     lca: 5
     log_epoch: False
 
-#    task_save_folder: /local/veniat/lileb/datasets
-#    task_save_folder: /net/blackorpheus/veniat/lileb/datasets
-    task_save_folder: /home/TUE/s167139/data/veniat/lileb/datasets
+    #    task_save_folder: /local/veniat/lileb/datasets
+    #    task_save_folder: /net/blackorpheus/veniat/lileb/datasets
+    task_save_folder: /home/rtaki/data/veniat/lileb/datasets
     load_tasks_from:
 
     ref_params_id:
