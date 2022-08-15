@@ -488,6 +488,7 @@ def train_on_tasks(config):
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
             print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
+            print("[TEST] best_trial's arch_scores:", best_trial.last_result["arch_scores"])  # self.arch_scores[task_id]['knn']
             print("[TEST] Finished task:", t_id)
 
             # print(type(analysis))
@@ -885,6 +886,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                 # info_training=info_training,
                 path=info_training['path'],
                 used_architecture_id=info_training['params']['architecture'],
+                arch_scores=learner.arch_scores,
                 **current_task_best_val_time_attr,
                 **accs, **stats)
     return rescaled, t, metrics, b_state_dict, stats
