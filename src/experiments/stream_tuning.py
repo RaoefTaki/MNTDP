@@ -392,7 +392,7 @@ def train_on_tasks(config):
             # Next define the amount of parallelism, as per the original MNTDP program
             division_factor_per_gpu = 4.0
             config['division_factor_per_gpu'] = division_factor_per_gpu
-            ray_params['resources_per_trial'] = {'cpu': 0.5, 'gpu': 0.25}  # TODO: somehow this changes per run if set dynamically?
+            ray_params['resources_per_trial'] = {'cpu': 0.5, 'gpu': 0}  # TODO: somehow this changes per run if set dynamically?
             # raise ValueError(ray_params)
             # ValueError: {'loggers': [<class 'ray.tune.logger.JsonLogger'>, <class 'ray.tune.logger.CSVLogger'>],
             # 'name': 'PSSN-search-6-fw', 'resources_per_trial': {'cpu': 0.5, 'gpu': 0.25}, 'num_samples': 1,
