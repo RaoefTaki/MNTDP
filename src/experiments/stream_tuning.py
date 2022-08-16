@@ -30,6 +30,7 @@ from src.train.training import train, get_classic_dataloaders
 from src.train.utils import set_dropout, set_optim_params, \
     _load_datasets, evaluate_on_tasks
 from src.utils.log_observer import initialize_tune_report_arguments
+from src.utils.memory_buffer import MemoryBuffer
 from src.utils.misc import get_env_url, fill_matrix, \
     get_training_vis_conf
 from src.utils.plotting import update_summary, plot_tasks_env_urls, \
@@ -39,6 +40,7 @@ from src.utils.plotting import update_summary, plot_tasks_env_urls, \
 visdom.logger.setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
+IMAGES_PER_MB = (1000000/(3*32*32*4))  # The number of images that fit in one MB of memory. To be rounded down after possible multiplication of the number of MBs used
 
 class StreamTuningExperiment(BaseExperiment):
     def run(self):
@@ -347,14 +349,23 @@ def train_on_tasks(config):
         selected_tags = []
 
     # TODO: try to see if data sample saving is doable
+    memory_buffer = MemoryBuffer(memory_size=math.floor(IMAGES_PER_MB * 1))
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         datasets_p = dict(task=task, transforms=None, normalize=None)
         datasets = _load_datasets(**datasets_p)
+
+        total_i = 0
+        for i, x in enumerate(datasets[0].tensors[0]):
+            total_i = i
+            pass
         print("Task ID:", t_id)
         print("datasets:", datasets)
         print("datasets[0].tensors[0].size():", datasets[0].tensors[0].size())
         print("datasets[0].tensors[1].size():", datasets[0].tensors[1].size())
+        print("total_i:", total_i)
         print("-----")
+        # datasets[0].tensors[0].size(): torch.Size([400, 3, 32, 32])
+        # datasets[0].tensors[1].size(): torch.Size([400, 1])
         # train_loader, eval_loaders = get_classic_dataloaders(datasets, config['training-params']['batch_sizes'])
 
     exit(0)
