@@ -355,7 +355,7 @@ def train_on_tasks(config):
         datasets = _load_datasets(**datasets_p)
 
         for i, data_sample in enumerate(datasets[0].tensors[0]):
-            label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i]))
+            label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
             memory_buffer.observe_sample(data_sample, t_id, label)
 
         # Print info about the current memory contents for clarity
