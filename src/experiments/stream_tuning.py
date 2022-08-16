@@ -646,8 +646,12 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                       transforms=t_trans,
                       normalize=normalize)
     datasets = _load_datasets(**datasets_p)
-    raise ValueError("datasets[0]:", datasets[0], "len(datasets[0].tensors):", len(datasets[0].tensors),
-                     "datasets[0].tensors:", datasets[0].tensors)
+    raise ValueError("datasets[0].tensors[0].size():", datasets[0].tensors[0].size(),
+                     "datasets[0].tensors[1].size():", datasets[0].tensors[1].size(),
+                     "datasets[0].tensors[0].element_size()", datasets[0].tensors[0].element_size(),
+                     "datasets[0].tensors[0].nelement()", datasets[0].tensors[0].nelement(),
+                     "sys.getsizeof(datasets[0].tensors[0])", sys.getsizeof(datasets[0].tensors[0]),
+                     "todo:", datasets[0].tensors[1].size())
     train_loader, eval_loaders = get_classic_dataloaders(datasets,
                                                          batch_sizes)
 
