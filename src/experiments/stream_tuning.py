@@ -355,8 +355,13 @@ def train_on_tasks(config):
         datasets = _load_datasets(**datasets_p)
 
         total_i = 0
+        print("datasets[0].tensors[0]:", datasets[0].tensors[0])
+        print("datasets[0].tensors[1]:", datasets[0].tensors[1])
         for i, x in enumerate(datasets[0].tensors[0]):
             total_i = i
+            print(x)
+            print(torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])))
+            exit(0)
             pass
         print("Task ID:", t_id)
         print("datasets:", datasets)
