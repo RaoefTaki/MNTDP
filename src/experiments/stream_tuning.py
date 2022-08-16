@@ -346,6 +346,19 @@ def train_on_tasks(config):
         all_analysis = []
         selected_tags = []
 
+    # TODO: try to see if data sample saving is doable
+    for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
+        datasets_p = dict(task=task, transforms=None, normalize=None)
+        datasets = _load_datasets(**datasets_p)
+        print("Task ID:", t_id)
+        print("datasets:", datasets)
+        print("datasets[0].tensors[0].size():", datasets[0].tensors[0].size())
+        print("datasets[0].tensors[1].size():", datasets[0].tensors[1].size())
+        print("-----")
+        # train_loader, eval_loaders = get_classic_dataloaders(datasets, config['training-params']['batch_sizes'])
+
+    exit(0)
+
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
@@ -449,41 +462,11 @@ def train_on_tasks(config):
             learner = torch.load(best_learner_path, map_location='cpu')
             shutil.rmtree(best_trial.logdir)
 
-            # todo UPDATE LEARNER AND SAVE
+            # Save the learner
             torch.save(learner, learner_path)
 
-            # Get some data
-            # if task['id'] > 0:
-            #     batch_sizes = config['training-params']['batch_sizes']
-            #     normalize = config['training-params']['normalize']
-            #     t_trans = [[] for _ in range(len(task['split_names']))]
-            #     transformations = []
-            #     t_trans[0] = transformations.copy()
-            #
-            #     datasets_p = dict(task=task,
-            #                       transforms=t_trans,
-            #                       normalize=normalize)
-            #     datasets = _load_datasets(**datasets_p)
-            #     train_loader, eval_loaders = get_classic_dataloaders(datasets,
-            #                                                          batch_sizes)
-            #     learner_model_1 = learner.get_model(task['id'], x_dim=task['x_dim'],
-            #                                         n_classes=task['n_classes'],
-            #                                         descriptor=task['descriptor'],
-            #                                         dataset=eval_loaders[:2])
-            #     learner_model_0 = learner.get_model(0, x_dim=task['x_dim'],
-            #                                         n_classes=task['n_classes'],
-            #                                         descriptor=task['descriptor'],
-            #                                         dataset=eval_loaders[:2])
-            #     archs = learner_model_1.init_models()
-            #     archs_0 = learner_model_0.init_models()
-            #     # TODO: does it work now, or does it only create fully new models?
-            #     # Display current model
-            #     raise ValueError("learner:", learner, "learner_model:", learner_model_1, "learner_model.models:", learner_model_1.models,
-            #                      "learner_model_1.models_idx:", learner_model_1.models_idx, "learner_model.archs:", archs,
-            #                      "learner_model_0.models_idx:", learner_model_0.models_idx, "learner_model.archs_0:", archs_0,
-            #                      "best_learner_path:", best_learner_path, "learner_path:", learner_path)
-            #     # if t_id > 0: ...'learner_model.models_idx:', {((1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')): 0}, 'learner_model.get_graph():', <networkx.classes.digraph.DiGraph object at 0x7f0a380ec250>, 'learner_model.archs:', [[(1, 'INs'), (1, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (1, 'OUT', 0), (1, 'OUT')]], 'best_learner_path:', '/home/TUE/s167139/data/veniat/lileb/ray_results/1/PSSN-search-6-fw/PSSN-search-6-fw_32_0_architecture=4,0_lr=0.01,0_weight_decay=1e-05_2022-07-27_18-28-10/learner.pth', 'learner_path:', '/home/TUE/s167139/data/veniat/lileb/ray_results/1/model_initializations/PSSN-search-6-fw')
-            #     # Note that
+            # TODO: save samples to memory
+            pass
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
@@ -646,12 +629,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                       transforms=t_trans,
                       normalize=normalize)
     datasets = _load_datasets(**datasets_p)
-    raise ValueError("datasets[0].tensors[0].size():", datasets[0].tensors[0].size(),
-                     "datasets[0].tensors[1].size():", datasets[0].tensors[1].size(),
-                     "datasets[0].tensors[0].element_size()", datasets[0].tensors[0].element_size(),
-                     "datasets[0].tensors[0].nelement()", datasets[0].tensors[0].nelement(),
-                     "sys.getsizeof(datasets[0].tensors[0])", sys.getsizeof(datasets[0].tensors[0]),
-                     "todo:", datasets[0].tensors[1].size())
     train_loader, eval_loaders = get_classic_dataloaders(datasets,
                                                          batch_sizes)
 
