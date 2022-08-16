@@ -25,7 +25,7 @@ class MemoryBuffer:
 
     # Internal function to add a data sample to the memory
     def __add(self, data_sample, task_id, label, is_memory_full=False):
-        entry_to_add = {'sample': data_sample}
+        entry_to_add = data_sample
         entry_key = (task_id, label)
         if not is_memory_full:
             self.__add_to_memory(entry_to_add, entry_key)
