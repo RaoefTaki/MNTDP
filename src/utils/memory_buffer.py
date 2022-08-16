@@ -23,6 +23,23 @@ class MemoryBuffer:
             if probability_to_hit >= random.uniform(0, 1):
                 self.__add(data_sample, task_id, label, is_memory_full=True)
 
+    # Call this function if you want the data samples of a specific task (and possibly label)
+    def get_samples(self, task_id=None, label=None):
+        if task_id is None:
+            return self.memory
+        else:
+            if label is None:
+                # Loop over all keys to find the keys where task_id=task_id
+                # Return as a flattened list
+                entries = []
+                for key in self.memory:
+                    if key[0] == task_id:
+                        for entry in self.memory[key]:
+                            entries.append(entry)
+                return entries
+            else:
+                return self.memory[(task_id, label)]
+
     # Internal function to add a data sample to the memory
     def __add(self, data_sample, task_id, label, is_memory_full=False):
         entry_to_add = data_sample
