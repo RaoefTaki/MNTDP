@@ -354,20 +354,22 @@ def train_on_tasks(config):
         datasets_p = dict(task=task, transforms=None, normalize=None)
         datasets = _load_datasets(**datasets_p)
 
-        total_i = 0
-        print("datasets[0].tensors[0]:", datasets[0].tensors[0])
-        print("datasets[0].tensors[1]:", datasets[0].tensors[1])
-        for i, x in enumerate(datasets[0].tensors[0]):
-            total_i = i
-            print(x)
-            print(torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])))
-            exit(0)
-            pass
+        for i, data_sample in enumerate(datasets[0].tensors[0]):
+            label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i]))
+            memory_buffer.observe_sample(data_sample, t_id, label)
+
+        # Print info about the current memory contents for clarity
         print("Task ID:", t_id)
-        print("datasets:", datasets)
-        print("datasets[0].tensors[0].size():", datasets[0].tensors[0].size())
-        print("datasets[0].tensors[1].size():", datasets[0].tensors[1].size())
-        print("total_i:", total_i)
+        print("Memory content amounts:")
+        total_entries = 0
+        memory_display_dict = {}
+        for key in memory_buffer.memory:
+            nr_entries = memory_buffer.memory[key]
+            memory_display_dict[key] = nr_entries
+            total_entries += nr_entries
+            print(key, nr_entries)
+        print("total_entries:", total_entries)
+        print("total_entries:", total_entries)
         print("-----")
         # datasets[0].tensors[0].size(): torch.Size([400, 3, 32, 32])
         # datasets[0].tensors[1].size(): torch.Size([400, 1])
