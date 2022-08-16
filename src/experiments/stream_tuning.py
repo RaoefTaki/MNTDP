@@ -364,7 +364,7 @@ def train_on_tasks(config):
         total_entries = 0
         memory_display_dict = {}
         for key in memory_buffer.memory:
-            nr_entries = memory_buffer.memory[key]
+            nr_entries = len(memory_buffer.memory[key])
             memory_display_dict[key] = nr_entries
             total_entries += nr_entries
             print(key, nr_entries)
