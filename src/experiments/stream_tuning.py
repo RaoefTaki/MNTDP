@@ -368,6 +368,8 @@ def train_on_tasks(config):
             memory_display_dict[key] = nr_entries
             total_entries += nr_entries
             print(key, nr_entries)
+            print(memory_display_dict[key])
+            exit(0)
         print("total_entries:", total_entries)
         print("total_entries:", total_entries)
         print("-----")
