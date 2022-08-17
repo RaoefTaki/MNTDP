@@ -462,6 +462,7 @@ def train_on_tasks(config):
             pass
 
             # Save samples of the current task to the memory buffer
+            print("[TEST] Save samples to memory")
             save_samples_to_memory(memory_buffer, task_id, task)
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
