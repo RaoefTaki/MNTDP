@@ -385,7 +385,7 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            nr_of_architectures = 12
+            nr_of_architectures = 7 if len(learner.connections) == 1 else 12
             config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
             # TODO: REMOVE LINE BELOW
             # config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': {'grid_search': [0.01]}, 'weight_decay': {'grid_search': [0]}}]  # TODO: REMOVE
