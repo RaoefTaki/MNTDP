@@ -348,36 +348,9 @@ def train_on_tasks(config):
         all_analysis = []
         selected_tags = []
 
-    # TODO: try to see if data sample saving is doable
-    memory_buffer = MemoryBuffer(memory_size=math.floor(IMAGES_PER_MB * 1))
-    for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
-        datasets_p = dict(task=task, transforms=None, normalize=None)
-        datasets = _load_datasets(**datasets_p)
-
-        for i, data_sample in enumerate(datasets[0].tensors[0]):
-            label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
-            memory_buffer.observe_sample(data_sample, t_id, label)
-
-        # Print info about the current memory contents for clarity
-        print("Task ID:", t_id)
-        print("Memory content amounts:")
-        total_entries = 0
-        memory_display_dict = {}
-        for key in memory_buffer.memory:
-            nr_entries = len(memory_buffer.memory[key])
-            memory_display_dict[key] = nr_entries
-            total_entries += nr_entries
-            print(key, nr_entries)
-            print(memory_buffer.memory[key])
-            exit(0)
-        print("total_entries:", total_entries)
-        print("total_entries:", total_entries)
-        print("-----")
-        # datasets[0].tensors[0].size(): torch.Size([400, 3, 32, 32])
-        # datasets[0].tensors[1].size(): torch.Size([400, 1])
-        # train_loader, eval_loaders = get_classic_dataloaders(datasets, config['training-params']['batch_sizes'])
-
-    exit(0)
+    # # TODO: try to see if data sample saving is doable
+    number_of_MB_in_memory = 1
+    memory_buffer = MemoryBuffer(memory_size=math.floor(IMAGES_PER_MB * number_of_MB_in_memory))
 
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
@@ -485,8 +458,11 @@ def train_on_tasks(config):
             # Save the learner
             torch.save(learner, learner_path)
 
-            # TODO: save samples to memory
+            # Backward transfer  # TODO
             pass
+
+            # Save samples of the current task to the memory buffer
+            save_samples_to_memory(memory_buffer, task_id, task)
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
@@ -517,6 +493,32 @@ def train_on_tasks(config):
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
+
+def save_samples_to_memory(memory_buffer=None, task_id=None, task=None):
+    if memory_buffer is None or task_id is None or task is None:
+        raise ValueError('Some arguments are None or not supplied')
+
+    # Get the datasets of the current task
+    datasets_p = dict(task=task, transforms=None, normalize=None)
+    datasets = _load_datasets(**datasets_p)
+
+    # (Try to) add each data sample of the current task to the memory buffer
+    for i, data_sample in enumerate(datasets[0].tensors[0]):
+        label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
+        memory_buffer.observe_sample(data_sample, task_id, label)
+
+    # Print info about the current memory contents for clarity
+    print("Task ID:", task_id)
+    print("Memory:")
+    total_entries = 0
+    memory_display_dict = {}
+    for key in memory_buffer.memory:
+        nr_entries = len(memory_buffer.memory[key])
+        memory_display_dict[key] = nr_entries
+        total_entries += nr_entries
+        print(key, nr_entries)
+    print("total_entries:", total_entries)
+    print("-----")
 
 def train_t(config):
     # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
