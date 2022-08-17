@@ -417,7 +417,7 @@ def train_on_tasks(config):
             #     reduction_factor=3,
             #     brackets=1)
 
-            analysis = tune.run(train_t, config=config, **ray_params)  # scheduler=asha_scheduler, 
+            analysis = tune.run(train_t, config=config, **ray_params)  # scheduler=asha_scheduler,
             all_analysis.append(analysis)
 
             # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
@@ -731,6 +731,8 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # TODO: and try to see if can run s_test fully with good/expected results
 
     t_trans, normalize = get_transform_normalize(training_params, task)
+    training_params.pop('augment_data')
+    training_params.pop('normalize')
 
     datasets_p = dict(task=task,
                       transforms=t_trans,
