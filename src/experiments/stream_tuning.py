@@ -391,7 +391,7 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            nr_of_architectures = 7  # TODO: CURRENTLY RANDOMLY PICKING AN ARCHITECTURE TO USE, JUST TO TEST IT ON VM
+            nr_of_architectures = 7 if t_id > 0 else 1  # TODO: CURRENTLY RANDOMLY PICKING AN ARCHITECTURE TO USE, JUST TO TEST IT ON VM
             config['optim'] = [{'architecture': {'grid_search': [random.randint(0, nr_of_architectures-1)]}, 'lr': {'grid_search': [0.01]}, 'weight_decay': {'grid_search': [0]}}]
             # config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
             # 'optim' [{'architecture': {'grid_search': [0, 1, 2, 3, 4, 5, 6]}, 'lr': {'grid_search': [0.01, 0.001]}, 'weight_decay': {'grid_search': [0, 0.0001, 1e-05]}}]
