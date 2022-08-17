@@ -302,7 +302,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                     and (targ_col_id, targ_depth) in candidate_nodes:
                 repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
                 lateral_connections[targ_col_id] = repr_size
-        return lateral_connections
+        return {}  #lateral_connections  # TDOO: Try return nothing, to stop 'b' edges from occurring
 
     def get_forward_lateral_connections(self, col_id, depth, candidate_nodes):
         assert len(self.columns) == col_id + 1
