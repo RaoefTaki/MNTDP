@@ -35,7 +35,8 @@ class MemoryBuffer:
                 for key in self.memory:
                     if key[0] == task_id:
                         for entry in self.memory[key]:
-                            entries.append(entry)
+                            x_and_y = (entry, key[1])
+                            entries.append(x_and_y)
                 return entries
             else:
                 return self.memory[(task_id, label)]
