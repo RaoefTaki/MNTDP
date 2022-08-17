@@ -49,7 +49,7 @@ class ExhaustiveSearch(nn.Module):
             last = None
             i = 0
             n_new_blocks = 0
-            lateral_fw_connections_count = 0
+            newly_added_lateral_fw_connections_count = 0
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -66,8 +66,8 @@ class ExhaustiveSearch(nn.Module):
                     #     nn_module.load_state_dict(self.block_inits[node])
 
                 # Check if this node is a lateral forward connection
-                if len(node) == 4 and node[3] == 'f':
-                    lateral_fw_connections_count += 1
+                if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
+                    newly_added_lateral_fw_connections_count += 1
 
                 i += 1
 
@@ -75,8 +75,8 @@ class ExhaustiveSearch(nn.Module):
                 # print('Skipping {}'.format(path))
                 continue
 
-            # Skip this TODO in case there are multiple lateral FW connections
-            if lateral_fw_connections_count > 1:
+            # Skip this in case there are multiple NEWLY ADDED lateral FW connections
+            if newly_added_lateral_fw_connections_count > 1:
                 continue
 
             # print('Adding {}'.format(path))
@@ -125,6 +125,21 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
+        # if t_id == 2:
+        #     raise ValueError("len(archs):", len(archs), "archs:", archs,
+        #                      "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 0,
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (2, 6, 0, 'f'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 1,
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (2, 5, 0, 'f'), (2, 5), (2, 6, 'w'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 2,
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 3), (2, 4, 0, 'f'), (2, 4), (2, 5, 'w'), (2, 5), (2, 6, 'w'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 3,
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (0, 2, 'w'), (0, 2), (2, 3, 0, 'f'), (2, 3), (2, 4, 'w'), (2, 4), (2, 5, 'w'), (2, 5), (2, 6, 'w'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 4,
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1, 'w'), (0, 1), (2, 2, 0, 'f'), (2, 2), (2, 3, 'w'), (2, 3), (2, 4, 'w'), (2, 4), (2, 5, 'w'), (2, 5), (2, 6, 'w'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 5,
+        # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (2, 3, 'w'), (2, 3), (2, 4, 'w'), (2, 4), (2, 5, 'w'), (2, 5), (2, 6, 'w'), (2, 6), (2, 'OUT', 2), (2, 'OUT')): 6,
+        # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (2, 3, 'w'), (2, 3), (2, 4, 'w'), (2, 4), (2, 5, 'w'), (2, 5), (0, 6, 2, 'f'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 7,
+        # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (2, 3, 'w'), (2, 3), (2, 4, 'w'), (2, 4), (0, 5, 2, 'f'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 8,
+        # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (2, 3, 'w'), (2, 3), (0, 4, 2, 'f'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 9,
+        # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (0, 3, 2, 'f'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 10,
+        # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (0, 2, 2, 'f'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 11})
         # if t_id is not None and t_id > 0:
         #     paths_value_error = []
         #     for path, idx in self.models_idx.items():
@@ -190,6 +205,7 @@ class ExhaustiveSearch(nn.Module):
         # Change the model ID to use depending on the ID of the task
         # At the first task, there is only 1 model so this needs to be 0 ofc
         model_id_to_use = optim_fact.keywords['optim_params'][0]['architecture'] if t_id > 0 else 0
+        # model_id_to_use = 2 if t_id == 1 else model_id_to_use # TODO: remove, only for testing
 
         # Repeatedly run the model for x epochs, and at every termination check whether we should run it further using
         # some criteria. This is done inside the train() function
@@ -213,7 +229,10 @@ class ExhaustiveSearch(nn.Module):
                 call_path = path
 
         # Execute and override the outcomes
-        all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        try:
+            all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        except TypeError:
+            raise ValueError(t_id, optim_fact.keywords['optim_params'][0]['architecture'], self.models_idx)
         all_res = all_res[0]
 
         # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,

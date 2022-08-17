@@ -302,7 +302,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                     and (targ_col_id, targ_depth) in candidate_nodes:
                 repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
                 lateral_connections[targ_col_id] = repr_size
-        return lateral_connections
+        return lateral_connections  # TDOO: Try return nothing, to stop 'b' edges from occurring
 
     def get_forward_lateral_connections(self, col_id, depth, candidate_nodes):
         assert len(self.columns) == col_id + 1
@@ -317,6 +317,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
         for src_col_id, src_col in enumerate(self.columns[:col_id]):
             # if src_col_id not in columns:
             #     continue
+            # raised ValueError example:
+            # 'self.columns:', [{0: {(0, 0): DummyBlock()}, 'INs': {(0, 'INs'): DummyBlock(), (0, 'INs', 0): DummyBlock()},
+            #       1: {(0, 1, 'w'): Sequential( (0): Conv2
             src_layer = src_col.get(depth - 1)
             if src_layer and (src_col_id, depth - 1) in src_layer and \
                     (src_col_id, depth-1) in candidate_nodes:
@@ -327,6 +330,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 # raise ValueError("src_col_id:", src_col_id, "src_col:", src_col, "src_layer:", src_layer, "depth:", depth,
                 #                  "repr_size:", repr_size, "self.column_repr_sizes:", self.column_repr_sizes,
                 #                  "lateral_connections:", lateral_connections)
+        if len(self.columns) == 1:
+            raise ValueError(self.connections, depth, self.column_repr_sizes, self.columns[:col_id])
         return lateral_connections
 
     def add_column(self, sizes, candidate_nodes):
@@ -341,6 +346,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         # ValueError: ('list(range(1, self.n_modules+1)):', [1, 2, 3, 4, 5, 6])
 
         in_size = sizes[0]
+        new_modules_keys_list = []
         # for depth, out_size in enumerate(sizes[1:], start=1):
         for depth in range(1, self.n_modules+1):
             # Start from 1 because input (depth 0) is already connected.
@@ -357,13 +363,31 @@ class MNTDP(LifelongLearningModel, ModularModel):
             out_activations = not is_last_layer
             new_modules, new_fw_lb_modules = self.add_layer(f_connections, backward_connections,
                                                             depth, new_col_id, out_activations,
-                                                            in_size, out_size)
+                                                            in_size, out_size, candidate_nodes)
 
             in_size = out_size
             new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
             self.columns[-1][depth] = new_modules  # Includes lateral left branching FW connections
+            new_modules_keys_list.append(new_modules.keys())
             self.temporary_fw_lb_modules = new_fw_lb_modules
 
+        # if new_col_id == 2:
+        #     raise ValueError("new_modules_list keys:", new_modules_keys_list, "candidate_nodes:", candidate_nodes)
+        # After change try:
+        # ValueError: ('new_modules_list keys:', [dict_keys([(2, 1, 'w'), (2, 1)]), dict_keys([(2, 2, 'w'), (2, 2),
+        # (2, 2, 0, 'f'), (0, 2, 2, 'f')]), dict_keys([(2, 3, 'w'), (2, 3), (2, 3, 0, 'f'), (0, 3, 2, 'f')]),
+        # dict_keys([(2, 4, 'w'), (2, 4), (2, 4, 0, 'f'), (0, 4, 2, 'f')]), dict_keys([(2, 5, 'w'), (2, 5),
+        # (2, 5, 0, 'f'), (1, 5, 2, 'f')]), dict_keys([(2, 6, 'w'), (2, 6), (2, 6, 1, 'f'), (1, 6, 2, 'f')])],
+        # 'candidate_nodes:', {(0, 1), (0, 4), (0, 0), (1, 'INs'), (1, 5), (1, 'OUT'), (0, 3), (1, 6, 'w'),
+        # (1, 'OUT', 1), (1, 5, 0, 'f'), (0, 1, 'w'), (1, 'INs', 0), (0, 2, 'w'), (0, 2), (0, 3, 'w'), (0, 4, 'w'),
+        # (1, 6)})
+        # ValueError: ('new_modules_list keys:', [dict_keys([(2, 1, 'w'), (2, 1)]), dict_keys([(2, 2, 'w'), (2, 2),
+        # (2, 2, 0, 'f'), (0, 2, 2, 'f')]), dict_keys([(2, 3, 'w'), (2, 3), (2, 3, 0, 'f'), (0, 3, 2, 'f')]),
+        # dict_keys([(2, 4, 'w'), (2, 4), (2, 4, 0, 'f'), (0, 4, 2, 'f')]), dict_keys([(2, 5, 'w'), (2, 5),
+        # (2, 5, 0, 'f'), (0, 5, 2, 'f')]), dict_keys([(2, 6, 'w'), (2, 6), (2, 6, 1, 'f'), (1, 6, 2, 'f')])],
+        # 'candidate_nodes:', {(0, 1), (1, 6, 'w'), (0, 1, 'w'), (0, 4), (0, 2, 'w'), (0, 0), (0, 3, 'w'),
+        # (1, 'INs', 0), (1, 5), (0, 3), (0, 4, 'w'), (1, 'INs'), (1, 'OUT'), (0, 2), (1, 5, 0, 'f'), (1, 'OUT', 1),
+        # (1, 6)})
         # if new_col_id > 0:
         #     raise ValueError("new_modules_list keys:", new_modules_list)
         # ValueError: ('f_connections_list:', [{}, {0: [5, 32, 32]}, {0: [5, 32, 32]}, {0: [5, 16, 16]}, {0: [5, 8, 8]}, {0: [5, 1, 1]}],
@@ -438,10 +462,21 @@ class MNTDP(LifelongLearningModel, ModularModel):
         return input_connections
 
     def add_layer(self, f_connections, b_connections, depth, col_id, out_act,
-                  in_size, out_size):
+                  in_size, out_size, candidate_nodes):
         """ Add a layer to the 'col_id' column
         :returns the modules created for this block
         """
+        # Check whether the candidate path has left or rightbranched to reach this specific node, in the previous edge
+        branch_direction = None
+        current_node = None
+        if depth >= 1 and len(candidate_nodes):
+            current_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth][0]
+            previous_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth-1][0]
+            if current_node[0] > previous_node[0]:
+                branch_direction = 'right'
+            elif current_node[0] < previous_node[0]:
+                branch_direction = 'left'
+
         # Create node corresponding to current depth and column id
         h_name = (col_id, depth)
         # h = Add_Block(activation=out_act)
@@ -481,6 +516,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 mod = self.get_module(size, out_size, depth - 1)
                 lateral_out_node = h_name
 
+            # if col_id > 1:
+            #     raise ValueError("candidate_nodes:", candidate_nodes)
             proj_name = (col_id, depth, source_column, 'f')
             source = (source_column, depth - 1)
             self.graph.add_node(proj_name, module=mod)
@@ -490,7 +527,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
             # Also add a reverse node to allow for leftbranching too. Later on in the code restrict so that you can only either
             # rightbranch once or leftbranch once
-            node_left = source_column
+            if branch_direction == 'right' or branch_direction == 'left':
+                node_left = current_node[0]
+            else:
+                node_left = source_column
             node_right = col_id
             proj_name_left_branch = (node_left, depth, node_right, 'f')
             source = (node_right, depth - 1)
@@ -498,6 +538,13 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(source, proj_name_left_branch)
             self.graph.add_edge(proj_name_left_branch, (node_left, depth))
             added_fw_leftbranching_modules[proj_name_left_branch] = mod
+
+            # if depth == 1 and col_id == 2:
+            #     raise ValueError("[TEST]:", proj_name, (source_column, depth - 1), proj_name_left_branch, (node_right, depth - 1))
+
+            # {(0, 1), (1, 6, 'w'), (0, 1, 'w'), (0, 4), (0, 2, 'w'), (0, 0), (0, 3, 'w'),
+            # (1, 'INs', 0), (1, 5), (0, 3), (0, 4, 'w'), (1, 'INs'), (1, 'OUT'), (0, 2), (1, 5, 0, 'f'), (1, 'OUT', 1),
+            # (1, 6)}
 
             # raise ValueError("proj_name:", proj_name, "col_id:", col_id, "depth:", depth, "source_column:", source_column,
             #                  "source:", source, "len(added_modules):", len(added_modules))
@@ -859,6 +906,35 @@ class MNTDP(LifelongLearningModel, ModularModel):
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
         # if task_id == 2:
         #     raise ValueError("graph.nodes():", graph.nodes(), "nodes_to_remove:", nodes_to_remove)
+        # Latest try:
+        # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 5, 0, 'f'), (1, 6), (1, 6, 'w'), (2, 'INs'), (2, 0),
+        # (2, 'INs', 0), (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'),
+        # (2, 3), (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        # (2, 5), (2, 5, 'w'), (2, 5, 0, 'f'), (1, 5, 2, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'),
+        # (2, 'OUT'), (2, 'OUT', 1), (2, 'OUT', 2))),
+        # 'nodes_to_remove:', [(2, 'INs', 2), (2, 1, 'w'), (2, 2, 'w'),
+        # (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'),
+        # (0, 4, 2, 'f'), (2, 5, 'w'), (2, 5, 0, 'f'), (1, 5, 2, 'f'), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'),
+        # (2, 'OUT', 2)])
+        # Find out what graph nodes there are, for task 2, when task 1 right branches off task 0 at the last few nodes:
+        # -> this is the results:
+        # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        # (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 5, 0, 'f'), (1, 6), (1, 6, 'w'), (2, 'INs'), (2, 0),
+        # (2, 'INs', 0), (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'),
+        # (2, 3), (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        # (2, 5), (2, 5, 'w'), (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT'),
+        # (2, 'OUT', 1), (2, 'OUT', 2))),
+        # TODO: The above needs (1, 5, 2, 'f') added
+        # 'nodes_to_remove:', [(2, 'INs', 2), (2, 1, 'w'), (2, 2, 'w'), (2, 2, 0, 'f'),
+        # (0, 2, 2, 'f'), (2, 3, 'w'), (2, 3, 0, 'f'), (0, 3, 2, 'f'), (2, 4, 'w'), (2, 4, 0, 'f'), (0, 4, 2, 'f'),
+        # (2, 5, 'w'), (0, 5, 2, 'f'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT', 1), (1, 5, 0, 'f'), (1, 6, 'w')])
+        # TODO: The above (possibly) needs (1, 5, 2, 'f') added and (0, 5, 2, 'f') removed, because it doesnt exist.
+        # Manually calculated, this leaves the following nodes left:
+        # ((2, 'INs'), (2, 'INs', 0), (0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
+        #  (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 6), (2, 0), (2, 1), (2, 2), (2, 3), (2, 4),
+        #  (2, 5), (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 'OUT'), (2, 'OUT', 2))
+        # Normal results:
         # ValueError: ('graph.nodes():', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3),
         # (0, 3, 'w'),(0, 4), (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0),
         # (2, 'INs', 2), (2, 1), (2, 1, 'w'), (2, 2), (2, 2, 'w'), (2, 2, 0, 'f'), (0, 2, 2, 'f'), (2, 3), (2, 3, 'w'),
@@ -885,6 +961,11 @@ class MNTDP(LifelongLearningModel, ModularModel):
                         graph.remove_node(node)
                     except:
                         raise ValueError("previous_graph_nodes:", previous_graph_nodes)
+                        # ValueError: ('previous_graph_nodes:', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2),
+                        # (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 5, 0, 'f'), (1, 6),
+                        # (1, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5),
+                        # (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT'),
+                        # (2, 'OUT', 1), (2, 'OUT', 2))))
                 else:
                     logger.debug('Was supposed to remove {}, but no'
                                  .format(node))
