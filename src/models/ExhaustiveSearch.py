@@ -229,7 +229,10 @@ class ExhaustiveSearch(nn.Module):
                 call_path = path
 
         # Execute and override the outcomes
-        all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        try:
+            all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        except TypeError:
+            raise ValueError(t_id, optim_fact.keywords['optim_params'][0]['architecture'], self.models_idx)
         all_res = all_res[0]
 
         # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
