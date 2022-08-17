@@ -4,7 +4,7 @@ class MemoryBuffer:
     # Class constructor
     def __init__(self, memory_size):
         self.nr_of_observed_data_samples = 0  # The number of encountered distinct data samples (x, u)
-        self.nr_of_observed_task_label_pairs = 0  # The nr of encountered pairs (u, y)
+        self.unique_observed_task_label_pairs = set()  # The unique encountered pairs (u, y)
         self.memory_size = memory_size  # The nr of data samples that can fit in the memory
         self.memory = {}  # The current memory buffer and its contents. A dict of lists
 
@@ -12,7 +12,9 @@ class MemoryBuffer:
     # the memory
     def observe_sample(self, data_sample, task_id, label):
         self.nr_of_observed_data_samples += 1  # Update this at the start to include it in the probability calculation
-        # TODO: should be unique data samples
+        # If this function is only ran once for every unique data sample in each dataset, this will equal the unique nr of data samples
+
+        self.unique_observed_task_label_pairs.add((task_id, label))
 
         if self.__get_memory_filled_size() < self.memory_size:
             # Surely add the data sample since we have space
