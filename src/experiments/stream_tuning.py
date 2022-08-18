@@ -364,40 +364,6 @@ def train_on_tasks(config):
 
         print("[TEST] Current task:", t_id)
 
-        # TODO: Test, save samples to memory
-        # Get the datasets of the current task
-        datasets = get_datasets_of_task(task=task, transforms=None, normalize=None)
-        print(datasets[0].tensors[0].size())
-        print(datasets[0].tensors[1].size())
-
-        # (Try to) add each data sample of the current task to the memory buffer
-        for i, data_sample in enumerate(datasets[0].tensors[0]):
-            label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
-            memory_buffer.observe_sample(data_sample, 0, label)
-
-        # Print info about the current memory contents for clarity
-        print("Task ID:", 0)
-        print("Memory:")
-        total_entries = 0
-        memory_display_dict = {}
-        for key in memory_buffer.memory:
-            nr_entries = len(memory_buffer.memory[key])
-            memory_display_dict[key] = nr_entries
-            total_entries += nr_entries
-            print(key, nr_entries)
-        print("total_entries:", total_entries)
-        print("-----")
-        saved_samples = memory_buffer.get_samples(0)
-        saved_samples_tensor = [entry[0] for entry in saved_samples]
-        saved_labels = [entry[1] for entry in saved_samples]
-
-        saved_samples_tensor = torch.stack(saved_samples_tensor)
-        saved_labels_tensor = torch.zeros(memory_size, 1)
-
-        for i in range(len(saved_labels)):
-            saved_labels_tensor[i][0] = saved_labels[i]
-        # TODO: Test, end
-
         if task_level_tuning:
             if not ray.is_initialized():
                 if local_mode:
