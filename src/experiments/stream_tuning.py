@@ -514,6 +514,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
     # Get the unique labels of the current task (c_t)
     c_t_val_dataset = get_datasets_of_task(task, transforms=None, normalize=None)[1]
     c_t_labels = c_t_val_dataset.tensors[1].tolist()
+    c_t_labels = [item for sublist in c_t_labels for item in sublist]
     print(c_t_val_dataset.tensors[1])
     print(c_t_labels)
     print(set(c_t_labels))
