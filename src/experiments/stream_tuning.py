@@ -525,7 +525,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
 
     # Get the validation score
     c_t_val_dataset = _load_datasets(task, 'Val', normalize=normalize)[0]
-    c_t_c_m_acc, _ = evaluate(c_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
+    c_t_c_m_acc = evaluate(c_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
     print("c_t_c_m_acc:", c_t_c_m_acc)
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
@@ -575,15 +575,15 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         p_t_model = learner.get_model(task_id=p_t_id)
 
         # Evaluate the past samples on the past model
-        p_t_p_m_acc, _ = evaluate(p_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
+        p_t_p_m_acc = evaluate(p_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
         print("Score of the past samples on the past model:", p_t_p_m_acc)
 
         # Evaluate the past samples on the current model
-        p_t_c_m_acc, _ = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
+        p_t_c_m_acc = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
         print("Score of the past samples on the current model:", p_t_c_m_acc)
 
         # Evaluate the current samples on the past model
-        c_t_p_m_acc, _ = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
+        c_t_p_m_acc = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("Score of the current samples on the past model:", c_t_p_m_acc)
 
         # Print the outcome
