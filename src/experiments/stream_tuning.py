@@ -629,7 +629,7 @@ def convert_memory_samples_to_tensors(memory_samples=None, memory_size=None):
     labels_tensor = torch.zeros(memory_size, 1)
 
     for i in range(len(saved_labels)):
-        labels_tensor[i][0] = saved_labels[i]
+        labels_tensor[i][0] = int(saved_labels[i])
     return samples_tensor, labels_tensor
 
 def get_datasets_of_task(task=None, transforms=None, normalize=None):
