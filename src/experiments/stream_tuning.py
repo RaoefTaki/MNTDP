@@ -545,6 +545,10 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
 
         # Convert data samples to tensors
         p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
+        for tensor in [p_t_samples_tensor, p_t_labels_tensor]:
+            print([p_t_samples_tensor, p_t_labels_tensor][0].size(0))
+            print(tensor.size(0))
+            print("---")
         p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
 
         print("type(p_t_samples):")
