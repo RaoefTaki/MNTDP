@@ -517,10 +517,8 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
     c_t_labels = c_t_val_dataset.tensors[1].tolist()
     c_t_labels = [item for sublist in c_t_labels for item in sublist]
     print("c_t_labels:", c_t_labels)
-    print("type(c_t_val_dataset):")
-    print(type(c_t_val_dataset))
-    print("c_t_val_dataset:")
-    print(c_t_val_dataset)
+    print("c_t_val_dataset.tensors:")
+    print(c_t_val_dataset.tensors)
 
     # Get the model of the current task, which was just created
     c_t_model = learner.get_model(task_id=task_id)
@@ -566,6 +564,8 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         print(len(p_t_labels_tensor))
         print("p_t_labels_tensor:")
         print(p_t_labels_tensor)
+        print("p_t_tensor.tensors:")
+        print(p_t_tensor.tensors)
 
         # Get the past model
         p_t_model = learner.get_model(task_id=p_t_id)
