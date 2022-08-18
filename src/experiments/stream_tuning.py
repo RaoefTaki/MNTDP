@@ -389,6 +389,9 @@ def train_on_tasks(config):
         out_saved_samples_tensor = torch.Tensor(len(saved_samples), 3, 32, 32)
         out_saved_samples_labels_tensor = torch.Tensor(len(saved_samples), 1)
         saved_samples_tensor = [entry[0] for entry in saved_samples]
+        for i in saved_samples:
+            print(i[0].size())
+            print(torch.Tensor(i[1]).size())
         saved_samples_labels_tensor = [torch.Tensor(entry[1]) for entry in saved_samples]
         torch.cat(saved_samples_tensor, out=out_saved_samples_tensor)
         torch.cat(saved_samples_labels_tensor, out=out_saved_samples_labels_tensor)
