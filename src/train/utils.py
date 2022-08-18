@@ -211,6 +211,8 @@ def _load_datasets(task, splits=None, transforms=None, normalize=False):
 def evaluate(model, dataset, batch_size, device, out_id=0):
     val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     n_classes = dataset.tensors[1][:, 0].unique().numel()
+    print("[TEST] n_classes:")
+    print(n_classes)
     out_transform = get_attr_transform(out_id)
     eval_metrics = {
         'accuracy': Accuracy(output_transform=out_transform),
