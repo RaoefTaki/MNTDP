@@ -548,7 +548,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         # Convert data samples to tensors
         p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
         p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
-        
+
         print("type(p_t_samples):")
         print(type(p_t_samples))
         print("p_t_samples:")
@@ -557,6 +557,15 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         print(type(p_t_labels))
         print("p_t_labels:")
         print(p_t_labels)
+        print("---")
+        print("len(p_t_samples_tensor):")
+        print(len(p_t_samples_tensor))
+        print("p_t_samples_tensor:")
+        print(p_t_samples_tensor)
+        print("len(p_t_labels_tensor):")
+        print(len(p_t_labels_tensor))
+        print("p_t_labels_tensor:")
+        print(p_t_labels_tensor)
 
         # Get the past model
         p_t_model = learner.get_model(task_id=p_t_id)
