@@ -352,33 +352,6 @@ def train_on_tasks(config):
     number_of_MB_in_memory = 1
     memory_buffer = MemoryBuffer(memory_size=math.floor(IMAGES_PER_MB * number_of_MB_in_memory))
 
-    # TODO: Test, save samples to memory
-    # Get the datasets of the current task
-    datasets = get_datasets_of_task(0, transforms=None, normalize=None)
-    print(datasets[0])
-
-    # (Try to) add each data sample of the current task to the memory buffer
-    for i, data_sample in enumerate(datasets[0].tensors[0]):
-        label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
-        memory_buffer.observe_sample(data_sample, 0, label)
-
-    # Print info about the current memory contents for clarity
-    print("Task ID:", 0)
-    print("Memory:")
-    total_entries = 0
-    memory_display_dict = {}
-    for key in memory_buffer.memory:
-        nr_entries = len(memory_buffer.memory[key])
-        memory_display_dict[key] = nr_entries
-        total_entries += nr_entries
-        print(key, nr_entries)
-    print("total_entries:", total_entries)
-    print("-----")
-    saved_samples = memory_buffer.get_samples(0)
-    print(saved_samples)
-    exit(0)
-    # TODO: Test, end
-
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
@@ -388,6 +361,33 @@ def train_on_tasks(config):
         )
 
         print("[TEST] Current task:", t_id)
+
+        # TODO: Test, save samples to memory
+        # Get the datasets of the current task
+        datasets = get_datasets_of_task(task=task, transforms=None, normalize=None)
+        print(datasets[0])
+
+        # (Try to) add each data sample of the current task to the memory buffer
+        for i, data_sample in enumerate(datasets[0].tensors[0]):
+            label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
+            memory_buffer.observe_sample(data_sample, 0, label)
+
+        # Print info about the current memory contents for clarity
+        print("Task ID:", 0)
+        print("Memory:")
+        total_entries = 0
+        memory_display_dict = {}
+        for key in memory_buffer.memory:
+            nr_entries = len(memory_buffer.memory[key])
+            memory_display_dict[key] = nr_entries
+            total_entries += nr_entries
+            print(key, nr_entries)
+        print("total_entries:", total_entries)
+        print("-----")
+        saved_samples = memory_buffer.get_samples(0)
+        print(saved_samples)
+        exit(0)
+        # TODO: Test, end
 
         if task_level_tuning:
             if not ray.is_initialized():
