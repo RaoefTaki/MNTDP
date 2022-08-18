@@ -22,6 +22,7 @@ import ray.tune.utils
 from ray.tune.schedulers import ASHAScheduler
 from torchvision.transforms import transforms
 
+from src.datasets.TensorDataset import MyTensorDataset
 from src.experiments.base_experiment import BaseExperiment
 from src.models.ExhaustiveSearch import ExhaustiveSearch
 from src.models.utils import execute_step
@@ -395,12 +396,6 @@ def train_on_tasks(config):
 
         for i in range(len(saved_labels)):
             saved_labels_tensor[i][0] = saved_labels[i]
-        
-        print(saved_samples_tensor.size())
-        print(saved_samples_tensor)
-        print(saved_labels_tensor.size())
-        print(saved_labels_tensor)
-        exit(0)
         # TODO: Test, end
 
         if task_level_tuning:
@@ -578,17 +573,24 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         if not p_t_labels.issubset(c_t_labels):
             continue
 
+        # Convert data samples to tensors
+        p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
+        p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+
         # Get the past model
         p_t_model = learner.get_model(task_id=p_t_id)
 
         # Evaluate the past samples on the past model
-        print("Score of the past samples on the past model:", )
+        p_t_p_m_acc, _ = evaluate(p_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
+        print("Score of the past samples on the past model:", p_t_p_m_acc)
 
         # Evaluate the past samples on the current model
-        print("Score of the past samples on the current model:", )
+        p_t_c_m_acc, _ = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
+        print("Score of the past samples on the current model:", p_t_c_m_acc)
 
         # Evaluate the current samples on the past model
-        print("Score of the current samples on the past model:", )
+        c_t_p_m_acc, _ = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
+        print("Score of the current samples on the past model:", c_t_p_m_acc)
 
         # Print the outcome
         pass
@@ -626,6 +628,19 @@ def get_transform_normalize(training_params=None, task=None):
     t_trans[0] = transformations.copy()
     normalize = training_params['normalize']
     return t_trans, normalize
+
+def convert_memory_samples_to_tensors(memory_samples=None, memory_size=None):
+    if memory_samples is None or memory_size is None:
+        raise ValueError('Some arguments are None or not supplied')
+    samples_tensor = [entry[0] for entry in memory_samples]
+    saved_labels = [entry[1] for entry in memory_samples]
+
+    samples_tensor = torch.stack(samples_tensor)
+    labels_tensor = torch.zeros(memory_size, 1)
+
+    for i in range(len(saved_labels)):
+        labels_tensor[i][0] = saved_labels[i]
+    return samples_tensor, labels_tensor
 
 def get_datasets_of_task(task=None, transforms=None, normalize=None):
     if task is None:
