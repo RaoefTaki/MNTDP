@@ -534,6 +534,8 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         p_t_samples = memory_buffer.get_samples(task_id)
         p_t_labels = set([sample[1] for sample in p_t_samples])
         print(p_t_samples)
+        print(len(memory_buffer.memory))
+        print(memory_buffer.memory)
         print(p_t_labels)
 
         # Check if the past samples' labels are all included in the labels of the current task
