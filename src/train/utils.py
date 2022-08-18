@@ -215,9 +215,8 @@ def evaluate(model, dataset, batch_size, device, out_id=0):
     print(n_classes)
     out_transform = get_attr_transform(out_id)
     eval_metrics = {
-        'accuracy': Accuracy(output_transform=out_transform),
-        'confusion': ConfusionMatrix(num_classes=n_classes,
-                                     output_transform=out_transform)
+        'accuracy': Accuracy(output_transform=out_transform)
+        # 'confusion': ConfusionMatrix(num_classes=n_classes, output_transform=out_transform)
     }
     evaluator = create_supervised_evaluator(model, metrics=eval_metrics,
                                             device=device)
