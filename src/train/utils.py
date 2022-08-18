@@ -11,7 +11,7 @@ import torch
 import torchvision
 import torchvision.transforms.functional as tf
 from ignite.engine import Events
-from ignite.metrics import Accuracy, ConfusionMatrix
+from ignite.metrics import Accuracy
 from more_itertools import roundrobin
 from torch import nn
 from torch.utils.data import ConcatDataset, TensorDataset, DataLoader
@@ -223,7 +223,7 @@ def evaluate(model, dataset, batch_size, device, out_id=0):
     evaluator.logger.setLevel(logging.WARNING)
     evaluator.run(val_loader)
     metrics = evaluator.state.metrics
-    return metrics['accuracy'], metrics['confusion']
+    return metrics['accuracy']
 
 
 def evaluate_on_tasks(tasks, ll_model, batch_size, device, splits=None,
@@ -238,10 +238,8 @@ def evaluate_on_tasks(tasks, ll_model, batch_size, device, splits=None,
         eval_model = ll_model.get_model(task_id=t_id)
         for split in splits:
             split_dataset = _load_datasets(task, split, normalize=normalize)[0]
-            acc, conf_mat = evaluate(eval_model, split_dataset, batch_size,
-                                     device)
+            acc = evaluate(eval_model, split_dataset, batch_size, device)
             res[split]['accuracy'].append(acc)
-            res[split]['confusion'].append(conf_mat)
         eval_model.cpu()
         torch.cuda.empty_cache()
     return res
