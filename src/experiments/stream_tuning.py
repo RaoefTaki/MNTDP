@@ -365,7 +365,8 @@ def train_on_tasks(config):
         # TODO: Test, save samples to memory
         # Get the datasets of the current task
         datasets = get_datasets_of_task(task=task, transforms=None, normalize=None)
-        print(datasets[0])
+        print(datasets[0].tensors[0].size())
+        print(datasets[0].tensors[1].size())
 
         # (Try to) add each data sample of the current task to the memory buffer
         for i, data_sample in enumerate(datasets[0].tensors[0]):
@@ -385,7 +386,17 @@ def train_on_tasks(config):
         print("total_entries:", total_entries)
         print("-----")
         saved_samples = memory_buffer.get_samples(0)
-        print(saved_samples)
+        out_saved_samples_tensor = torch.Tensor(len(saved_samples), 3, 32, 32)
+        out_saved_samples_labels_tensor = torch.Tensor(len(saved_samples), 1)
+        saved_samples_tensor = [entry[0] for entry in saved_samples]
+        saved_samples_labels_tensor = [entry[1] for entry in saved_samples]
+        torch.cat(saved_samples_tensor, out=out_saved_samples_tensor)
+        torch.cat(saved_samples_labels_tensor, out=out_saved_samples_labels_tensor)
+        print(len(saved_samples))
+        print(out_saved_samples_tensor.size())
+        print(out_saved_samples_tensor)
+        print(out_saved_samples_labels_tensor.size())
+        print(out_saved_samples_labels_tensor)
         exit(0)
         # TODO: Test, end
 
