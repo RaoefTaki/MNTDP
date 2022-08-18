@@ -4,7 +4,7 @@ class MemoryBuffer:
     # Class constructor
     def __init__(self, memory_size):
         self.nr_of_observed_data_samples = 0  # The number of encountered distinct data samples (x, u)
-        self.unique_observed_task_label_pairs = set()  # The unique encountered pairs (u, y)
+        self.nr_of_observed_task_label_pairs = 0  # The nr of encountered pairs (u, y)
         self.memory_size = memory_size  # The nr of data samples that can fit in the memory
         self.memory = {}  # The current memory buffer and its contents. A dict of lists
 
@@ -12,9 +12,7 @@ class MemoryBuffer:
     # the memory
     def observe_sample(self, data_sample, task_id, label):
         self.nr_of_observed_data_samples += 1  # Update this at the start to include it in the probability calculation
-        # If this function is only ran once for every unique data sample in each dataset, this will equal the unique nr of data samples
-
-        self.unique_observed_task_label_pairs.add((task_id, label))
+        # TODO: should be unique data samples
 
         if self.__get_memory_filled_size() < self.memory_size:
             # Surely add the data sample since we have space
@@ -25,9 +23,27 @@ class MemoryBuffer:
             if probability_to_hit >= random.uniform(0, 1):
                 self.__add(data_sample, task_id, label, is_memory_full=True)
 
+    # Call this function if you want the data samples of a specific task (and possibly label)
+    def get_samples(self, task_id=None, label=None):
+        if task_id is None:
+            return self.memory
+        else:
+            if label is None:
+                # Loop over all keys to find the keys where task_id=task_id
+                # Return as a flattened list
+                entries = []
+                for key in self.memory:
+                    if key[0] == task_id:
+                        for entry in self.memory[key]:
+                            x_and_y = (entry, key[1])
+                            entries.append(x_and_y)
+                return entries
+            else:
+                return self.memory[(task_id, label)]
+
     # Internal function to add a data sample to the memory
     def __add(self, data_sample, task_id, label, is_memory_full=False):
-        entry_to_add = {'sample': data_sample}
+        entry_to_add = data_sample
         entry_key = (task_id, label)
         if not is_memory_full:
             self.__add_to_memory(entry_to_add, entry_key)
