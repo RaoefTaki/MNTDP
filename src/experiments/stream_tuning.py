@@ -350,7 +350,8 @@ def train_on_tasks(config):
 
     # # TODO: try to see if data sample saving is doable
     number_of_MB_in_memory = 1
-    memory_buffer = MemoryBuffer(memory_size=math.floor(IMAGES_PER_MB * number_of_MB_in_memory))
+    memory_size = math.floor(IMAGES_PER_MB * number_of_MB_in_memory)
+    memory_buffer = MemoryBuffer(memory_size=memory_size)
 
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
@@ -386,20 +387,19 @@ def train_on_tasks(config):
         print("total_entries:", total_entries)
         print("-----")
         saved_samples = memory_buffer.get_samples(0)
-        out_saved_samples_tensor = torch.Tensor(len(saved_samples), 3, 32, 32)
-        out_saved_samples_labels_tensor = torch.Tensor(len(saved_samples), 1)
         saved_samples_tensor = [entry[0] for entry in saved_samples]
-        for i in saved_samples:
-            print(i[0].size())
-            print(torch.Tensor(i[1]).size())
-        saved_samples_labels_tensor = [torch.Tensor(entry[1]) for entry in saved_samples]
-        torch.cat(saved_samples_tensor, out=out_saved_samples_tensor)
-        torch.cat(saved_samples_labels_tensor, out=out_saved_samples_labels_tensor)
-        print(len(saved_samples))
-        print(out_saved_samples_tensor.size())
-        print(out_saved_samples_tensor)
-        print(out_saved_samples_labels_tensor.size())
-        print(out_saved_samples_labels_tensor)
+        saved_labels = [entry[1] for entry in saved_samples]
+
+        saved_samples_tensor = torch.stack(saved_samples_tensor)
+        saved_labels_tensor = torch.zeros(memory_size, 1)
+
+        for i in range(len(saved_labels)):
+            saved_labels_tensor[i][0] = saved_labels[i]
+        
+        print(saved_samples_tensor.size())
+        print(saved_samples_tensor)
+        print(saved_labels_tensor.size())
+        print(saved_labels_tensor)
         exit(0)
         # TODO: Test, end
 
