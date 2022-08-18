@@ -626,7 +626,7 @@ def convert_memory_samples_to_tensors(memory_samples=None, memory_size=None):
     saved_labels = [entry[1] for entry in memory_samples]
 
     samples_tensor = torch.stack(samples_tensor)
-    labels_tensor = torch.zeros(memory_size, 1)
+    labels_tensor = torch.zeros(memory_size, 1).int()
 
     for i in range(len(saved_labels)):
         labels_tensor[i][0] = int(saved_labels[i])
