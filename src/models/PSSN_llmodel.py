@@ -257,7 +257,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 for x, y in train:
                     x = x.to(device)
                     y = y.to(device)
-                    raise ValueError(type(x), x.size(), x, type(y), y.size(), y)
+                    # raise ValueError(type(x), x.size(), x, type(y), y.size(), y)
                     feats, preds = pruned_model.feats_forward(x)
                     features.append(flatten(feats))
                     model_preds.append(preds)
@@ -649,7 +649,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             if task_id > 0:
                 desrc = task_infos['descriptor']
                 dataset = task_infos['dataset']
-                raise ValueError(dataset, task_infos)
+                # raise ValueError(dataset, task_infos)
                 n_sources = self.n_source_models
                 n_neighbors = self.n_neighbors \
                     if hasattr(self, 'n_neighbors') else 15
