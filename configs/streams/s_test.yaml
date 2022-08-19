@@ -354,7 +354,7 @@ experiment:
     use_ray: True
     use_processes: True
     n_it_max: null
-    n_ep_max: 3
+    n_ep_max: 1
     batch_sizes: [256, 1024]  # Train and Eval batch sizes
     grace_period: 1500
     stream_setting: True
