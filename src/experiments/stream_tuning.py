@@ -366,11 +366,11 @@ def train_on_tasks(config):
 
         print("[TEST] Current task:", t_id)
 
-        # print("[TEST] Trying for backward transfer now based on task:", t_id)
-        # try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, tasks_list=tasks_list,
-        #                           learner=learner, training_params=config['training-params'])
-        # print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
-        # exit(0)
+        print("[TEST] Trying for backward transfer now based on task:", t_id)
+        try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, tasks_list=tasks_list,
+                                  learner=learner, training_params=config['training-params'])
+        print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+        exit(0)
 
         if task_level_tuning:
             if not ray.is_initialized():
@@ -543,7 +543,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
     c_t_c_m_EVAL_acc = evaluate(c_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
     print("c_t_c_m_EVAL_acc:", c_t_c_m_EVAL_acc)
 
-    c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'][1])
+    c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
     print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())
     exit(0)
 
