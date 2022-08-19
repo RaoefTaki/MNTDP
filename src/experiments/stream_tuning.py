@@ -545,6 +545,10 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
 
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
     # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # TODO: this crashes for some reason
+    print(len(c_t_train_knn_dataset))
+    print(len(c_t_eval_knn_dataset[0]))
+    print(len(c_t_eval_knn_dataset[1]))
+    exit(0)
     print("c_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[:2], 15))
     exit(0)
 
