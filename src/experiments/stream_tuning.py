@@ -350,7 +350,7 @@ def train_on_tasks(config):
         selected_tags = []
 
     # # TODO: try to see if data sample saving is doable
-    number_of_MB_in_memory = 1
+    number_of_MB_in_memory = 5
     memory_size = math.floor(IMAGES_PER_MB * number_of_MB_in_memory)
     memory_buffer = MemoryBuffer(memory_size=memory_size)
 
