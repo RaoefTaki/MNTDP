@@ -583,7 +583,10 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         print("Score of the current samples on the past model:", c_t_p_m_acc)
 
         # Print the outcome
-        pass
+        if p_t_c_m_acc > p_t_p_m_acc:
+            print("!!! Score of the past samples on the current model > on past model. Can enable for BW transfer")
+        if c_t_p_m_acc > c_t_c_m_acc:
+            print("!!! Score of the current samples on the past model > on current model. Can enable for more transfer. This case should be rare")
     # res = defaultdict(lambda: defaultdict(list))
     # for t_id, task in enumerate(tqdm(tasks, desc='Evaluation on tasks',
     #                                  leave=False, disable=True)):
