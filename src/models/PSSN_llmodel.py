@@ -184,6 +184,53 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         self.arch_scores = defaultdict(dict)
 
+    def get_knn_accuracy(self, model, train_dataset, val_dataset, n_neighbors, max_samples=1000):
+        if torch.cuda.is_available():
+            device = 'cuda'
+        else:
+            device = 'cpu'
+        knn_acc = -1
+
+        pruned_model = model.get_frozen_model()
+        pruned_model.to(device)
+
+        features, model_preds, labels = [], [], []
+        with torch.no_grad():
+            # Generate the training features & labels, for the KNN algorithm
+            n_samples = 0
+            for x, y in train_dataset:
+                x = x.to(device)
+                y = y.to(device)
+                feats, preds = pruned_model.feats_forward(x)
+                features.append(flatten(feats))
+                labels.append(y)
+                n_samples += x.size(0)
+                if n_samples >= max_samples:
+                    break
+            features = torch.cat(features, 0)
+            labels = torch.cat(labels, 0).flatten()
+        n_neighbors = min(n_neighbors, features.size(0))
+        knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+        knn.fit(features.cpu(), labels.cpu())
+        preds, gt = [], []
+        with torch.no_grad():
+            # Validate the KNN classification performance
+            n_samples = 0
+            for x, y in val_dataset:
+                x = x.to(device)
+                y = y.to(device)
+                feats, _ = pruned_model.feats_forward(x)
+                feats = flatten(feats).cpu()
+                preds.append(torch.tensor(knn.predict(feats)))
+                gt.append(y.flatten())
+                n_samples += x.size(0)
+                if n_samples >= max_samples:
+                    break
+            preds = torch.cat(preds, 0).to(device)
+            gt = torch.cat(gt, 0)
+            knn_acc = (preds == gt).float().mean().item()
+        return knn_acc
+
     def get_candidate_models(self, task_id, descriptor, dataset, topk,
                              n_neighbors, max_samples=1000):
         if topk == -1:
