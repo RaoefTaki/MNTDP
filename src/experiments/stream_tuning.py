@@ -22,13 +22,14 @@ import ray.tune.utils
 from ray.tune.schedulers import ASHAScheduler
 from torchvision.transforms import transforms
 
+from src.datasets.TensorDataset import MyTensorDataset
 from src.experiments.base_experiment import BaseExperiment
 from src.models.ExhaustiveSearch import ExhaustiveSearch
 from src.models.utils import execute_step
 from src.train.ignite_utils import _prepare_batch
 from src.train.training import train, get_classic_dataloaders
 from src.train.utils import set_dropout, set_optim_params, \
-    _load_datasets, evaluate_on_tasks
+    _load_datasets, evaluate_on_tasks, evaluate
 from src.utils.log_observer import initialize_tune_report_arguments
 from src.utils.memory_buffer import MemoryBuffer
 from src.utils.misc import get_env_url, fill_matrix, \
@@ -350,7 +351,8 @@ def train_on_tasks(config):
 
     # # TODO: try to see if data sample saving is doable
     number_of_MB_in_memory = 1
-    memory_buffer = MemoryBuffer(memory_size=math.floor(IMAGES_PER_MB * number_of_MB_in_memory))
+    memory_size = math.floor(IMAGES_PER_MB * number_of_MB_in_memory)
+    memory_buffer = MemoryBuffer(memory_size=memory_size)
 
     task_counter = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
@@ -459,19 +461,23 @@ def train_on_tasks(config):
             # Save the learner
             torch.save(learner, learner_path)
 
-            # Backward transfer  # TODO
-            pass
-
-            # Save samples of the current task to the memory buffer
-            print("[TEST] Save samples to memory")
-            save_samples_to_memory(memory_buffer, t_id, task)
-            print("[TEST] Nr of memory samples obtained from the memory of this task", len(memory_buffer.get_samples(t_id)))
-
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
             print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
             print("[TEST] best_trial's arch_scores:", best_trial.last_result["arch_scores"])  # self.arch_scores[task_id]['knn']
-            print("[TEST] Finished task:", t_id)
+            print("[TEST] Finished learning on task:", t_id)
+
+            # Backward transfer
+            print("[TEST] Trying for backward transfer now based on task:", t_id)
+            try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, learner=learner,
+                                      training_params=config['training-params'])
+            print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+
+            # Save samples of the current task to the memory buffer
+            print("[TEST] Save samples to memory")
+            save_samples_to_memory(memory_buffer, t_id, task)
+
+            print("[TEST] Finished everything for task:", t_id)
 
             # print(type(analysis))
             # print(analysis)
@@ -497,13 +503,154 @@ def train_on_tasks(config):
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
 
-def save_samples_to_memory(memory_buffer=None, task_id=None, task=None):
-    if memory_buffer is None or task_id is None or task is None:
+def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learner=None, training_params=None):
+    if memory_buffer is None or task_id is None or task is None or learner is None or training_params is None:
+        raise ValueError('Some arguments are None or not supplied')
+
+    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
+        return
+
+    # Get the settings for transforming and normalizing the data
+    transforms, normalize = get_transform_normalize(training_params, task)  # TODO: needed?
+
+    # Get the unique labels of the current task (c_t)
+    c_t_val_dataset = get_datasets_of_task(task, transforms=None, normalize=None)[1]
+    c_t_labels = c_t_val_dataset.tensors[1].tolist()
+    c_t_labels = [item for sublist in c_t_labels for item in sublist]
+    # print("c_t_labels:", c_t_labels)
+    # print("c_t_val_dataset.tensors:")
+    # print(c_t_val_dataset.tensors)
+
+    # Get the model of the current task, which was just created
+    c_t_model = learner.get_model(task_id=task_id)
+
+    # Get the validation score
+    c_t_val_dataset = _load_datasets(task, 'Val', normalize=normalize)[0]
+    c_t_c_m_acc = evaluate(c_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
+    print("c_t_c_m_acc:", c_t_c_m_acc)
+
+    # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
+    # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
+    for p_t_id in range(task_id):
+        print("p_t_id:", p_t_id)
+        # Get all data samples of the past task
+        p_t_samples = memory_buffer.get_samples(p_t_id)
+        p_t_labels = set([sample[1] for sample in p_t_samples])
+        # print(len(memory_buffer.memory))
+        # print(memory_buffer.memory)
+        # print(p_t_labels)
+
+        # Check if the past samples' labels are all included in the labels of the current task
+        if not p_t_labels.issubset(c_t_labels):
+            continue
+
+        # Convert data samples to tensors
+        p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
+        p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+
+        # print("type(p_t_samples):")
+        # print(type(p_t_samples))
+        # print("p_t_samples:")
+        # print(p_t_samples)
+        # print("type(p_t_labels):")
+        # print(type(p_t_labels))
+        # print("p_t_labels:")
+        # print(p_t_labels)
+        # print("---")
+        # print("len(p_t_samples_tensor):")
+        # print(len(p_t_samples_tensor))
+        # print("p_t_samples_tensor:")
+        # print(p_t_samples_tensor)
+        # print("len(p_t_labels_tensor):")
+        # print(len(p_t_labels_tensor))
+        # print("p_t_labels_tensor:")
+        # print(p_t_labels_tensor)
+        # print("p_t_tensor.tensors:")
+        # print(p_t_tensor.tensors)
+
+        # Get the past model
+        p_t_model = learner.get_model(task_id=p_t_id)
+
+        # Evaluate the past samples on the past model
+        p_t_p_m_acc = evaluate(p_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
+        print("Score of the past samples on the past model:", p_t_p_m_acc)
+
+        # Evaluate the past samples on the current model
+        p_t_c_m_acc = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
+        print("Score of the past samples on the current model:", p_t_c_m_acc)
+
+        # Evaluate the current samples on the past model
+        c_t_p_m_acc = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
+        print("Score of the current samples on the past model:", c_t_p_m_acc)
+
+        # Print the outcome
+        if p_t_c_m_acc > p_t_p_m_acc:
+            print("!!! Score of the past samples on the current model > on past model. Can enable for BW transfer")
+        if c_t_p_m_acc > c_t_c_m_acc:
+            print("!!! Score of the current samples on the past model > on current model. Can enable for more transfer. This case should be rare")
+    # res = defaultdict(lambda: defaultdict(list))
+    # for t_id, task in enumerate(tqdm(tasks, desc='Evaluation on tasks',
+    #                                  leave=False, disable=True)):
+    #     t_id = t_id if cur_task is None else min(t_id, cur_task)
+    #     eval_model = ll_model.get_model(task_id=t_id)
+    #     for split in splits:
+    #         split_dataset = _load_datasets(task, split, normalize=normalize)[0]
+    #         acc, conf_mat = evaluate(eval_model, split_dataset, batch_size,
+    #                                  device)
+    #         res[split]['accuracy'].append(acc)
+    #         res[split]['confusion'].append(conf_mat)
+    #     eval_model.cpu()
+    #     torch.cuda.empty_cache()
+    # # TODO: what?
+    # pass
+    # # TODO IMPLEMENT, CHECK
+
+def get_transform_normalize(training_params=None, task=None):
+    if training_params is None or task is None:
+        raise ValueError('Some arguments are None or not supplied')
+
+    augment_data = training_params['augment_data']
+    transformations = []
+    if augment_data:
+        transformations.extend([
+            transforms.ToPILImage(),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(32, 4),
+            transforms.ToTensor()
+        ])
+    t_trans = [[] for _ in range(len(task['split_names']))]
+    t_trans[0] = transformations.copy()
+    normalize = training_params['normalize']
+    return t_trans, normalize
+
+def convert_memory_samples_to_tensors(memory_samples=None, memory_size=None):
+    if memory_samples is None or memory_size is None:
+        raise ValueError('Some arguments are None or not supplied')
+    samples_tensor = [entry[0] for entry in memory_samples]
+    saved_labels = [entry[1] for entry in memory_samples]
+
+    samples_tensor = torch.stack(samples_tensor)
+    labels_tensor = torch.zeros(len(saved_labels), 1).int()
+
+    for i in range(len(saved_labels)):
+        labels_tensor[i][0] = int(saved_labels[i])
+    return samples_tensor, labels_tensor
+
+def get_datasets_of_task(task=None, transforms=None, normalize=None):
+    if task is None:
         raise ValueError('Some arguments are None or not supplied')
 
     # Get the datasets of the current task
     datasets_p = dict(task=task, transforms=None, normalize=None)
     datasets = _load_datasets(**datasets_p)
+    return datasets
+
+def save_samples_to_memory(memory_buffer=None, task_id=None, task=None):
+    if memory_buffer is None or task_id is None or task is None:
+        raise ValueError('Some arguments are None or not supplied')
+
+    # Get the datasets of the current task
+    datasets = get_datasets_of_task(task, transforms=None, normalize=None)
 
     # (Try to) add each data sample of the current task to the memory buffer
     for i, data_sample in enumerate(datasets[0].tensors[0]):
@@ -612,16 +759,6 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
 
     stream_setting = training_params.pop('stream_setting')
     plot_all = training_params.pop('plot_all')
-    normalize = training_params.pop('normalize')
-    augment_data = training_params.pop('augment_data')
-    transformations = []
-    if augment_data:
-        transformations.extend([
-            transforms.ToPILImage(),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(32, 4),
-            transforms.ToTensor()
-        ])
     lca_n = training_params.pop('lca')
 
     if plot_all:
@@ -647,8 +784,9 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
     # TODO: try to fix the error that occurs at approx. line 346 in stream_tuning.py, put tune_reporter back in at end of this func
     # TODO: and try to see if can run s_test fully with good/expected results
 
-    t_trans = [[] for _ in range(len(task['split_names']))]
-    t_trans[0] = transformations.copy()
+    t_trans, normalize = get_transform_normalize(training_params, task)
+    training_params.pop('augment_data')
+    training_params.pop('normalize')
 
     datasets_p = dict(task=task,
                       transforms=t_trans,

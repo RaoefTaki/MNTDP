@@ -11,7 +11,7 @@ import torch
 import torchvision
 import torchvision.transforms.functional as tf
 from ignite.engine import Events
-from ignite.metrics import Accuracy, ConfusionMatrix
+from ignite.metrics import Accuracy
 from more_itertools import roundrobin
 from torch import nn
 from torch.utils.data import ConcatDataset, TensorDataset, DataLoader
@@ -78,9 +78,9 @@ def get_multitask_dataset(tasks, min_samples_per_class=10):
                 n_classes = y.unique().size(0)
                 if n_elems < min_samples_per_class * n_classes:
                     logger.warning('Not enough sample, will select {} elems'
-                                     ' for {} classes when requiring at '
-                                     'least {} samples per class'
-                                     .format(n_elems, n_classes, min_samples_per_class))
+                                   ' for {} classes when requiring at '
+                                   'least {} samples per class'
+                                   .format(n_elems, n_classes, min_samples_per_class))
                     n_elems = min_samples_per_class * n_classes
                 selected_idx = torch.randint(x.size(0), (n_elems,))
                 x = x[selected_idx]
@@ -172,7 +172,7 @@ def strat_split_from_y(ds, split_ratio=0.5, y_idx=1):
 
 
 def _load_datasets_old(data_path, cur_loss_fn=None, past_tasks=None,
-                   transforms=None, normalize=False):
+                       transforms=None, normalize=False):
     if transforms is None:
         transforms = [None] * len(data_path)
     datasets = []
@@ -213,16 +213,15 @@ def evaluate(model, dataset, batch_size, device, out_id=0):
     n_classes = dataset.tensors[1][:, 0].unique().numel()
     out_transform = get_attr_transform(out_id)
     eval_metrics = {
-        'accuracy': Accuracy(output_transform=out_transform),
-        'confusion': ConfusionMatrix(num_classes=n_classes,
-                                     output_transform=out_transform)
+        'accuracy': Accuracy(output_transform=out_transform)
+        # 'confusion': ConfusionMatrix(num_classes=n_classes, output_transform=out_transform)
     }
     evaluator = create_supervised_evaluator(model, metrics=eval_metrics,
                                             device=device)
     evaluator.logger.setLevel(logging.WARNING)
     evaluator.run(val_loader)
     metrics = evaluator.state.metrics
-    return metrics['accuracy'], metrics['confusion']
+    return metrics['accuracy']
 
 
 def evaluate_on_tasks(tasks, ll_model, batch_size, device, splits=None,
@@ -237,10 +236,8 @@ def evaluate_on_tasks(tasks, ll_model, batch_size, device, splits=None,
         eval_model = ll_model.get_model(task_id=t_id)
         for split in splits:
             split_dataset = _load_datasets(task, split, normalize=normalize)[0]
-            acc, conf_mat = evaluate(eval_model, split_dataset, batch_size,
-                                     device)
+            acc = evaluate(eval_model, split_dataset, batch_size, device)
             res[split]['accuracy'].append(acc)
-            res[split]['confusion'].append(conf_mat)
         eval_model.cpu()
         torch.cuda.empty_cache()
     return res
