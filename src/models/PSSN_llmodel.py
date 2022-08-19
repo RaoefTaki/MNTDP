@@ -217,7 +217,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         with torch.no_grad():
             # Validate the KNN classification performance
             n_samples = 0
-            print(val_dataset)
+            raise ValueError(train_dataset, val_dataset)
             for x, y in val_dataset:
                 x = x.to(device)
                 y = y.to(device)
