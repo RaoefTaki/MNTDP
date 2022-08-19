@@ -546,7 +546,6 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
     # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # TODO: this crashes for some reason
     print("c_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[0], 15))
-    exit(0)
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
@@ -569,6 +568,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Convert data samples to tensors
         p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
         p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+
+        # Get the dataloader for kNN for the past task
+        p_t_knn_dataset, _ = get_classic_dataloaders([p_t_tensor], training_params['batch_sizes'])
 
         # print("type(p_t_samples):")
         # print(type(p_t_samples))
@@ -599,6 +601,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Evaluate the past samples eval dataset on the past model
         p_t_p_m_EVAL_acc = evaluate(p_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the past model:", p_t_p_m_EVAL_acc)
+        # Note: We don't have enough samples to do kNN for this situation
 
         # Evaluate the past samples on the current model
         p_t_c_m_acc = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
@@ -606,7 +609,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Evaluate the past samples eval dataset on the current model
         p_t_c_m_EVAL_acc = evaluate(c_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the current model:", p_t_c_m_EVAL_acc)
-        print("p_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_dataset, p_t_tensor, 15))
+        print("p_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, p_t_knn_dataset, 15))
 
         # Evaluate the current samples on the past model
         c_t_p_m_acc = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
@@ -614,7 +617,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Evaluate the current samples eval dataset on the past model
         c_t_p_m_EVAL_acc = evaluate(p_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the current samples on the past model:", c_t_p_m_EVAL_acc)
-        print("c_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_tensor, c_t_val_dataset, 15))
+        print("c_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_val_knn_dataset, 15))
 
         # Print the outcome
         if p_t_c_m_acc > p_t_p_m_acc:
