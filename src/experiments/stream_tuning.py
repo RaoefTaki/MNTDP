@@ -544,10 +544,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
     print("c_t_c_m_EVAL_acc:", c_t_c_m_EVAL_acc)
 
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
-    print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())
-    exit(0)
-
+    # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # TODO: this crashes for some reason
     print("c_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_dataset, c_t_val_dataset, 15))
+    exit(0)
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
