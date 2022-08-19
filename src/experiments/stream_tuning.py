@@ -366,11 +366,11 @@ def train_on_tasks(config):
 
         print("[TEST] Current task:", t_id)
 
-        print("[TEST] Trying for backward transfer now based on task:", t_id)
-        try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, tasks_list=tasks_list,
-                                  learner=learner, training_params=config['training-params'])
-        print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
-        exit(0)
+        # print("[TEST] Trying for backward transfer now based on task:", t_id)
+        # try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, tasks_list=tasks_list,
+        #                           learner=learner, training_params=config['training-params'])
+        # print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+        # exit(0)
 
         if task_level_tuning:
             if not ray.is_initialized():
@@ -517,8 +517,8 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         raise ValueError('Some arguments are None or not supplied')
 
     # TODO: comment out
-    # if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-    #     return
+    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
+        return
 
     # Get the settings for transforming and normalizing the data
     transforms, normalize = get_transform_normalize(training_params, task)  # TODO: needed?

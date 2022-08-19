@@ -257,6 +257,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                 for x, y in train:
                     x = x.to(device)
                     y = y.to(device)
+                    raise ValueError(type(x), x.size(), x, type(y), y.size(), y)
                     feats, preds = pruned_model.feats_forward(x)
                     features.append(flatten(feats))
                     model_preds.append(preds)
