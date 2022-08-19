@@ -516,8 +516,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
             training_params is None:
         raise ValueError('Some arguments are None or not supplied')
 
-    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-        return
+    # TODO: comment out
+    # if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
+    #     return
 
     # Get the settings for transforming and normalizing the data
     transforms, normalize = get_transform_normalize(training_params, task)  # TODO: needed?
