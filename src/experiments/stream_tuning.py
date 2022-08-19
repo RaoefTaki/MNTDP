@@ -516,9 +516,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
     c_t_val_dataset = get_datasets_of_task(task, transforms=None, normalize=None)[1]
     c_t_labels = c_t_val_dataset.tensors[1].tolist()
     c_t_labels = [item for sublist in c_t_labels for item in sublist]
-    print("c_t_labels:", c_t_labels)
-    print("c_t_val_dataset.tensors:")
-    print(c_t_val_dataset.tensors)
+    # print("c_t_labels:", c_t_labels)
+    # print("c_t_val_dataset.tensors:")
+    # print(c_t_val_dataset.tensors)
 
     # Get the model of the current task, which was just created
     c_t_model = learner.get_model(task_id=task_id)
@@ -535,9 +535,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         # Get all data samples of the past task
         p_t_samples = memory_buffer.get_samples(p_t_id)
         p_t_labels = set([sample[1] for sample in p_t_samples])
-        print(len(memory_buffer.memory))
-        print(memory_buffer.memory)
-        print(p_t_labels)
+        # print(len(memory_buffer.memory))
+        # print(memory_buffer.memory)
+        # print(p_t_labels)
 
         # Check if the past samples' labels are all included in the labels of the current task
         if not p_t_labels.issubset(c_t_labels):
@@ -545,31 +545,27 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
 
         # Convert data samples to tensors
         p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
-        for tensor in [p_t_samples_tensor, p_t_labels_tensor]:
-            print([p_t_samples_tensor, p_t_labels_tensor][0].size(0))
-            print(tensor.size(0))
-            print("---")
         p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
 
-        print("type(p_t_samples):")
-        print(type(p_t_samples))
-        print("p_t_samples:")
-        print(p_t_samples)
-        print("type(p_t_labels):")
-        print(type(p_t_labels))
-        print("p_t_labels:")
-        print(p_t_labels)
-        print("---")
-        print("len(p_t_samples_tensor):")
-        print(len(p_t_samples_tensor))
-        print("p_t_samples_tensor:")
-        print(p_t_samples_tensor)
-        print("len(p_t_labels_tensor):")
-        print(len(p_t_labels_tensor))
-        print("p_t_labels_tensor:")
-        print(p_t_labels_tensor)
-        print("p_t_tensor.tensors:")
-        print(p_t_tensor.tensors)
+        # print("type(p_t_samples):")
+        # print(type(p_t_samples))
+        # print("p_t_samples:")
+        # print(p_t_samples)
+        # print("type(p_t_labels):")
+        # print(type(p_t_labels))
+        # print("p_t_labels:")
+        # print(p_t_labels)
+        # print("---")
+        # print("len(p_t_samples_tensor):")
+        # print(len(p_t_samples_tensor))
+        # print("p_t_samples_tensor:")
+        # print(p_t_samples_tensor)
+        # print("len(p_t_labels_tensor):")
+        # print(len(p_t_labels_tensor))
+        # print("p_t_labels_tensor:")
+        # print(p_t_labels_tensor)
+        # print("p_t_tensor.tensors:")
+        # print(p_t_tensor.tensors)
 
         # Get the past model
         p_t_model = learner.get_model(task_id=p_t_id)
