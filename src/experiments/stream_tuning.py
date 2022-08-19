@@ -366,6 +366,12 @@ def train_on_tasks(config):
 
         print("[TEST] Current task:", t_id)
 
+        print("[TEST] Trying for backward transfer now based on task:", t_id)
+        try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, tasks_list=tasks_list,
+                                  learner=learner, training_params=config['training-params'])
+        print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+        exit(0)
+
         if task_level_tuning:
             if not ray.is_initialized():
                 if local_mode:
