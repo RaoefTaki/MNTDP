@@ -649,6 +649,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             if task_id > 0:
                 desrc = task_infos['descriptor']
                 dataset = task_infos['dataset']
+                raise ValueError(dataset, task_infos)
                 n_sources = self.n_source_models
                 n_neighbors = self.n_neighbors \
                     if hasattr(self, 'n_neighbors') else 15
