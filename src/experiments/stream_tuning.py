@@ -527,6 +527,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
     c_t_val_dataset = _load_datasets(task, 'Val', normalize=normalize)[0]
     c_t_c_m_acc = evaluate(c_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
     print("c_t_c_m_acc:", c_t_c_m_acc)
+    c_t_EVAL_dataset = _load_datasets(task, 'Test', normalize=normalize)[0]
+    c_t_c_m_EVAL_acc = evaluate(c_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
+    print("c_t_c_m_EVAL_acc:", c_t_c_m_EVAL_acc)
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
@@ -538,6 +541,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         # print(len(memory_buffer.memory))
         # print(memory_buffer.memory)
         # print(p_t_labels)
+
+        # Get evaluation data samples of the past task, just for comprehension purposes
+        p_t_EVAL_dataset = _load_datasets(task, 'Test', normalize=normalize)[0]
 
         # Check if the past samples' labels are all included in the labels of the current task
         if not p_t_labels.issubset(c_t_labels):
@@ -573,14 +579,23 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, learn
         # Evaluate the past samples on the past model
         p_t_p_m_acc = evaluate(p_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
         print("Score of the past samples on the past model:", p_t_p_m_acc)
+        # Evaluate the past samples eval dataset on the past model
+        p_t_p_m_EVAL_acc = evaluate(p_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
+        print("EVAL score of the past samples on the past model:", p_t_p_m_EVAL_acc)
 
         # Evaluate the past samples on the current model
         p_t_c_m_acc = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
         print("Score of the past samples on the current model:", p_t_c_m_acc)
+        # Evaluate the past samples eval dataset on the current model
+        p_t_c_m_EVAL_acc = evaluate(c_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
+        print("EVAL score of the past samples on the current model:", p_t_c_m_EVAL_acc)
 
         # Evaluate the current samples on the past model
         c_t_p_m_acc = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("Score of the current samples on the past model:", c_t_p_m_acc)
+        # Evaluate the current samples eval dataset on the past model
+        c_t_p_m_EVAL_acc = evaluate(p_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
+        print("EVAL score of the past samples on the current model:", c_t_p_m_EVAL_acc)
 
         # Print the outcome
         if p_t_c_m_acc > p_t_p_m_acc:

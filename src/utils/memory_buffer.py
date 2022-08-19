@@ -33,8 +33,7 @@ class MemoryBuffer:
                 # Return as a flattened list
                 entries = []
                 for key in self.memory:
-                    # TODO: test whether removing a label leads to an error
-                    if key[0] == task_id and key[1] != 9:
+                    if key[0] == task_id:
                         for entry in self.memory[key]:
                             x_and_y = (entry, key[1])
                             entries.append(x_and_y)
