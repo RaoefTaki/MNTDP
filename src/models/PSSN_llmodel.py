@@ -184,6 +184,53 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
         self.arch_scores = defaultdict(dict)
 
+    def get_knn_accuracy(self, model, train_dataset, val_dataset, n_neighbors, max_samples=1000):
+        if torch.cuda.is_available():
+            device = 'cuda'
+        else:
+            device = 'cpu'
+        knn_acc = -1
+
+        pruned_model = model.get_frozen_model()
+        pruned_model.to(device)
+
+        features, model_preds, labels = [], [], []
+        with torch.no_grad():
+            # Generate the training features & labels, for the KNN algorithm
+            n_samples = 0
+            for x, y in train_dataset:
+                x = x.to(device)
+                y = y.to(device)
+                feats, preds = pruned_model.feats_forward(x)
+                features.append(flatten(feats))
+                labels.append(y)
+                n_samples += x.size(0)
+                if n_samples >= max_samples:
+                    break
+            features = torch.cat(features, 0)
+            labels = torch.cat(labels, 0).flatten()
+        n_neighbors = min(n_neighbors, features.size(0))
+        knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+        knn.fit(features.cpu(), labels.cpu())
+        preds, gt = [], []
+        with torch.no_grad():
+            # Validate the KNN classification performance
+            n_samples = 0
+            for x, y in val_dataset:
+                x = x.to(device)
+                y = y.to(device)
+                feats, _ = pruned_model.feats_forward(x)
+                feats = flatten(feats).cpu()
+                preds.append(torch.tensor(knn.predict(feats)))
+                gt.append(y.flatten())
+                n_samples += x.size(0)
+                if n_samples >= max_samples:
+                    break
+            preds = torch.cat(preds, 0).to(device)
+            gt = torch.cat(gt, 0)
+            knn_acc = (preds == gt).float().mean().item()
+        return knn_acc
+
     def get_candidate_models(self, task_id, descriptor, dataset, topk,
                              n_neighbors, max_samples=1000):
         if topk == -1:
@@ -297,8 +344,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if targ_col_id not in candidate_nodes:
             #     continue
             targ_layer = targ_col.get(targ_depth)
-            if targ_layer and (targ_col_id, targ_depth) in targ_layer\
-                and (targ_col_id, targ_depth) in candidate_nodes:
+            if targ_layer and (targ_col_id, targ_depth) in targ_layer \
+                    and (targ_col_id, targ_depth) in candidate_nodes:
                 repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
                 lateral_connections[targ_col_id] = repr_size
         return lateral_connections
@@ -314,8 +361,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if src_col_id not in columns:
             #     continue
             src_layer = src_col.get(depth - 1)
-            if src_layer and (src_col_id, depth - 1) in src_layer and\
-                (src_col_id, depth-1) in candidate_nodes:
+            if src_layer and (src_col_id, depth - 1) in src_layer and \
+                    (src_col_id, depth-1) in candidate_nodes:
                 repr_size = self.column_repr_sizes[src_col_id]
                 repr_size = repr_size[depth - 1] \
                     if len(repr_size) >= depth else -1
@@ -366,10 +413,10 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # last_layer_depth_old = len(self.hidden_size) + 1
             src_layer = self.columns[prev_col_id].get(last_layer_depth)
             last_node = (prev_col_id, last_layer_depth)
-            if not src_layer or last_node not in src_layer\
+            if not src_layer or last_node not in src_layer \
                     or last_node not in \
                     candidate_nodes | {(col_id, last_layer_depth)}:
-                    # or prev_col_id not in (columns + [col_id]):
+                # or prev_col_id not in (columns + [col_id]):
                 continue
             if self.learn_in_and_out:
                 conn_name = (col_id, self.OUT_NODE, prev_col_id)
@@ -401,9 +448,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
         for prev_col_id in range(col_id + 1):
             in_layer = self.columns[prev_col_id].get(0)
             target_node = (prev_col_id, 0)
-            if not in_layer or target_node not in in_layer\
+            if not in_layer or target_node not in in_layer \
                     or target_node not in candidate_nodes | {(col_id, 0)}:
-                    # or prev_col_id not in columns + [col_id]:
+                # or prev_col_id not in columns + [col_id]:
                 continue
 
             if self.learn_in_and_out:
@@ -595,7 +642,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # if self.split_last:
             #     sizes[-self.n_new_layers-1:-1] = \
             #         [sizes[-self.n_new_layers-2]] * self.n_new_layers
-                # sizes[-2] = sizes[-3]
+            # sizes[-2] = sizes[-3]
             self.column_repr_sizes.append(sizes)
             if task_id > 0:
                 desrc = task_infos['descriptor']
