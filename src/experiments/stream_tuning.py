@@ -369,19 +369,6 @@ def train_on_tasks(config):
 
         print("[TEST] Current task:", t_id)
 
-        # TODO: remove below:
-        print("[TEST] Trying for backward transfer now based on task:", t_id)
-        knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
-                                                                                   task_id=t_id, task=task,
-                                                                                   tasks_list=tasks_list,
-                                                                                   learner=learner,
-                                                                                   training_params=config['training-params'],
-                                                                                   knn_accuracies_list=knn_accuracies,
-                                                                                   tasks_bw_output_head=tasks_bw_output_head,
-                                                                                   knn_n=learner.n_neighbors)
-        print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
-        exit(0)
-
         if task_level_tuning:
             if not ray.is_initialized():
                 if local_mode:
@@ -517,7 +504,10 @@ def train_on_tasks(config):
         #                  g_task_vis, False)
         task_counter += 1
 
-    print("[TEST] End training")
+    print("[TEST] End of regular training")
+    print("[TEST] Accounting for BW transfer now")
+    print("[TEST] Found the following tasks_bw_output_head:", tasks_bw_output_head)
+    # TODO: do more with tasks_bw_output_head
 
     if task_level_tuning:
         print("[TEST] len(all_analysis):", len(all_analysis), "selected_tags:", selected_tags)
@@ -562,14 +552,6 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     knn_n_samples = knn_n if len(c_t_train_knn_dataset.dataset) >= knn_n else len(c_t_train_knn_dataset.dataset)
     c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples)
     print("c_t_c_m_knn_acc:", c_t_c_m_knn_acc)
-    print("knn_n_samples:", knn_n_samples)
-
-    print("Nr of labels:", c_t_val_dataset)
-    print("Nr of labels:", c_t_val_dataset.tensors)
-    print("Nr of labels:", c_t_val_dataset.tensors[1])
-    print("Nr of labels:", torch.unique(c_t_val_dataset.tensors[1]))
-    print("Nr of labels:", len(torch.unique(c_t_val_dataset.tensors[1])))
-    exit(0)
 
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
         return
@@ -582,8 +564,9 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         p_t_samples = memory_buffer.get_samples(p_t_id)
         p_t_labels = set([sample[1] for sample in p_t_samples])
 
-        # Get evaluation data samples of the past task. These are just for comprehension purposes
+        # Get validation, evaluation data samples of the past task. These are just for comprehension purposes
         p_t_EVAL_dataset = _load_datasets(tasks_list[p_t_id], 'Test', normalize=normalize)[0]
+        p_t_val_dataset = _load_datasets(tasks_list[p_t_id], 'Val', normalize=normalize)[0]
 
         # Check if the past samples' labels are all included in the labels of the current task
         if not p_t_labels.issubset(c_t_labels):
@@ -632,17 +615,17 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # we see potential for backwards transfer and we try to establish a new model for the past task, based on a mix
         # of the saved memory data and the new data, where just the classification head is retrained branching off from
         # the entire path of the current model
-        if TODO and\
+        # Account for that of all labels at least one sample should be included. This serves as a check on the nr of samples
+        # in the memory, so that not tóó little samples are present for our next analyses
+        nr_of_labels_p_t = len(torch.unique(p_t_val_dataset.tensors[1]))
+        if len(p_t_labels) >= nr_of_labels_p_t and\
                 ((p_t_id not in tasks_bw_output_head and p_t_c_m_acc > p_t_p_m_acc) or
-                 (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc'])):  # TODO: and at least one sample is present per task, i.e. len() >= 10 or 5, just to filter out some insecurities possibly happening
-            # TODO: accuracies list to see which is best overal, or read from tasks_bw_output_head
-            # TODO: try just setting the classification head different and noting that the unused modules should be removed, to count for M(S)
-            #  Then look at results
+                 (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc'])):
             tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc}
         print()
     # Add the new accuracy to the list of the current task on the current model, and return the list
     knn_accuracies_list.append(c_t_c_m_knn_acc)
-    return knn_accuracies_list
+    return knn_accuracies_list, tasks_bw_output_head
 
 def get_transform_normalize(training_params=None, task=None):
     if training_params is None or task is None:
