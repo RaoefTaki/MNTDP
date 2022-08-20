@@ -433,12 +433,6 @@ def train_on_tasks(config):
 
             print("Len(analysis):", len(analysis.trials), "analysis.trials:", list(map(get_key, analysis.trials)))
 
-            # TODO: print the current model
-            print(learner.get_model(task_id=t_id))
-            print("***")
-            print(learner.columns)
-            exit(0)
-
             best_trial = max(analysis.trials, key=get_key)
             # Changed the total nr of iterations to accommodate for this new approach
             total_iterations_for_this_task = 0
@@ -504,6 +498,9 @@ def train_on_tasks(config):
     print("[TEST] End of regular training")
     print("[TEST] Accounting for BW transfer now")
     print("[TEST] Found the following tasks_bw_output_head:", tasks_bw_output_head)
+    print("***")
+    print(learner.columns)
+    print("***")
     for key, value in tasks_bw_output_head.items():
         print(learner.get_model(task_id=key))
 
