@@ -428,24 +428,21 @@ def train_on_tasks(config):
             analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)  # scheduler=asha_scheduler,
             all_analysis.append(analysis)
 
-            # TODO: consider only using tune_report in the same location, i.e. in the train script. See if that changes things perhaps/
-            # TODO: also print out the **accs, **stats of tune_report maybe
-
             def get_key(trial):
-                # return trial.last_result['avg_acc_val_so_far']
                 return trial.last_result['best_val']
 
             print("Len(analysis):", len(analysis.trials), "analysis.trials:", list(map(get_key, analysis.trials)))
 
+            # TODO: print the current model
+            print(learner.get_model(task_id=t_id))
+            print("***")
+            print(learner.get_model(task_id=t_id).get_graph())
+            exit(0)
+
             best_trial = max(analysis.trials, key=get_key)
             # Changed the total nr of iterations to accommodate for this new approach
             total_iterations_for_this_task = 0
-            # TODO: does this also consider stopped trials?
             for trial in analysis.trials:
-                # print(trial.trial_id)
-                # print(trial.status)
-                # print(trial.last_result['iteration_of_report'])
-                # print("---")
                 if trial != best_trial:
                     trial_path = trial.logdir
                     shutil.rmtree(trial_path)
@@ -507,6 +504,19 @@ def train_on_tasks(config):
     print("[TEST] End of regular training")
     print("[TEST] Accounting for BW transfer now")
     print("[TEST] Found the following tasks_bw_output_head:", tasks_bw_output_head)
+    for key, value in tasks_bw_output_head.items():
+        print(learner.get_model(task_id=key))
+
+        # Calculate nr of parameters saved
+        nr_of_parameters_saved = -1
+
+        # Calculate old and new evaluation accuracy
+        old_evaluation_accuracy = -1
+        new_evaluation_accuracy = -1
+
+        print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'], "from",
+              old_evaluation_accuracy, "to", new_evaluation_accuracy)
+        print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")  # TODO: how much memory saved
     # TODO: do more with tasks_bw_output_head
 
     if task_level_tuning:
@@ -621,10 +631,10 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Account for that of all labels at least one sample should be included. This serves as a check on the nr of samples
         # in the memory, so that not tóó little samples are present for our next analyses
         nr_of_labels_p_t = len(torch.unique(p_t_val_dataset.tensors[1]))
-        if len(p_t_labels) >= nr_of_labels_p_t and\
-                ((p_t_id not in tasks_bw_output_head and p_t_c_m_acc > p_t_p_m_acc) or
-                 (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc'])):
-            tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc}
+        if len(p_t_labels) >= nr_of_labels_p_t and (p_t_id not in tasks_bw_output_head and p_t_c_m_acc > p_t_p_m_acc):
+            tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': p_t_p_m_acc}
+        elif len(p_t_labels) >= nr_of_labels_p_t and (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc']):
+            tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': tasks_bw_output_head[p_t_id]['acc_original_model']}
         print()
     return knn_accuracies_list, tasks_bw_output_head
 
