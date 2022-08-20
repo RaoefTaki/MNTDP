@@ -596,6 +596,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         p_t_p_m_EVAL_acc = evaluate(p_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the past model:", p_t_p_m_EVAL_acc)
         # Note: We don't have enough samples to do kNN for this situation
+        knn_small_samples = 15 if len(p_t_samples) >= 15 else len(p_t_samples)
+        print("p_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_train_knn_dataset, knn_small_samples))
+        print("p_t_p_m_knn_acc DATASWAP:", learner.get_knn_accuracy(p_t_model, c_t_train_knn_dataset, p_t_knn_dataset, 15))
 
         # Evaluate the past samples on the current model
         p_t_c_m_acc = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
@@ -618,6 +621,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
             print("!!! Score of the past samples on the current model > on past model. Can enable for BW transfer")
         if c_t_p_m_acc > c_t_c_m_acc:
             print("!!! Score of the current samples on the past model > on current model. Can enable for more transfer. This case should be rare")
+        print()
     # res = defaultdict(lambda: defaultdict(list))
     # for t_id, task in enumerate(tqdm(tasks, desc='Evaluation on tasks',
     #                                  leave=False, disable=True)):
