@@ -568,6 +568,7 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     print("Nr of labels:", c_t_val_dataset.tensors)
     print("Nr of labels:", c_t_val_dataset.tensors[1])
     print("Nr of labels:", torch.unique(c_t_val_dataset.tensors[1]))
+    print("Nr of labels:", len(torch.unique(c_t_val_dataset.tensors[1])))
     exit(0)
 
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
