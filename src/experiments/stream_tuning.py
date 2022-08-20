@@ -34,7 +34,7 @@ from src.train.utils import set_dropout, set_optim_params, \
 from src.utils.log_observer import initialize_tune_report_arguments
 from src.utils.memory_buffer import MemoryBuffer
 from src.utils.misc import get_env_url, fill_matrix, \
-    get_training_vis_conf
+    get_training_vis_conf, BASE_ARCHITECTURE_PARAMS
 from src.utils.plotting import update_summary, plot_tasks_env_urls, \
     plot_heatmaps, \
     plot_trajectory, list_top_archs, process_final_results
@@ -508,25 +508,47 @@ def train_on_tasks(config):
             print(path_generated)
     print("***")
     print("Test:")
-    print(nx.all_simple_paths(learner.fixed_graphs[0], (0, learner.IN_NODE), (0, learner.OUT_NODE))[0])
+    # print(nx.all_simple_paths(learner.fixed_graphs[0], (0, learner.IN_NODE), (0, learner.OUT_NODE))[0])
     print("***")
 
     # Edited example of outcome of print(learner.columns), figure out how to loop over this:
     # [{0: {(0, 0): '(0, 0)'}, "INs": {(0, "INs"): '(0, "INs")', (0, "INs", 0): '(0, "INs", 0)'}, 1: {(0, 1, "w"): '(0, 1, "w")', (0, 1): '(0, 1)'}, 2: {(0, 2, "w"): '(0, 2, "w")', (0, 2): '(0, 2)'}, 3: {(0, 3, "w"): '(0, 3, "w")', (0, 3): '(0, 3)'}, 4: {(0, 4, "w"): '(0, 4, "w")', (0, 4): '(0, 4)'}, 5: {(0, 5, "w"): '(0, 5, "w")', (0, 5): '(0, 5)'}, 6: {(0, 6, "w"): '(0, 6, "w")', (0, 6): '(0, 6)'}, "OUT": {(0, "OUT"): '(0, "OUT")', (0, "OUT", 0): '(0, "OUT", 0)'}}, {0: {}, "INs": {(1, "INs"): '(1, "INs")', (1, "INs", 0): '(1, "INs", 0)'}, 1: {}, 2: {}, 3: {}, 4: {(1, 4): '(1, 4)', (1, 4, 0, "f"): '(1, 4, 0, "f")'}, 5: {(1, 5, "w"): '(1, 5, "w")', (1, 5): '(1, 5)'}, 6: {(1, 6, "w"): '(1, 6, "w")', (1, 6): '(1, 6)'}, "OUT": {(1, "OUT"): '(1, "OUT")', (1, "OUT", 1): '(1, "OUT", 1)'}}, {0: {}, "INs": {(2, "INs"): '(2, "INs")', (2, "INs", 0): '(2, "INs", 0)'}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {(2, 5): '(2, 5)', (2, 5, 1, "f"): '(2, 5, 1, "f")'}, 6: {(2, 6, "w"): '(2, 6, "w")', (2, 6): '(2, 6)'}, "OUT": {(2, "OUT"): '(2, "OUT")', (2, "OUT", 2): '(2, "OUT", 2)'}}, {0: {(3, 0): '(3, 0)'}, "INs": {(3, "INs"): '(3, "INs")', (3, "INs", 3): '(3, "INs", 3)'}, 1: {(3, 1, "w"): '(3, 1, "w")', (3, 1): '(3, 1)'}, 2: {(3, 2, "w"): '(3, 2, "w")', (3, 2): '(3, 2)'}, 3: {(3, 3, "w"): '(3, 3, "w")', (3, 3): '(3, 3)'}, 4: {(3, 4, "w"): '(3, 4, "w")', (3, 4): '(3, 4)'}, 5: {(3, 5, "w"): '(3, 5, "w")', (3, 5): '(3, 5)'}, 6: {(3, 6, "w"): '(3, 6, "w")', (3, 6): '(3, 6)'}, "OUT": {(3, "OUT"): '(3, "OUT")', (3, "OUT", 3): '(3, "OUT", 3)'}}]
     for key, value in tasks_bw_output_head.items():
-        print(learner.get_model(task_id=key))
+        # Find all generated paths where t_id != key, to see which nodes of key can be deleted
+        original_nodes = []
+        shared_nodes = []
+        for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
+            in_node = (t_id, learner.IN_NODE)
+            out_node = (t_id, learner.OUT_NODE)
+            for constructed_path in nx.all_simple_paths(learner.fixed_graphs[t_id], in_node, out_node):
+                for node in constructed_path:
+                    if len(node) == 2 and node[0] == key:
+                        if t_id != key:
+                            shared_nodes.append(node)
+                        elif isinstance(node[1], int):
+                            # Don't add the INs and OUT nodes
+                            original_nodes.append(node)
+        # Find the nodes which can be removed from the learner, reducing the memory space
+        original_nodes = list(set(original_nodes).difference(shared_nodes))
 
-        # Calculate nr of parameters saved
-        nr_of_parameters_saved = -1
+        # Calculate from the layers of the nodes the number of parameters that are saved by removing these nodes
+        # Use a lookup table
+        nr_of_parameters_saved = 0
+        for node in original_nodes:
+            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1]]
 
         # Calculate old and new evaluation accuracy
-        old_evaluation_accuracy = -1
-        new_evaluation_accuracy = -1
+        transforms, normalize = get_transform_normalize(config['training-params'], tasks_list[key])
+        key_eval_dataset = _load_datasets(tasks_list[key], 'Test', normalize=normalize)[0]
+        old_evaluation_accuracy = evaluate(learner.get_model(task_id=key), key_eval_dataset,
+                                           config['training-params']['batch_sizes'][1], config['training-params']['device'])
+
+        new_evaluation_accuracy = evaluate(learner.get_model(task_id=value['other_t_id']), key_eval_dataset,
+                                           config['training-params']['batch_sizes'][1], config['training-params']['device'])
 
         print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'], "from",
               old_evaluation_accuracy, "to", new_evaluation_accuracy)
-        print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")  # TODO: how much memory saved
-    # TODO: do more with tasks_bw_output_head
+        print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")
 
     if task_level_tuning:
         print("[TEST] len(all_analysis):", len(all_analysis), "selected_tags:", selected_tags)
