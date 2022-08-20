@@ -10,6 +10,7 @@ from copy import deepcopy
 from functools import partial
 from os import path
 
+import networkx as nx
 import numpy as np
 import pandas
 import ray
@@ -463,7 +464,8 @@ def train_on_tasks(config):
             print("[TEST] best_trial's arch_scores:", best_trial.last_result["arch_scores"])  # self.arch_scores[task_id]['knn']
             print("[TEST] Finished learning on task:", t_id)
 
-            print(learner.fixed_graphs)
+            print(learner.fixed_graphs[t_id])
+            print(nx.all_simple_paths(learner.fixed_graphs[t_id], (t_id, learner.IN_NODE), (t_id, learner.OUT_NODE)))
             exit(0)
 
             # Backward transfer
