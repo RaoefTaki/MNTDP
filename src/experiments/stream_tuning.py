@@ -357,6 +357,8 @@ def train_on_tasks(config):
     task_counter = 0
     tasks_list = []  # The list of currently encountered 'task' objects
     knn_accuracies = []
+    tasks_bw_output_head = {}  # A dict containing per task_id which different output head to use instead. If no key is present
+    # for a certain task_id, then just use its specifically designated classification head
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
         static_params = dict(
@@ -366,6 +368,19 @@ def train_on_tasks(config):
         tasks_list.append(task)
 
         print("[TEST] Current task:", t_id)
+
+        # TODO: remove below:
+        print("[TEST] Trying for backward transfer now based on task:", t_id)
+        knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
+                                                                                   task_id=t_id, task=task,
+                                                                                   tasks_list=tasks_list,
+                                                                                   learner=learner,
+                                                                                   training_params=config['training-params'],
+                                                                                   knn_accuracies_list=knn_accuracies,
+                                                                                   tasks_bw_output_head=tasks_bw_output_head,
+                                                                                   knn_n=learner.n_neighbors)
+        print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+        exit(0)
 
         if task_level_tuning:
             if not ray.is_initialized():
@@ -472,10 +487,14 @@ def train_on_tasks(config):
 
             # Backward transfer
             print("[TEST] Trying for backward transfer now based on task:", t_id)
-            knn_accuracies = try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task,
-                                                       tasks_list=tasks_list, learner=learner,
-                                                       training_params=config['training-params'],
-                                                       knn_accuracies_list=knn_accuracies, knn_n=learner.n_neighbors)
+            knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
+                                                                                       task_id=t_id, task=task,
+                                                                                       tasks_list=tasks_list,
+                                                                                       learner=learner,
+                                                                                       training_params=config['training-params'],
+                                                                                       knn_accuracies_list=knn_accuracies,
+                                                                                       tasks_bw_output_head=tasks_bw_output_head,
+                                                                                       knn_n=learner.n_neighbors)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Save samples of the current task to the memory buffer
@@ -508,10 +527,10 @@ def train_on_tasks(config):
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
 
-def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
-                              training_params=None, knn_accuracies_list=None, knn_n=15):
+def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
+                              training_params=None, knn_accuracies_list=None, tasks_bw_output_head=None, knn_n=15):
     if memory_buffer is None or task_id is None or task is None or tasks_list is None or learner is None or\
-            training_params is None or knn_accuracies_list is None:
+            training_params is None or knn_accuracies_list is None or tasks_bw_output_head is None:
         raise ValueError('Some arguments are None or not supplied')
 
     print("learner.n_neighbours:", knn_n)
@@ -539,18 +558,18 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
     print("c_t_c_m_EVAL_acc:", c_t_c_m_EVAL_acc)
 
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
-    # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # TODO: this crashes for some reason
-    knn_n_samples = knn_n if len(c_t_train_knn_dataset) >= knn_n else len(c_t_train_knn_dataset)
+    # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # This crashes for some reason
+    knn_n_samples = knn_n if len(c_t_train_knn_dataset.dataset) >= knn_n else len(c_t_train_knn_dataset.dataset)
     c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples)
     print("c_t_c_m_knn_acc:", c_t_c_m_knn_acc)
     print("knn_n_samples:", knn_n_samples)
-    print("len(c_t_train_knn_dataset):", len(c_t_train_knn_dataset))
-    print("len(c_t_train_knn_dataset.dataset):", len(c_t_train_knn_dataset.dataset))
 
-    # TODO: comment out
+    print("Nr of labels:", c_t_val_dataset)
+    print("Nr of labels:", c_t_val_dataset)
+    exit(0)
+
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
         return
-    exit(0)  # TODO: Remove later
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
@@ -586,7 +605,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Note: We don't have enough samples to do kNN for this situation
         knn_n_samples = knn_n if len(p_t_samples) >= knn_n else len(p_t_samples)
         print("p_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_train_knn_dataset, knn_n_samples))
-        knn_n_samples = knn_n if len(c_t_train_knn_dataset) >= knn_n else len(c_t_train_knn_dataset)
+        knn_n_samples = knn_n if len(c_t_train_knn_dataset.dataset) >= knn_n else len(c_t_train_knn_dataset.dataset)
         print("p_t_p_m_knn_acc DATASWAP:", learner.get_knn_accuracy(p_t_model, c_t_train_knn_dataset, p_t_knn_dataset, knn_n_samples))
 
         # Evaluate the past samples on the current model
@@ -595,7 +614,8 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Evaluate the past samples eval dataset on the current model
         p_t_c_m_EVAL_acc = evaluate(c_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the current model:", p_t_c_m_EVAL_acc)
-        print("p_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, p_t_knn_dataset, knn_n_samples))
+        p_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, p_t_knn_dataset, knn_n_samples)
+        print("p_t_c_m_knn_acc:", p_t_c_m_knn_acc)
 
         # Evaluate the current samples on the past model
         c_t_p_m_acc = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
@@ -604,6 +624,18 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         c_t_p_m_EVAL_acc = evaluate(p_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the current samples on the past model:", c_t_p_m_EVAL_acc)
         print("c_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples))
+
+        # In case the kNN evaluation score of the past task is higher on the current model than on its own model,
+        # we see potential for backwards transfer and we try to establish a new model for the past task, based on a mix
+        # of the saved memory data and the new data, where just the classification head is retrained branching off from
+        # the entire path of the current model
+        if TODO and\
+                ((p_t_id not in tasks_bw_output_head and p_t_c_m_acc > p_t_p_m_acc) or
+                 (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc'])):  # TODO: and at least one sample is present per task, i.e. len() >= 10 or 5, just to filter out some insecurities possibly happening
+            # TODO: accuracies list to see which is best overal, or read from tasks_bw_output_head
+            # TODO: try just setting the classification head different and noting that the unused modules should be removed, to count for M(S)
+            #  Then look at results
+            tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc}
         print()
     # Add the new accuracy to the list of the current task on the current model, and return the list
     knn_accuracies_list.append(c_t_c_m_knn_acc)
@@ -673,6 +705,15 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None):
         print(key, nr_entries)
     print("total_entries:", total_entries)
     print("-----")
+
+def try_backward_transfer(memory_buffer=None, current_task_id=None, current_task=None, past_task_id=None, learner=None,
+                          training_params=None):
+    if memory_buffer is None or current_task_id is None or current_task is None or past_task_id is None or\
+            learner is None or training_params is None:
+        raise ValueError('Some arguments are None or not supplied')
+
+    # Try to create a new path branching off from the current model, and train it on TODO
+    pass
 
 def train_t(config):
     # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
