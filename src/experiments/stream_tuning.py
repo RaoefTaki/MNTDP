@@ -356,6 +356,7 @@ def train_on_tasks(config):
 
     task_counter = 0
     tasks_list = []  # The list of currently encountered 'task' objects
+    knn_accuracies = []
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
         static_params = dict(
@@ -471,8 +472,10 @@ def train_on_tasks(config):
 
             # Backward transfer
             print("[TEST] Trying for backward transfer now based on task:", t_id)
-            try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task, tasks_list=tasks_list,
-                                      learner=learner, training_params=config['training-params'])
+            knn_accuracies = try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task,
+                                                     tasks_list=tasks_list, learner=learner,
+                                                     training_params=config['training-params'],
+                                                     knn_accuracies_list=knn_accuracies, knn_n=learner.n_neighbors)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Save samples of the current task to the memory buffer
@@ -505,14 +508,11 @@ def train_on_tasks(config):
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
 
-def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None, training_params=None):
-    if memory_buffer is None or task_id is None or task is None or tasks_list is None or learner is None or \
-            training_params is None:
+def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
+                              training_params=None, knn_accuracies_list=None, knn_n=15):
+    if memory_buffer is None or task_id is None or task is None or tasks_list is None or learner is None or\
+            training_params is None or knn_accuracies_list is None:
         raise ValueError('Some arguments are None or not supplied')
-
-    # TODO: comment out
-    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-        return
 
     # Get the settings for transforming and normalizing the data
     transforms, normalize = get_transform_normalize(training_params, task)  # TODO: needed?
@@ -539,7 +539,15 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
 
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
     # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # TODO: this crashes for some reason
-    print("c_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], 15))
+    knn_n_samples = knn_n if len(c_t_train_knn_dataset) >= knn_n else len(c_t_train_knn_dataset)
+    c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples)
+    print("c_t_c_m_knn_acc:", c_t_c_m_knn_acc)
+    print("knn_n_samples/learner.n_neighbours:", knn_n_samples)
+
+    # TODO: comment out
+    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
+        return
+    exit(0)  # TODO: Remove later
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
@@ -548,9 +556,6 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Get all data samples of the past task
         p_t_samples = memory_buffer.get_samples(p_t_id)
         p_t_labels = set([sample[1] for sample in p_t_samples])
-        # print(len(memory_buffer.memory))
-        # print(memory_buffer.memory)
-        # print(p_t_labels)
 
         # Get evaluation data samples of the past task. These are just for comprehension purposes
         p_t_EVAL_dataset = _load_datasets(tasks_list[p_t_id], 'Test', normalize=normalize)[0]
@@ -566,26 +571,6 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Get the dataloader for kNN for the past task
         p_t_knn_dataset, _ = get_classic_dataloaders([p_t_tensor], training_params['batch_sizes'])
 
-        # print("type(p_t_samples):")
-        # print(type(p_t_samples))
-        # print("p_t_samples:")
-        # print(p_t_samples)
-        # print("type(p_t_labels):")
-        # print(type(p_t_labels))
-        # print("p_t_labels:")
-        # print(p_t_labels)
-        # print("---")
-        # print("len(p_t_samples_tensor):")
-        # print(len(p_t_samples_tensor))
-        # print("p_t_samples_tensor:")
-        # print(p_t_samples_tensor)
-        # print("len(p_t_labels_tensor):")
-        # print(len(p_t_labels_tensor))
-        # print("p_t_labels_tensor:")
-        # print(p_t_labels_tensor)
-        # print("p_t_tensor.tensors:")
-        # printEVAL score of the past samples on the current model:(p_t_tensor.tensors)
-
         # Get the past model
         p_t_model = learner.get_model(task_id=p_t_id)
 
@@ -596,9 +581,10 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         p_t_p_m_EVAL_acc = evaluate(p_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the past model:", p_t_p_m_EVAL_acc)
         # Note: We don't have enough samples to do kNN for this situation
-        knn_small_samples = 15 if len(p_t_samples) >= 15 else len(p_t_samples)
-        print("p_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_train_knn_dataset, knn_small_samples))
-        print("p_t_p_m_knn_acc DATASWAP:", learner.get_knn_accuracy(p_t_model, c_t_train_knn_dataset, p_t_knn_dataset, 15))
+        knn_n_samples = knn_n if len(p_t_samples) >= knn_n else len(p_t_samples)
+        print("p_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_train_knn_dataset, knn_n_samples))
+        knn_n_samples = knn_n if len(c_t_train_knn_dataset) >= knn_n else len(c_t_train_knn_dataset)
+        print("p_t_p_m_knn_acc DATASWAP:", learner.get_knn_accuracy(p_t_model, c_t_train_knn_dataset, p_t_knn_dataset, knn_n_samples))
 
         # Evaluate the past samples on the current model
         p_t_c_m_acc = evaluate(c_t_model, p_t_tensor, training_params['batch_sizes'][1], training_params['device'])
@@ -606,7 +592,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Evaluate the past samples eval dataset on the current model
         p_t_c_m_EVAL_acc = evaluate(c_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the current model:", p_t_c_m_EVAL_acc)
-        print("p_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, p_t_knn_dataset, 15))
+        print("p_t_c_m_knn_acc:", learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, p_t_knn_dataset, knn_n_samples))
 
         # Evaluate the current samples on the past model
         c_t_p_m_acc = evaluate(p_t_model, c_t_val_dataset, training_params['batch_sizes'][1], training_params['device'])
@@ -614,30 +600,11 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
         # Evaluate the current samples eval dataset on the past model
         c_t_p_m_EVAL_acc = evaluate(p_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the current samples on the past model:", c_t_p_m_EVAL_acc)
-        print("c_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_eval_knn_dataset[1], 15))
-
-        # Print the outcome
-        if p_t_c_m_acc > p_t_p_m_acc:
-            print("!!! Score of the past samples on the current model > on past model. Can enable for BW transfer")
-        if c_t_p_m_acc > c_t_c_m_acc:
-            print("!!! Score of the current samples on the past model > on current model. Can enable for more transfer. This case should be rare")
+        print("c_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples))
         print()
-    # res = defaultdict(lambda: defaultdict(list))
-    # for t_id, task in enumerate(tqdm(tasks, desc='Evaluation on tasks',
-    #                                  leave=False, disable=True)):
-    #     t_id = t_id if cur_task is None else min(t_id, cur_task)
-    #     eval_model = ll_model.get_model(task_id=t_id)
-    #     for split in splits:
-    #         split_dataset = _load_datasets(task, split, normalize=normalize)[0]
-    #         acc, conf_mat = evaluate(eval_model, split_dataset, batch_size,
-    #                                  device)
-    #         res[split]['accuracy'].append(acc)
-    #         res[split]['confusion'].append(conf_mat)
-    #     eval_model.cpu()
-    #     torch.cuda.empty_cache()
-    # # TODO: what?
-    # pass
-    # # TODO IMPLEMENT, CHECK
+    # Add the new accuracy to the list of the current task on the current model, and return the list
+    knn_accuracies_list.append(c_t_c_m_knn_acc)
+    return knn_accuracies_list
 
 def get_transform_normalize(training_params=None, task=None):
     if training_params is None or task is None:
