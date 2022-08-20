@@ -433,9 +433,6 @@ def train_on_tasks(config):
 
             print("Len(analysis):", len(analysis.trials), "analysis.trials:", list(map(get_key, analysis.trials)))
 
-            print(learner.fixed_graphs)
-            exit(0)
-
             best_trial = max(analysis.trials, key=get_key)
             # Changed the total nr of iterations to accommodate for this new approach
             total_iterations_for_this_task = 0
@@ -465,6 +462,9 @@ def train_on_tasks(config):
             print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
             print("[TEST] best_trial's arch_scores:", best_trial.last_result["arch_scores"])  # self.arch_scores[task_id]['knn']
             print("[TEST] Finished learning on task:", t_id)
+
+            print(learner.fixed_graphs)
+            exit(0)
 
             # Backward transfer
             print("[TEST] Trying for backward transfer now based on task:", t_id)
