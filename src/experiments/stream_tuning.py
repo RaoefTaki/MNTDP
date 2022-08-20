@@ -436,7 +436,7 @@ def train_on_tasks(config):
             # TODO: print the current model
             print(learner.get_model(task_id=t_id))
             print("***")
-            print(learner.get_model(task_id=t_id).get_graph())
+            print(learner.columns)
             exit(0)
 
             best_trial = max(analysis.trials, key=get_key)
