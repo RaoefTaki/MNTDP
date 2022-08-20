@@ -473,9 +473,9 @@ def train_on_tasks(config):
             # Backward transfer
             print("[TEST] Trying for backward transfer now based on task:", t_id)
             knn_accuracies = try_for_backward_transfer(memory_buffer=memory_buffer, task_id=t_id, task=task,
-                                                     tasks_list=tasks_list, learner=learner,
-                                                     training_params=config['training-params'],
-                                                     knn_accuracies_list=knn_accuracies, knn_n=learner.n_neighbors)
+                                                       tasks_list=tasks_list, learner=learner,
+                                                       training_params=config['training-params'],
+                                                       knn_accuracies_list=knn_accuracies, knn_n=learner.n_neighbors)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Save samples of the current task to the memory buffer
@@ -514,6 +514,7 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
             training_params is None or knn_accuracies_list is None:
         raise ValueError('Some arguments are None or not supplied')
 
+    print("learner.n_neighbours:", knn_n)
     # Get the settings for transforming and normalizing the data
     transforms, normalize = get_transform_normalize(training_params, task)  # TODO: needed?
 
@@ -542,7 +543,9 @@ def try_for_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks
     knn_n_samples = knn_n if len(c_t_train_knn_dataset) >= knn_n else len(c_t_train_knn_dataset)
     c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples)
     print("c_t_c_m_knn_acc:", c_t_c_m_knn_acc)
-    print("knn_n_samples/learner.n_neighbours:", knn_n_samples)
+    print("knn_n_samples:", knn_n_samples)
+    print("len(c_t_train_knn_dataset):", len(c_t_train_knn_dataset))
+    print("len(c_t_train_knn_dataset.dataset):", len(c_t_train_knn_dataset.dataset))
 
     # TODO: comment out
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
