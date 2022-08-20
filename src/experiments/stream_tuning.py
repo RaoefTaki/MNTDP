@@ -465,6 +465,8 @@ def train_on_tasks(config):
             print("[TEST] Finished learning on task:", t_id)
 
             print(learner.fixed_graphs[t_id])
+            for path_generated in nx.all_simple_paths(learner.fixed_graphs[t_id], (t_id, learner.IN_NODE), (t_id, learner.OUT_NODE)):
+                print(path_generated)
             print(nx.all_simple_paths(learner.fixed_graphs[t_id], (t_id, learner.IN_NODE), (t_id, learner.OUT_NODE)))
             exit(0)
 
