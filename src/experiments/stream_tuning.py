@@ -553,8 +553,11 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples)
     print("c_t_c_m_knn_acc:", c_t_c_m_knn_acc)
 
+    # Add the new knn ccuracy to the list of the current task on the current model for returning
+    knn_accuracies_list.append(c_t_c_m_knn_acc)
+
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-        return
+        return knn_accuracies_list, tasks_bw_output_head
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
@@ -623,8 +626,6 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
                  (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc'])):
             tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc}
         print()
-    # Add the new accuracy to the list of the current task on the current model, and return the list
-    knn_accuracies_list.append(c_t_c_m_knn_acc)
     return knn_accuracies_list, tasks_bw_output_head
 
 def get_transform_normalize(training_params=None, task=None):
