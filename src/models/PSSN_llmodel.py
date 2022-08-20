@@ -887,8 +887,6 @@ class MNTDP(LifelongLearningModel, ModularModel):
         self.entropy_coef = entropy_coef
         self.split_training = split_training
 
-
-
 def clean_graph(g, in_node, out_node):
     # candidate_nodes = list(g.nodes)
     # for column in self.columns[:col+1]:
