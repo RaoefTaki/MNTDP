@@ -604,7 +604,7 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         print("p_t_id:", p_t_id)
         # Get all data samples of the past task
         p_t_samples = memory_buffer.get_samples(p_t_id)  # List of entries, where entry = (sample, index_in_train_dataset)
-        p_t_indices_in_dataset = [entry[1] for entry in p_t_samples]
+        p_t_indices_in_dataset = torch.tensor([entry[1] for entry in p_t_samples])
         p_t_labels = set([sample[1] for sample in p_t_samples])
 
         # TODO
