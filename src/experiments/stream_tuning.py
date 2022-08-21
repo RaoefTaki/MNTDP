@@ -478,7 +478,8 @@ def train_on_tasks(config):
 
             # Save samples of the current task to the memory buffer
             print("[TEST] Save samples to memory")
-            memory_buffer = save_samples_to_memory(memory_buffer, t_id, task)
+            transforms, normalize = get_transform_normalize(config['training-params'], task)
+            memory_buffer = save_samples_to_memory(memory_buffer, t_id, task, normalize=normalize)
 
             print("[TEST] Finished everything for task:", t_id)
 
@@ -499,17 +500,10 @@ def train_on_tasks(config):
     print("[TEST] End of regular training")
     print("[TEST] Accounting for BW transfer now")
     print("[TEST] Found the following tasks_bw_output_head:", tasks_bw_output_head)
-    print("***")
-    print(learner.columns)
-    print("***")
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         print("Path generation for t_id:", t_id)
         for path_generated in nx.all_simple_paths(learner.fixed_graphs[t_id], (t_id, learner.IN_NODE), (t_id, learner.OUT_NODE)):
             print(path_generated)
-    print("***")
-    print("Test:")
-    # print(nx.all_simple_paths(learner.fixed_graphs[0], (0, learner.IN_NODE), (0, learner.OUT_NODE))[0])
-    print("***")
 
     # Edited example of outcome of print(learner.columns), figure out how to loop over this:
     # [{0: {(0, 0): '(0, 0)'}, "INs": {(0, "INs"): '(0, "INs")', (0, "INs", 0): '(0, "INs", 0)'}, 1: {(0, 1, "w"): '(0, 1, "w")', (0, 1): '(0, 1)'}, 2: {(0, 2, "w"): '(0, 2, "w")', (0, 2): '(0, 2)'}, 3: {(0, 3, "w"): '(0, 3, "w")', (0, 3): '(0, 3)'}, 4: {(0, 4, "w"): '(0, 4, "w")', (0, 4): '(0, 4)'}, 5: {(0, 5, "w"): '(0, 5, "w")', (0, 5): '(0, 5)'}, 6: {(0, 6, "w"): '(0, 6, "w")', (0, 6): '(0, 6)'}, "OUT": {(0, "OUT"): '(0, "OUT")', (0, "OUT", 0): '(0, "OUT", 0)'}}, {0: {}, "INs": {(1, "INs"): '(1, "INs")', (1, "INs", 0): '(1, "INs", 0)'}, 1: {}, 2: {}, 3: {}, 4: {(1, 4): '(1, 4)', (1, 4, 0, "f"): '(1, 4, 0, "f")'}, 5: {(1, 5, "w"): '(1, 5, "w")', (1, 5): '(1, 5)'}, 6: {(1, 6, "w"): '(1, 6, "w")', (1, 6): '(1, 6)'}, "OUT": {(1, "OUT"): '(1, "OUT")', (1, "OUT", 1): '(1, "OUT", 1)'}}, {0: {}, "INs": {(2, "INs"): '(2, "INs")', (2, "INs", 0): '(2, "INs", 0)'}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {(2, 5): '(2, 5)', (2, 5, 1, "f"): '(2, 5, 1, "f")'}, 6: {(2, 6, "w"): '(2, 6, "w")', (2, 6): '(2, 6)'}, "OUT": {(2, "OUT"): '(2, "OUT")', (2, "OUT", 2): '(2, "OUT", 2)'}}, {0: {(3, 0): '(3, 0)'}, "INs": {(3, "INs"): '(3, "INs")', (3, "INs", 3): '(3, "INs", 3)'}, 1: {(3, 1, "w"): '(3, 1, "w")', (3, 1): '(3, 1)'}, 2: {(3, 2, "w"): '(3, 2, "w")', (3, 2): '(3, 2)'}, 3: {(3, 3, "w"): '(3, 3, "w")', (3, 3): '(3, 3)'}, 4: {(3, 4, "w"): '(3, 4, "w")', (3, 4): '(3, 4)'}, 5: {(3, 5, "w"): '(3, 5, "w")', (3, 5): '(3, 5)'}, 6: {(3, 6, "w"): '(3, 6, "w")', (3, 6): '(3, 6)'}, "OUT": {(3, "OUT"): '(3, "OUT")', (3, "OUT", 3): '(3, "OUT", 3)'}}]
@@ -715,12 +709,12 @@ def get_datasets_of_task(task=None, transforms=None, normalize=None):
     datasets = _load_datasets(**datasets_p)
     return datasets
 
-def save_samples_to_memory(memory_buffer=None, task_id=None, task=None):
+def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transforms=None, normalize=None):
     if memory_buffer is None or task_id is None or task is None:
         raise ValueError('Some arguments are None or not supplied')
 
     # Get the datasets of the current task
-    datasets = get_datasets_of_task(task, transforms=None, normalize=None)
+    datasets = get_datasets_of_task(task, transforms=transforms, normalize=normalize)
 
     # (Try to) add each data sample of the current task to the memory buffer
     for i, data_sample in enumerate(datasets[0].tensors[0]):
