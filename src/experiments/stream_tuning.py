@@ -625,7 +625,7 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Convert data samples to tensors
         # p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
         # p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
-        p_t_tensor = _load_datasets_indices(task=task, indices=p_t_indices_in_dataset, splits='Train', normalize=normalize)[0]
+        p_t_tensor = _load_datasets_indices(task=task, indices=p_t_indices_in_dataset, splits='Val', normalize=normalize)[0]
 
         # TODO: remove later
         for tensor_item in p_t_tensor:
@@ -729,10 +729,11 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     # Get the datasets of the current task
     datasets = get_datasets_of_task(task, transforms=transforms, normalize=normalize)
 
-    # (Try to) add each data sample of the current task to the memory buffer
-    for i, data_sample in enumerate(datasets[0].tensors[0]):
-        label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
-        memory_buffer.observe_sample(data_sample, task_id, label ,i)
+    # (Try to) add each data sample of the current task's validation dataset to the memory buffer
+    # We don't use the training dataset, since we don't want to use samples on which the model has overfit
+    for i, data_sample in enumerate(datasets[1].tensors[0]):
+        label = torch.index_select(datasets[1].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
+        memory_buffer.observe_sample(data_sample, task_id, label, i)
 
     # Print info about the current memory contents for clarity
     print("Task ID:", task_id)
