@@ -30,7 +30,7 @@ from src.models.utils import execute_step
 from src.train.ignite_utils import _prepare_batch
 from src.train.training import train, get_classic_dataloaders
 from src.train.utils import set_dropout, set_optim_params, \
-    _load_datasets, evaluate_on_tasks, evaluate
+    _load_datasets, evaluate_on_tasks, evaluate, _load_datasets_indices
 from src.utils.log_observer import initialize_tune_report_arguments
 from src.utils.memory_buffer import MemoryBuffer
 from src.utils.misc import get_env_url, fill_matrix, \
@@ -369,6 +369,10 @@ def train_on_tasks(config):
         tasks_list.append(task)
 
         print("[TEST] Current task:", t_id)
+        indices = 1
+        transforms, normalize = get_transform_normalize(config['training-params'], task)
+        a = _load_datasets_indices(task=task, indices=indices, splits='Test', normalize=normalize)[0]
+        exit(0)
 
         if task_level_tuning:
             if not ray.is_initialized():

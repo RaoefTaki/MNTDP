@@ -207,6 +207,35 @@ def _load_datasets(task, splits=None, transforms=None, normalize=False):
         datasets.append(MyTensorDataset(x, y, transforms=trans))
     return datasets
 
+def _load_datasets_indices(task, indices=None, splits=None, transforms=None, normalize=False):
+    """
+    Load the dataset associated with a task, all splits by default
+    """
+    if indices is None:
+        raise ValueError('Some arguments are None or not supplied')
+    if splits is None:
+        splits = task['split_names']
+    if isinstance(splits, str):
+        splits = [splits]
+
+    if transforms is None:
+        transforms = [[] for _ in range(len(splits))]
+    if normalize:
+        assert 'statistics' in task
+        t = torchvision.transforms.Normalize(**task['statistics'])
+        transforms = [split_trans + [t] for split_trans in transforms]
+
+    datasets = []
+    for split, trans in zip(splits, transforms):
+        split_idx = task['split_names'].index(split)
+        split_path = task['data_path'][split_idx]
+        x, y = torch.load(split_path)
+        print(type(x))
+        print(type(y))
+        trans = torchvision.transforms.Compose(trans) if trans else None
+        datasets.append(MyTensorDataset(x, y, transforms=trans))
+    return datasets
+
 
 def evaluate(model, dataset, batch_size, device, out_id=0):
     val_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
