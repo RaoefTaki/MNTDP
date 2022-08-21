@@ -369,7 +369,7 @@ def train_on_tasks(config):
         tasks_list.append(task)
 
         print("[TEST] Current task:", t_id)
-        indices = 1
+        indices = torch.tensor([0, 2])
         transforms, normalize = get_transform_normalize(config['training-params'], task)
         a = _load_datasets_indices(task=task, indices=indices, splits='Test', normalize=normalize)[0]
         exit(0)
