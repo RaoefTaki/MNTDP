@@ -609,6 +609,27 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     # Add the new knn ccuracy to the list of the current task on the current model for returning
     knn_accuracies_list.append(c_t_c_m_knn_acc)
 
+    # TODO: REMOVE BELOW
+    # Get all data samples of the past task
+    p_t_samples = memory_buffer.get_samples(0)
+    p_t_labels = set([sample[1] for sample in p_t_samples])
+
+    # Get validation, evaluation data samples of the past task. These are just for comprehension purposes
+    p_t_EVAL_dataset = _load_datasets(tasks_list[0], 'Test', normalize=normalize)[0]
+    p_t_val_dataset = _load_datasets(tasks_list[0], 'Val', normalize=normalize)[0]
+
+    # Check if the past samples' labels are all included in the labels of the current task
+    print("p_t_labels.issubset(c_t_labels):", p_t_labels.issubset(c_t_labels))
+
+    # Convert data samples to tensors
+    p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
+    p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+
+    for tensor_item in p_t_tensor:
+        print(tensor_item)
+    exit(0)
+    # TODO: REMOVE ABOVE
+
     # TODO: uncomment
     # if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
     #     return knn_accuracies_list, tasks_bw_output_head
