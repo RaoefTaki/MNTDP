@@ -371,6 +371,7 @@ def train_on_tasks(config):
         print("[TEST] Current task:", t_id)
 
         print("[TEST] Trying for backward transfer now based on task:", t_id)
+        save_samples_to_memory(memory_buffer, t_id, task)
         knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
                                                                                    task_id=t_id, task=task,
                                                                                    tasks_list=tasks_list,
@@ -621,9 +622,6 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     # Check if the past samples' labels are all included in the labels of the current task
     print("p_t_labels.issubset(c_t_labels):", p_t_labels.issubset(c_t_labels))
 
-    print(p_t_samples)
-    print(not p_t_samples)
-
     # Convert data samples to tensors
     p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
     p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
@@ -649,8 +647,9 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         p_t_EVAL_dataset = _load_datasets(tasks_list[p_t_id], 'Test', normalize=normalize)[0]
         p_t_val_dataset = _load_datasets(tasks_list[p_t_id], 'Val', normalize=normalize)[0]
 
-        # Check if the past samples' labels are all included in the labels of the current task
-        if not p_t_labels.issubset(c_t_labels):
+        # Check if the past samples' labels are all included in the labels of the current task. Also return if there are
+        # no found samples
+        if not p_t_labels.issubset(c_t_labels) or not p_t_samples:
             continue
 
         # Convert data samples to tensors
