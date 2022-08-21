@@ -539,7 +539,7 @@ def train_on_tasks(config):
                                            config['training-params']['batch_sizes'][1], config['training-params']['device'])
 
         print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'],
-              " to update the evalaution accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
+              " to update the evaluation accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
         print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")
 
     if task_level_tuning:
