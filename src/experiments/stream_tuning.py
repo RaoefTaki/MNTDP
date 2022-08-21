@@ -464,10 +464,6 @@ def train_on_tasks(config):
 
             # Backward transfer
             print("[TEST] Trying for backward transfer now based on task:", t_id)
-            # TODO: Save to memory, just to see how it performs on those memory samples
-            transforms, normalize = get_transform_normalize(config['training-params'], task)
-            memory_buffer = save_samples_to_memory(memory_buffer, t_id, task, normalize=normalize)
-
             knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
                                                                                        task_id=t_id, task=task,
                                                                                        tasks_list=tasks_list,
@@ -476,7 +472,6 @@ def train_on_tasks(config):
                                                                                        knn_accuracies_list=knn_accuracies,
                                                                                        tasks_bw_output_head=tasks_bw_output_head,
                                                                                        knn_n=learner.n_neighbors)
-            exit(0)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Save samples of the current task to the memory buffer
@@ -594,24 +589,17 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     # Add the new knn ccuracy to the list of the current task on the current model for returning
     knn_accuracies_list.append(c_t_c_m_knn_acc)
 
-    # TODO: UNCOMMENT
-    # if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-    #     return knn_accuracies_list, tasks_bw_output_head
+    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
+        return knn_accuracies_list, tasks_bw_output_head
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
-    for p_t_id in range(task_id+1):  # TODO: REMOVE +1, JUST FOR TESTING
+    for p_t_id in range(task_id):
         print("p_t_id:", p_t_id)
         # Get all data samples of the past task
         p_t_samples = memory_buffer.get_samples(p_t_id)  # List of entries, where entry = (sample, index_in_train_dataset)
         p_t_indices_in_dataset = torch.tensor([entry[1] for entry in p_t_samples])
         p_t_labels = set([sample[1] for sample in p_t_samples])
-
-        # TODO
-        # indices = torch.tensor([0, 2])
-        # transforms, normalize = get_transform_normalize(config['training-params'], task)
-        # a = _load_datasets_indices(task=task, indices=indices, splits='Test', normalize=normalize)[0]
-        # TODO
 
         # Get validation, evaluation data samples of the past task. These are just for comprehension purposes
         p_t_EVAL_dataset = _load_datasets(tasks_list[p_t_id], 'Test', normalize=normalize)[0]
@@ -627,9 +615,8 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
         p_t_tensor = _load_datasets_indices(task=task, indices=p_t_indices_in_dataset, splits='Val', normalize=normalize)[0]
 
-        # TODO: remove later
-        for tensor_item in p_t_tensor:
-            print(tensor_item)
+        # for tensor_item in p_t_tensor:
+        #     print(tensor_item)
         # print(p_t_tensor)
 
         # Get the dataloader for kNN for the past task
@@ -644,7 +631,6 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Evaluate the past samples eval dataset on the past model
         p_t_p_m_EVAL_acc = evaluate(p_t_model, p_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
         print("EVAL score of the past samples on the past model:", p_t_p_m_EVAL_acc)
-        exit(0)  # TODO: REMOVE
         # Note: We don't have enough samples to do kNN for this situation
         knn_n_samples = knn_n if len(p_t_samples) >= knn_n else len(p_t_samples)
         print("p_t_p_m_knn_acc:", learner.get_knn_accuracy(p_t_model, p_t_knn_dataset, c_t_train_knn_dataset, knn_n_samples))
