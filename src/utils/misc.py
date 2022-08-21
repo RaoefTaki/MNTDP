@@ -21,13 +21,13 @@ logger = logging.getLogger(__name__)
 
 # A variable denoting the number of parameters per layer of the base architecture
 # The 7th layer is not in the graph (search) structure, but is added per task separately
-BASE_ARCHITECTURE_PARAMS = {'1': 1856,
-                            '2': 147968,
-                            '3': 152192,
-                            '4': 152192,
-                            '5': 78208,
-                            '6': 73984,
-                            '7': 650}
+BASE_ARCHITECTURE_PARAMS = {1: 1856,
+                            2: 147968,
+                            3: 152192,
+                            4: 152192,
+                            5: 78208,
+                            6: 73984,
+                            7: 650}
 
 def get_env_url(visdom_client, replace=('devfair054', 'localhost')):
     if isinstance(visdom_client, dict):
