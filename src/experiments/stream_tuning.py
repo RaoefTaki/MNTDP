@@ -351,7 +351,7 @@ def train_on_tasks(config):
         selected_tags = []
 
     # # TODO: try to see if data sample saving is doable
-    number_of_MB_in_memory = 200  # TODO: 1
+    number_of_MB_in_memory = 1
     memory_size = math.floor(IMAGES_PER_MB * number_of_MB_in_memory)
     memory_buffer = MemoryBuffer(memory_size=memory_size)
 
@@ -724,8 +724,8 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     datasets = get_datasets_of_task(task, transforms=transforms, normalize=normalize)
 
     # (Try to) add each data sample of the current task to the memory buffer
-    for i, data_sample in enumerate(datasets[2].tensors[0]):  # TODO: 2 -> 0
-        label = torch.index_select(datasets[2].tensors[1], 0, torch.tensor([i])).tolist()[0][0]  # TODO: 2 -> 0
+    for i, data_sample in enumerate(datasets[0].tensors[0]):
+        label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
         memory_buffer.observe_sample(data_sample, task_id, label)
 
     # Print info about the current memory contents for clarity
