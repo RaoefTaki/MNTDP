@@ -232,8 +232,6 @@ def _load_datasets_indices(task, indices=None, splits=None, transforms=None, nor
         x, y = torch.load(split_path)
         x = torch.index_select(x, 0, indices)
         y = torch.index_select(y, 0, indices)
-        print(type(x))
-        print(type(y))
         trans = torchvision.transforms.Compose(trans) if trans else None
         datasets.append(MyTensorDataset(x, y, transforms=trans))
     return datasets

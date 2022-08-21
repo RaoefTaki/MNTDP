@@ -368,12 +368,6 @@ def train_on_tasks(config):
         )
         tasks_list.append(task)
 
-        print("[TEST] Current task:", t_id)
-        indices = torch.tensor([0, 2])
-        transforms, normalize = get_transform_normalize(config['training-params'], task)
-        a = _load_datasets_indices(task=task, indices=indices, splits='Test', normalize=normalize)[0]
-        exit(0)
-
         if task_level_tuning:
             if not ray.is_initialized():
                 if local_mode:
@@ -609,8 +603,15 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     for p_t_id in range(task_id+1):  # TODO: REMOVE +1, JUST FOR TESTING
         print("p_t_id:", p_t_id)
         # Get all data samples of the past task
-        p_t_samples = memory_buffer.get_samples(p_t_id)
+        p_t_samples = memory_buffer.get_samples(p_t_id)  # List of entries, where entry = (sample, index_in_train_dataset)
+        p_t_indices_in_dataset = [entry[1] for entry in p_t_samples]
         p_t_labels = set([sample[1] for sample in p_t_samples])
+
+        # TODO
+        # indices = torch.tensor([0, 2])
+        # transforms, normalize = get_transform_normalize(config['training-params'], task)
+        # a = _load_datasets_indices(task=task, indices=indices, splits='Test', normalize=normalize)[0]
+        # TODO
 
         # Get validation, evaluation data samples of the past task. These are just for comprehension purposes
         p_t_EVAL_dataset = _load_datasets(tasks_list[p_t_id], 'Test', normalize=normalize)[0]
@@ -622,8 +623,9 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
             continue
 
         # Convert data samples to tensors
-        p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
-        p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+        # p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
+        # p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+        p_t_tensor = _load_datasets_indices(task=task, indices=p_t_indices_in_dataset, splits='Train', normalize=normalize)[0]
 
         # TODO: remove later
         for tensor_item in p_t_tensor:
@@ -730,7 +732,7 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     # (Try to) add each data sample of the current task to the memory buffer
     for i, data_sample in enumerate(datasets[0].tensors[0]):
         label = torch.index_select(datasets[0].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
-        memory_buffer.observe_sample(data_sample, task_id, label)
+        memory_buffer.observe_sample(data_sample, task_id, label ,i)
 
     # Print info about the current memory contents for clarity
     print("Task ID:", task_id)

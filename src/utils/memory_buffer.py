@@ -10,18 +10,18 @@ class MemoryBuffer:
 
     # Call this function if you observe a data sample, which may, depending on the memory buffer settings, be added to
     # the memory
-    def observe_sample(self, data_sample, task_id, label):
+    def observe_sample(self, data_sample, task_id, label, index_in_dataset):
         self.nr_of_observed_data_samples += 1  # Update this at the start to include it in the probability calculation
         # TODO: should be unique data samples
 
         if self.__get_memory_filled_size() < self.memory_size:
             # Surely add the data sample since we have space
-            self.__add(data_sample, task_id, label, is_memory_full=False)
+            self.__add(data_sample, task_id, label, index_in_dataset, is_memory_full=False)
         else:
             # Roll a dice to see if we add the observed data sample to the memory or not
             probability_to_hit = self.memory_size / self.nr_of_observed_data_samples
             if probability_to_hit >= random.uniform(0, 1):
-                self.__add(data_sample, task_id, label, is_memory_full=True)
+                self.__add(data_sample, task_id, label, index_in_dataset, is_memory_full=True)
 
     # Call this function if you want the data samples of a specific task (and possibly label)
     def get_samples(self, task_id=None, label=None):
@@ -42,8 +42,8 @@ class MemoryBuffer:
                 return self.memory[(task_id, label)]
 
     # Internal function to add a data sample to the memory
-    def __add(self, data_sample, task_id, label, is_memory_full=False):
-        entry_to_add = data_sample
+    def __add(self, data_sample, task_id, label, index_in_dataset, is_memory_full=False):
+        entry_to_add = (data_sample, index_in_dataset)
         entry_key = (task_id, label)
         if not is_memory_full:
             self.__add_to_memory(entry_to_add, entry_key)
