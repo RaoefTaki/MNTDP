@@ -370,6 +370,18 @@ def train_on_tasks(config):
 
         print("[TEST] Current task:", t_id)
 
+        print("[TEST] Trying for backward transfer now based on task:", t_id)
+        knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
+                                                                                   task_id=t_id, task=task,
+                                                                                   tasks_list=tasks_list,
+                                                                                   learner=learner,
+                                                                                   training_params=config['training-params'],
+                                                                                   knn_accuracies_list=knn_accuracies,
+                                                                                   tasks_bw_output_head=tasks_bw_output_head,
+                                                                                   knn_n=learner.n_neighbors)
+        print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+        exit(0)
+
         if task_level_tuning:
             if not ray.is_initialized():
                 if local_mode:
@@ -597,8 +609,9 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     # Add the new knn ccuracy to the list of the current task on the current model for returning
     knn_accuracies_list.append(c_t_c_m_knn_acc)
 
-    if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-        return knn_accuracies_list, tasks_bw_output_head
+    # TODO: uncomment
+    # if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
+    #     return knn_accuracies_list, tasks_bw_output_head
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
@@ -619,6 +632,9 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Convert data samples to tensors
         p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
         p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
+
+        for tensor_item in p_t_tensor:
+            print(tensor_item)
 
         # Get the dataloader for kNN for the past task
         p_t_knn_dataset, _ = get_classic_dataloaders([p_t_tensor], training_params['batch_sizes'])
