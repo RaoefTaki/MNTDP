@@ -357,6 +357,7 @@ def train_on_tasks(config):
 
     task_counter = 0
     tasks_list = []  # The list of currently encountered 'task' objects
+    original_accuracies_list = []
     knn_accuracies = []
     tasks_bw_output_head = {}  # A dict containing per task_id which different output head to use instead. If no key is present
     # for a certain task_id, then just use its specifically designated classification head
@@ -464,14 +465,16 @@ def train_on_tasks(config):
 
             # Backward transfer
             print("[TEST] Trying for backward transfer now based on task:", t_id)
-            knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(memory_buffer=memory_buffer,
-                                                                                       task_id=t_id, task=task,
-                                                                                       tasks_list=tasks_list,
-                                                                                       learner=learner,
-                                                                                       training_params=config['training-params'],
-                                                                                       knn_accuracies_list=knn_accuracies,
-                                                                                       tasks_bw_output_head=tasks_bw_output_head,
-                                                                                       knn_n=learner.n_neighbors)
+            original_accuracies_list, knn_accuracies, tasks_bw_output_head = check_possibility_backward_transfer(
+                memory_buffer=memory_buffer,
+                task_id=t_id, task=task,
+                tasks_list=tasks_list,
+                learner=learner,
+                training_params=config['training-params'],
+                original_accuracies_list=original_accuracies_list,
+                knn_accuracies_list=knn_accuracies,
+                tasks_bw_output_head=tasks_bw_output_head,
+                knn_n=learner.n_neighbors)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Save samples of the current task to the memory buffer
@@ -552,9 +555,11 @@ def train_on_tasks(config):
         torch.save(learner, save_path)
 
 def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
-                              training_params=None, knn_accuracies_list=None, tasks_bw_output_head=None, knn_n=15):
+                              training_params=None, original_accuracies_list=None, knn_accuracies_list=None,
+                                        tasks_bw_output_head=None, knn_n=15):
     if memory_buffer is None or task_id is None or task is None or tasks_list is None or learner is None or\
-            training_params is None or knn_accuracies_list is None or tasks_bw_output_head is None:
+            training_params is None or original_accuracies_list is None or knn_accuracies_list is None or\
+            tasks_bw_output_head is None:
         raise ValueError('Some arguments are None or not supplied')
 
     print("learner.n_neighbours:", knn_n)
@@ -585,10 +590,11 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
     # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # This crashes for some reason
     knn_n_samples = knn_n if len(c_t_train_knn_dataset.dataset) >= knn_n else len(c_t_train_knn_dataset.dataset)
-    c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[1], knn_n_samples)
+    c_t_c_m_knn_acc = learner.get_knn_accuracy(c_t_model, c_t_train_knn_dataset, c_t_eval_knn_dataset[0], knn_n_samples)
     print("c_t_c_m_knn_acc:", c_t_c_m_knn_acc)
 
-    # Add the new knn ccuracy to the list of the current task on the current model for returning
+    # Add the new original & knn (validation!) accuracy to the list of the current task on the current model for returning
+    original_accuracies_list.append(c_t_c_m_acc)
     knn_accuracies_list.append(c_t_c_m_knn_acc)
 
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
@@ -663,12 +669,12 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Account for that of all labels at least one sample should be included. This serves as a check on the nr of samples
         # in the memory, so that not tóó little samples are present for our next analyses
         nr_of_labels_p_t = len(torch.unique(p_t_val_dataset.tensors[1]))
-        if len(p_t_labels) >= nr_of_labels_p_t and (p_t_id not in tasks_bw_output_head and p_t_c_m_acc > p_t_p_m_acc):
-            tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': p_t_p_m_acc}
+        if len(p_t_labels) >= nr_of_labels_p_t and (p_t_id not in tasks_bw_output_head and p_t_c_m_acc > original_accuracies_list[p_t_id]):
+            tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': original_accuracies_list[p_t_id]}
         elif len(p_t_labels) >= nr_of_labels_p_t and (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc']):
             tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': tasks_bw_output_head[p_t_id]['acc_original_model']}
         print()
-    return knn_accuracies_list, tasks_bw_output_head
+    return original_accuracies_list, knn_accuracies_list, tasks_bw_output_head
 
 def get_transform_normalize(training_params=None, task=None):
     if training_params is None or task is None:
