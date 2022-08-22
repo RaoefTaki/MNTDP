@@ -539,7 +539,7 @@ def train_on_tasks(config):
                                            config['training-params']['batch_sizes'][1], config['training-params']['device'])
 
         print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'],
-              " to update the evaluation accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
+              "to update the evaluation accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
         print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")
         print("[RESULT] Used memory with", memory_size, "items requiring", number_of_MB_in_memory, "MB in total")
 
@@ -580,6 +580,7 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     c_t_EVAL_dataset = _load_datasets(task, 'Test', normalize=normalize)[0]
     c_t_c_m_EVAL_acc = evaluate(c_t_model, c_t_EVAL_dataset, training_params['batch_sizes'][1], training_params['device'])
     print("c_t_c_m_EVAL_acc:", c_t_c_m_EVAL_acc)
+    print("[RESULT] Evaluation accuracy for task", task_id, "at this point is", c_t_c_m_EVAL_acc)
 
     c_t_train_knn_dataset, c_t_eval_knn_dataset = get_classic_dataloaders(get_datasets_of_task(task, transforms=None, normalize=None), training_params['batch_sizes'])
     # print(c_t_train_knn_dataset.size(), c_t_eval_knn_dataset.size())  # This crashes for some reason
