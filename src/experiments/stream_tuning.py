@@ -613,7 +613,7 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Convert data samples to tensors
         # p_t_samples_tensor, p_t_labels_tensor = convert_memory_samples_to_tensors(memory_samples=p_t_samples, memory_size=memory_buffer.memory_size)
         # p_t_tensor = MyTensorDataset(p_t_samples_tensor, p_t_labels_tensor, transforms=None)
-        p_t_tensor = _load_datasets_indices(task=task, indices=p_t_indices_in_dataset, splits='Val', normalize=normalize)[0]
+        p_t_tensor = _load_datasets_indices(task=tasks_list[p_t_id], indices=p_t_indices_in_dataset, splits='Val', normalize=normalize)[0]
 
         # for tensor_item in p_t_tensor:
         #     print(tensor_item)
