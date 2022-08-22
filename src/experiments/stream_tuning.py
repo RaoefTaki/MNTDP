@@ -598,7 +598,7 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     knn_accuracies_list.append(c_t_c_m_knn_acc)
 
     if memory_buffer.nr_of_observed_data_samples == 0 or task_id == 0:
-        return knn_accuracies_list, tasks_bw_output_head
+        return original_accuracies_list, knn_accuracies_list, tasks_bw_output_head
 
     # For the currently added/created network, evaluate which past task, based on the saved data samples, has the same
     # labels as the current task, and gets higher avg accuracy than on its own network TODO: check if this can actually work or not
