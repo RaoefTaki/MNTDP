@@ -695,8 +695,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #                                                self.n_source_models,
             #                                             candidate_models))
             candidate_nodes = self.get_nodes_from_models(candidate_models)
-            # if task_id > 0:
-            #     raise ValueError("candidate_nodes:", candidate_nodes)
+            if task_id > 0:
+                raise ValueError("candidate_nodes:", candidate_nodes)
             # ValueError: ('candidate_nodes:', {(0, 1), (0, 'INs'), (0, 3, 'w'), (0, 6, 'w'), (0, 4), (0, 4, 'w'),
             # (0, 'OUT'), (0, 0), (0, 3), (0, 'OUT', 0), (0, 6), (0, 2), (0, 'INs', 0), (0, 5), (0, 5, 'w'),
             # (0, 1, 'w'), (0, 2, 'w')})
