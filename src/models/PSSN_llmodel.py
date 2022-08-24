@@ -291,23 +291,27 @@ class MNTDP(LifelongLearningModel, ModularModel):
         """
         assert len(self.columns) == col_id + 1
         lateral_connections = {}
-        if 'bw' not in self.connections or is_last:
-            return lateral_connections
-
-        for targ_col_id, targ_col in enumerate(self.columns[:col_id]):
-            # if targ_col_id not in candidate_nodes:
-            #     continue
-            targ_layer = targ_col.get(targ_depth)
-            if targ_layer and (targ_col_id, targ_depth) in targ_layer \
-                    and (targ_col_id, targ_depth) in candidate_nodes:
-                repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
-                lateral_connections[targ_col_id] = repr_size
-        return lateral_connections
+        return lateral_connections  # Always return, since we have this (better called leftbranching) incorporated in FW branching
+        # if 'bw' not in self.connections or is_last:
+        #     return lateral_connections
+        #
+        # for targ_col_id, targ_col in enumerate(self.columns[:col_id]):
+        #     # if targ_col_id not in candidate_nodes:
+        #     #     continue
+        #     targ_layer = targ_col.get(targ_depth)
+        #     if targ_layer and (targ_col_id, targ_depth) in targ_layer \
+        #             and (targ_col_id, targ_depth) in candidate_nodes:
+        #         repr_size = self.column_repr_sizes[targ_col_id][targ_depth]
+        #         lateral_connections[targ_col_id] = repr_size
+        # return lateral_connections
 
     def get_forward_lateral_connections(self, col_id, depth, candidate_nodes):
         assert len(self.columns) == col_id + 1
         lateral_connections = {}
-        if 'fw' not in self.connections or depth == 1:
+        if 'fw' not in self.connections:
+            pass  # Always do this, and never do the bw connections anymore, since now we made the forward connections to
+            # also incorporate leftbranching connections
+        if depth == 1:
             # This is the first "real" layer, forward connection would be
             # identical to the (col_id, depth, 'w') layer
             return lateral_connections
@@ -753,6 +757,23 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # (0, 3, 'w'), (1, 'OUT'), (1, 4, 0, 'f'), (1, 3, 'w'), (0, 1), (1, 1, 'w'), (1, 2), (0, 4), (0, 5, 'w'),
             # (1, 5), (1, 'INs', 1), (1, 5, 'w'), (0, 0), (1, 1), (0, 3), (0, 2, 'w'), (0, 4, 'w'), (1, 4), (0, 6),
             # (0, 6, 'w'), (1, 'OUT', 1), (1, 'INs', 0)}, 'task_id:', 1)
+            # For s_test_in.yaml:
+            # ValueError: ('In first run of this function, enters lower if statement. sub_graph.nodes():',
+            # NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4), (0, 4, 'w'),
+            # (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (0, 7), (0, 7, 'w'), (1, 'INs'), (1, 0), (1, 'INs', 0),
+            # (1, 'INs', 1), (1, 1), (1, 1, 'w'), (1, 1, 0, 'b'), (1, 2), (1, 2, 'w'), (1, 2, 0, 'f'), (0, 2, 1, 'f'),
+            # (1, 2, 0, 'b'), (1, 3), (1, 3, 'w'), (1, 3, 0, 'f'), (0, 3, 1, 'f'), (1, 3, 0, 'b'), (1, 4), (1, 4, 'w'),
+            # (1, 4, 0, 'f'), (0, 4, 1, 'f'), (1, 4, 0, 'b'), (1, 5), (1, 5, 'w'), (1, 5, 0, 'f'), (0, 5, 1, 'f'),
+            # (1, 5, 0, 'b'), (1, 6), (1, 6, 'w'), (1, 6, 0, 'f'), (0, 6, 1, 'f'), (1, 6, 0, 'b'), (1, 7), (1, 7, 'w'),
+            # (1, 7, 0, 'f'), (0, 7, 1, 'f'), (1, 'OUT'), (1, 'OUT', 0), (1, 'OUT', 1))),
+            # 'active_nodes:', {(1, 2, 'w'), (1, 'INs', 1), (1, 4, 'w'), (1, 5, 0, 'f'), (0, 2), (1, 6, 0, 'f'), (0, 5),
+            # (1, 0), (1, 6), (1, 3), (1, 7, 0, 'f'), (1, 6, 'w'), (1, 5, 0, 'b'), (0, 4, 1, 'f'), (0, 3, 'w'),
+            # (1, 6, 0, 'b'), (0, 1, 'w'), (1, 2, 0, 'f'), (1, 'INs', 0), (0, 5, 1, 'f'), (1, 3, 0, 'f'), (1, 3, 'w'),
+            # (1, 'OUT'), (0, 6, 1, 'f'), (1, 2, 0, 'b'), (0, 1), (0, 7), (0, 7, 1, 'f'), (1, 4, 0, 'f'), (0, 4),
+            # (1, 'OUT', 1), (0, 5, 'w'), (1, 5), (1, 2), (1, 1, 'w'), (1, 3, 0, 'b'), (0, 7, 'w'), (1, 5, 'w'),
+            # (1, 7, 'w'), (1, 4, 0, 'b'), (0, 3, 1, 'f'), (1, 'INs'), (0, 0), (1, 1), (0, 3), (0, 2, 'w'),
+            # (0, 4, 'w'), (1, 4), (0, 6), (0, 6, 'w'), (1, 'OUT', 0), (1, 7), (1, 1, 0, 'b'), (0, 2, 1, 'f')},
+            # 'task_id:', 1)
 
         if sub_graph:
             in_node = (task_id, self.IN_NODE)
