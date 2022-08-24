@@ -544,7 +544,7 @@ def train_on_tasks(config):
         print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'],
               "to update the evaluation accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
         print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")
-        print("[RESULT] Used memory with", memory_size, "items requiring", number_of_MB_in_memory, "MB in total")
+    print("[RESULT] Used memory with", memory_size, "items requiring", number_of_MB_in_memory, "MB in total")
 
     if task_level_tuning:
         print("[TEST] len(all_analysis):", len(all_analysis), "selected_tags:", selected_tags)
