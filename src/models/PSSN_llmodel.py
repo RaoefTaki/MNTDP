@@ -732,9 +732,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #     architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
             #     raise ValueError("architectures:", '\n'.join(map(str, architectures)))
 
-            if task_id > 0:
-                raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
-                                 "active_nodes:", active_nodes, "task_id:", task_id)
+            # if task_id > 0:
+            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
+            #                      "active_nodes:", active_nodes, "task_id:", task_id)
             # ValueError: ('In first run of this function, enters lower if statement. sub_graph.nodes():',
             #              NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4),
             #                        (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (1, 'INs'), (1, 0),
