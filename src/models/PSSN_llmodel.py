@@ -695,11 +695,15 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #                                                self.n_source_models,
             #                                             candidate_models))
             candidate_nodes = self.get_nodes_from_models(candidate_models)
-            if task_id > 0:
-                raise ValueError("candidate_nodes:", candidate_nodes)
+            # if task_id > 0:
+            #     raise ValueError("candidate_nodes:", candidate_nodes)
             # ValueError: ('candidate_nodes:', {(0, 1), (0, 'INs'), (0, 3, 'w'), (0, 6, 'w'), (0, 4), (0, 4, 'w'),
             # (0, 'OUT'), (0, 0), (0, 3), (0, 'OUT', 0), (0, 6), (0, 2), (0, 'INs', 0), (0, 5), (0, 5, 'w'),
             # (0, 1, 'w'), (0, 2, 'w')})
+            # For s_test_in.yaml this gives:
+            # ValueError: ('candidate_nodes:', {(0, 7, 'w'), (0, 2), (0, 5), (0, 2, 'w'), (0, 'OUT', 0), (0, 6, 'w'),
+            # (0, 4, 'w'), (0, 1), (0, 7), (0, 4), (0, 'INs', 0), (0, 1, 'w'), (0, 0), (0, 'INs'), (0, 3, 'w'), (0, 3),
+            # (0, 6), (0, 'OUT'), (0, 5, 'w')})
             # Add a new column for the current task
             self.add_column(sizes, candidate_nodes)
 
@@ -724,9 +728,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             #     architectures = list(nx.all_simple_paths(self.graph, (task_id, self.IN_NODE), (task_id, self.OUT_NODE)))
             #     raise ValueError("architectures:", '\n'.join(map(str, architectures)))
 
-            # if task_id > 0:
-            #     raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
-            #                      "active_nodes:", active_nodes, "task_id:", task_id)
+            if task_id > 0:
+                raise ValueError("In first run of this function, enters lower if statement. sub_graph.nodes():", sub_graph.nodes(),
+                                 "active_nodes:", active_nodes, "task_id:", task_id)
             # ValueError: ('In first run of this function, enters lower if statement. sub_graph.nodes():',
             #              NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2), (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4),
             #                        (0, 4, 'w'), (0, 5), (0, 5, 'w'), (0, 6), (0, 6, 'w'), (1, 'INs'), (1, 0),
