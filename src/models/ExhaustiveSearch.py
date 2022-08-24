@@ -125,6 +125,10 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
+        if t_id == 1:
+            raise ValueError("len(archs):", len(archs), "archs:", archs,
+                             "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)
+
         # if t_id == 2:
         #     raise ValueError("len(archs):", len(archs), "archs:", archs,
         #                      "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)
