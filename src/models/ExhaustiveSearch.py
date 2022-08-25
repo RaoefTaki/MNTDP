@@ -91,6 +91,7 @@ class ExhaustiveSearch(nn.Module):
 
                 # Disallow connections to nodes of an earlier iteration for the last node in the network: the 6th
                 if len(node) == 3 and node[1] == 6:
+                    raise ValueError(node, iteration)
                     if node[0] != iteration:
                         is_last_module_new = False
 
