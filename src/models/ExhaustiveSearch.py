@@ -54,7 +54,8 @@ class ExhaustiveSearch(nn.Module):
             is_allowable_left_branch = True
             is_last_module_new = True
             has_early_or_late_branch = False
-            nodes_6 = []
+            if iteration is None:
+                iteration = path[0][0]
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -63,7 +64,6 @@ class ExhaustiveSearch(nn.Module):
                 if is_dummy_block(nn_module):
                     # Disallow connections to nodes of an earlier iteration for the last node in the network: the 6th
                     if len(node) == 2 and node[1] == 6 and node[0] != iteration:
-                        raise ValueError(path, node, len(node) == 2, node[1] == 6, node[0] != iteration, iteration)
                         is_last_module_new = False
                     continue
                 new_model.add_module(str(i), nn_module)
