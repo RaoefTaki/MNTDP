@@ -52,6 +52,7 @@ class ExhaustiveSearch(nn.Module):
             n_new_blocks = 0
             newly_added_right_branch_count = 0
             is_allowable_left_branch = True
+            is_last_module_new = True
             has_early_or_late_branch = False
             for node in path:
                 assert node == self.in_node \
@@ -87,6 +88,10 @@ class ExhaustiveSearch(nn.Module):
                     if node[1] > self.early_or_late_layer:
                         has_early_or_late_branch = True
 
+                if len(node) == 2 and node[1] == 6:
+                    if node[0] != iteration:
+                        is_last_module_new = False
+
                 i += 1
 
             if n_new_blocks > self.max_new_blocks and len(archs) > 1:  # node[0] == iteration or
@@ -94,8 +99,8 @@ class ExhaustiveSearch(nn.Module):
                 continue
 
             # Skip this in case there are multiple NEWLY ADDED right branching connections to the current task's column
-            # or if we branch too early/late
-            if not is_allowable_left_branch or newly_added_right_branch_count > 1 or has_early_or_late_branch:
+            # or if we branch too early/late or if the last module is not new for this iteration
+            if not is_allowable_left_branch or newly_added_right_branch_count > 1 or has_early_or_late_branch or is_last_module_new:
                 continue
 
             # print('Adding {}'.format(path))
