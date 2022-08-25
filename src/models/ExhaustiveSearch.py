@@ -55,7 +55,6 @@ class ExhaustiveSearch(nn.Module):
             is_last_module_new = True
             has_early_or_late_branch = False
             for node in path:
-                raise ValueError("len(node):", len(node))
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
                 nn_module = self.graph.nodes[node]['module']
@@ -89,6 +88,7 @@ class ExhaustiveSearch(nn.Module):
                     if node[1] > self.early_or_late_layer:
                         has_early_or_late_branch = True
 
+                raise ValueError("node[1]", node[1])
                 if len(node) == 2 and node[1] == 6:
                     if node[0] != iteration:
                         is_last_module_new = False
