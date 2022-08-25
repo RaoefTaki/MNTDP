@@ -61,6 +61,11 @@ class ExhaustiveSearch(nn.Module):
                 nn_module = self.graph.nodes[node]['module']
                 last = node
                 if is_dummy_block(nn_module):
+                    if node[1] == 6:
+                        nodes_6.append(node)
+                    # if len(node) == 2 and node[1] == 6:
+                    #     if node[0] != iteration:
+                    #         is_last_module_new = False
                     continue
                 new_model.add_module(str(i), nn_module)
                 if nn_module in self.frozen_modules:
@@ -88,12 +93,6 @@ class ExhaustiveSearch(nn.Module):
                     # If we branch too late, disallow this
                     if node[1] > self.early_or_late_layer:
                         has_early_or_late_branch = True
-
-                if node[1] == 6:
-                    nodes_6.append(node)
-                if len(node) == 2 and node[1] == 6:
-                    if node[0] != iteration:
-                        is_last_module_new = False
 
                 i += 1
             raise ValueError("nodes_6:", nodes_6)
