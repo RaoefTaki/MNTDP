@@ -63,8 +63,8 @@ class ExhaustiveSearch(nn.Module):
                 last = node
                 if is_dummy_block(nn_module):
                     # Disallow connections to nodes of an earlier iteration for the last node in the network: the 6th
-                    if len(node) == 2 and node[1] == 6 and node[0] != iteration:
-                        is_last_module_new = False
+                    # if len(node) == 2 and node[1] == 6 and node[0] != iteration:
+                    #     is_last_module_new = False
                     continue
                 new_model.add_module(str(i), nn_module)
                 if nn_module in self.frozen_modules:
