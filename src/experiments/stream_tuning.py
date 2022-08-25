@@ -434,7 +434,9 @@ def train_on_tasks(config):
             for trial in analysis.trials:
                 print(trial.trial_id)
                 print(trial.last_result['best_val'])
+                print(trial.last_result['iteration_of_report'])
                 print(trial.last_result['path'])
+                print("-----")
                 # print(trial.trial_id)
                 # print(trial.status)
                 # print(trial.last_result['iteration_of_report'])
@@ -602,6 +604,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                     duration_best_it=-1,
                     iteration_of_report=0,
                     epoch_of_report=-1,
+                    path=-1,
                     **current_task_best_val_time_attr,
                     **tune_report_arguments_initialized)
         return -1, -1, -1, -1, -1
