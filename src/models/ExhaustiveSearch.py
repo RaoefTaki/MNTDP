@@ -61,6 +61,9 @@ class ExhaustiveSearch(nn.Module):
                 nn_module = self.graph.nodes[node]['module']
                 last = node
                 if is_dummy_block(nn_module):
+                    # Disallow connections to nodes of an earlier iteration for the last node in the network: the 6th
+                    if len(node) == 2 and node[1] == 6 and node[0] != iteration:
+                        is_last_module_new = False
                     continue
                 new_model.add_module(str(i), nn_module)
                 if nn_module in self.frozen_modules:
@@ -88,12 +91,6 @@ class ExhaustiveSearch(nn.Module):
                     # If we branch too late, disallow this
                     if node[1] > self.early_or_late_layer:
                         has_early_or_late_branch = True
-
-                # Disallow connections to nodes of an earlier iteration for the last node in the network: the 6th
-                if len(node) == 3 and node[1] == 6:
-                    raise ValueError(node, iteration)
-                    if node[0] != iteration:
-                        is_last_module_new = False
 
                 i += 1
 
