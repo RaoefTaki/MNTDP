@@ -54,8 +54,8 @@ class ExhaustiveSearch(nn.Module):
             is_allowable_left_branch = True
             is_last_module_new = True
             has_early_or_late_branch = False
-            raise ValueError("path:", path)
             for node in path:
+                raise ValueError("len(node):", len(node))
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
                 nn_module = self.graph.nodes[node]['module']
