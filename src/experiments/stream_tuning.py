@@ -604,7 +604,7 @@ def train_single_task(t_id, task, tasks, vis_p, learner, config, transfer_matrix
                     duration_best_it=-1,
                     iteration_of_report=0,
                     epoch_of_report=-1,
-                    path=-1,
+                    path=tuple(),
                     **current_task_best_val_time_attr,
                     **tune_report_arguments_initialized)
         return -1, -1, -1, -1, -1
