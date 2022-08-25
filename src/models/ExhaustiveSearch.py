@@ -227,7 +227,7 @@ class ExhaustiveSearch(nn.Module):
                     model = model_trained
                 call = (partial(wrap, model=model, idx=idx,
                                 optim_fact=optim_fact, datasets_p=datasets_p,
-                                b_sizes=b_sizes, env_url=env_url, t_id=t_id, path=path,
+                                b_sizes=b_sizes, env_url=env_url, t_id=t_id,
                                 tune_report_arguments_initialized=tune_report_arguments_initialized, *args, **kwargs))
                 call_path = path
 
@@ -313,7 +313,7 @@ class ExhaustiveSearch(nn.Module):
         return graph_arch_details(self.graph)
 
 
-def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=None, t_id=-1, path=-1,
+def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=None, t_id=-1,
          tune_report_arguments_initialized=None, **kwargs):
     # TODO: somehow it doesn't enter this function the second time round. Idk why
     # if t_id != 0:
@@ -327,6 +327,6 @@ def wrap(*args, idx=None, uid=None, optim_fact, datasets_p, b_sizes, env_url=Non
         train_loader = model.train_loader_wrapper(train_loader)
 
     res = train(*args, train_loader=train_loader, eval_loaders=eval_loaders,
-                optimizer=optim, env_url=env_url, t_id=t_id, path=path,
+                optimizer=optim, env_url=env_url, t_id=t_id,
                 tune_report_arguments_initialized=tune_report_arguments_initialized, **kwargs)
     return res

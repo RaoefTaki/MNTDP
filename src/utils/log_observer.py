@@ -72,6 +72,7 @@ def initialize_tune_report_arguments(tasks, evaluation_splits):
                                 'eval_t': -1,
                                 'total_t': -1,
                                 'env_url': -1,
+                                'path': -1,
                                 'used_architecture_id': -1}
     other_keyword_dictionary.update(accs)
     other_keyword_dictionary.update(stats)
