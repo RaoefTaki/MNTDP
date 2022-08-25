@@ -67,11 +67,11 @@ class ExhaustiveSearch(nn.Module):
                     #     nn_module.load_state_dict(self.block_inits[node])
 
                 # Check if this node is a right branching connection
-                if len(node) == 4 and node[3] == 'f' and node[2] == iteration:
+                if len(node) == 4 and node[3] == 'f' and node[0] == iteration:
                     newly_added_right_branch_count += 1
 
                 # Check if this node is a left branching connection
-                if len(node) == 4 and node[3] == 'f' and node[0] == iteration:
+                if len(node) == 4 and node[3] == 'f' and node[2] == iteration:
                     # In case we have already right branched, don't left branch anymore
                     if newly_added_right_branch_count > 0:
                         is_allowable_left_branch = False
