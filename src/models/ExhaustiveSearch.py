@@ -89,6 +89,7 @@ class ExhaustiveSearch(nn.Module):
                         has_early_or_late_branch = True
 
                 if len(node) == 2 and node[1] == 6:
+                    raise ValueError("node:", node)
                     if node[0] != iteration:
                         is_last_module_new = False
 
