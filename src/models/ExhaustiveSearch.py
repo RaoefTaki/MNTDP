@@ -49,7 +49,8 @@ class ExhaustiveSearch(nn.Module):
             last = None
             i = 0
             n_new_blocks = 0
-            newly_added_lateral_fw_connections_count = 0
+            newly_added_right_branch_count = 0
+            is_allowable_left_branch = True
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -65,18 +66,24 @@ class ExhaustiveSearch(nn.Module):
                     # else:
                     #     nn_module.load_state_dict(self.block_inits[node])
 
-                # Check if this node is a lateral forward connection
-                if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
-                    newly_added_lateral_fw_connections_count += 1
+                # Check if this node is a right branching connection
+                if len(node) == 4 and node[3] == 'f' and node[2] == iteration:
+                    newly_added_right_branch_count += 1
+
+                # Check if this node is a left branching connection
+                if len(node) == 4 and node[3] == 'f' and node[0] == iteration:
+                    # In case we have already right branched, don't left branch anymore
+                    if newly_added_right_branch_count > 0:
+                        is_allowable_left_branch = False
 
                 i += 1
 
-            if n_new_blocks > self.max_new_blocks and len(archs) > 1:
+            if n_new_blocks > self.max_new_blocks and len(archs) > 1:  # node[0] == iteration or
                 # print('Skipping {}'.format(path))
                 continue
 
-            # Skip this in case there are multiple NEWLY ADDED lateral FW connections
-            if newly_added_lateral_fw_connections_count > 1:
+            # Skip this in case there are multiple NEWLY ADDED right branching connections to the current task's column
+            if not is_allowable_left_branch or newly_added_right_branch_count > 1:
                 continue
 
             # print('Adding {}'.format(path))
