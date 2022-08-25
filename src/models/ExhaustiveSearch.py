@@ -100,7 +100,7 @@ class ExhaustiveSearch(nn.Module):
 
             # Skip this in case there are multiple NEWLY ADDED right branching connections to the current task's column
             # or if we branch too early/late or if the last module is not new for this iteration
-            if not is_allowable_left_branch or newly_added_right_branch_count > 1 or has_early_or_late_branch or is_last_module_new:
+            if not is_allowable_left_branch or newly_added_right_branch_count > 1 or has_early_or_late_branch or not is_last_module_new:
                 continue
 
             # print('Adding {}'.format(path))
@@ -149,7 +149,6 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
-        raise ValueError("len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)  # "len(archs):", len(archs), "archs:", archs, "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx
         if t_id == 1:
             raise ValueError("len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)  # "len(archs):", len(archs), "archs:", archs, "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx
 
