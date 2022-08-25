@@ -35,6 +35,7 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
+        self.early_or_late_layer = 4
 
         self.max_new_blocks = max_new_blocks
 
@@ -51,6 +52,7 @@ class ExhaustiveSearch(nn.Module):
             n_new_blocks = 0
             newly_added_right_branch_count = 0
             is_allowable_left_branch = True
+            has_early_or_late_branch = False
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -66,15 +68,24 @@ class ExhaustiveSearch(nn.Module):
                     # else:
                     #     nn_module.load_state_dict(self.block_inits[node])
 
-                # Check if this node is a right branching connection
+                # Check if this node is a newly added right branching connection
                 if len(node) == 4 and node[3] == 'f' and node[0] == iteration:
                     newly_added_right_branch_count += 1
 
-                # Check if this node is a left branching connection
+                    # If we branch too early, disallow this
+                    if node[1] < self.early_or_late_layer:
+                        has_early_or_late_branch = True
+
+                # Check if this node is a newly added left branching connection
+                is_new_left_branch = False
                 if len(node) == 4 and node[3] == 'f' and node[2] == iteration:
                     # In case we have already right branched, don't left branch anymore
                     if newly_added_right_branch_count > 0:
                         is_allowable_left_branch = False
+
+                    # If we branch too late, disallow this
+                    if node[1] > self.early_or_late_layer:
+                        has_early_or_late_branch = True
 
                 i += 1
 
@@ -83,7 +94,8 @@ class ExhaustiveSearch(nn.Module):
                 continue
 
             # Skip this in case there are multiple NEWLY ADDED right branching connections to the current task's column
-            if not is_allowable_left_branch or newly_added_right_branch_count > 1:
+            # or if we branch too early/late
+            if not is_allowable_left_branch or newly_added_right_branch_count > 1 or has_early_or_late_branch:
                 continue
 
             # print('Adding {}'.format(path))
