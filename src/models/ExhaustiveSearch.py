@@ -35,7 +35,6 @@ class ExhaustiveSearch(nn.Module):
         self.models = nn.ModuleList()
         self.models_idx = {}
         self.res = {}
-        self.early_or_late_layer = 4
 
         self.max_new_blocks = max_new_blocks
 
@@ -50,21 +49,13 @@ class ExhaustiveSearch(nn.Module):
             last = None
             i = 0
             n_new_blocks = 0
-            newly_added_right_branch_count = 0
-            is_allowable_left_branch = True
-            is_last_module_new = True
-            has_early_or_late_branch = False
-            if iteration is None:
-                iteration = path[0][0]
+            newly_added_lateral_fw_connections_count = 0
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
                 nn_module = self.graph.nodes[node]['module']
                 last = node
                 if is_dummy_block(nn_module):
-                    # Disallow connections to nodes of an earlier iteration for the last node in the network: the 6th
-                    # if len(node) == 2 and node[1] == 6 and node[0] != iteration:
-                    #     is_last_module_new = False
                     continue
                 new_model.add_module(str(i), nn_module)
                 if nn_module in self.frozen_modules:
@@ -74,34 +65,18 @@ class ExhaustiveSearch(nn.Module):
                     # else:
                     #     nn_module.load_state_dict(self.block_inits[node])
 
-                # Check if this node is a newly added right branching connection
-                if len(node) == 4 and node[3] == 'f' and node[0] == iteration:
-                    newly_added_right_branch_count += 1
-
-                    # If we branch too early, disallow this
-                    if node[1] < self.early_or_late_layer:
-                        has_early_or_late_branch = True
-
-                # Check if this node is a newly added left branching connection
-                is_new_left_branch = False
-                if len(node) == 4 and node[3] == 'f' and node[2] == iteration:
-                    # In case we have already right branched, don't left branch anymore
-                    if newly_added_right_branch_count > 0:
-                        is_allowable_left_branch = False
-
-                    # If we branch too late, disallow this
-                    if node[1] > self.early_or_late_layer:
-                        has_early_or_late_branch = True
+                # Check if this node is a lateral forward connection
+                if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
+                    newly_added_lateral_fw_connections_count += 1
 
                 i += 1
 
-            if n_new_blocks > self.max_new_blocks and len(archs) > 1:  # node[0] == iteration or
+            if n_new_blocks > self.max_new_blocks and len(archs) > 1:
                 # print('Skipping {}'.format(path))
                 continue
 
-            # Skip this in case there are multiple NEWLY ADDED right branching connections to the current task's column
-            # or if we branch too early/late or if the last module is not new for this iteration
-            if not is_allowable_left_branch or newly_added_right_branch_count > 1 or has_early_or_late_branch or not is_last_module_new:
+            # Skip this in case there are multiple NEWLY ADDED lateral FW connections
+            if newly_added_lateral_fw_connections_count > 1:
                 continue
 
             # print('Adding {}'.format(path))
@@ -150,9 +125,6 @@ class ExhaustiveSearch(nn.Module):
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
-        # if t_id == 1:
-        #     raise ValueError("len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)  # "len(archs):", len(archs), "archs:", archs, "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx
-
         # if t_id == 2:
         #     raise ValueError("len(archs):", len(archs), "archs:", archs,
         #                      "len(self.models_idx):", len(self.models_idx), "self.models_idx:", self.models_idx)
@@ -168,7 +140,7 @@ class ExhaustiveSearch(nn.Module):
         # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (2, 3, 'w'), (2, 3), (0, 4, 2, 'f'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 9,
         # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (2, 2, 'w'), (2, 2), (0, 3, 2, 'f'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 10,
         # ((2, 'INs'), (2, 'INs', 2), (2, 0), (2, 1, 'w'), (2, 1), (0, 2, 2, 'f'), (0, 2), (0, 3, 'w'), (0, 3), (0, 4, 'w'), (0, 4), (0, 5, 'w'), (0, 5), (0, 6, 'w'), (0, 6), (2, 'OUT', 0), (2, 'OUT')): 11})
-    # if t_id is not None and t_id > 0:
+        # if t_id is not None and t_id > 0:
         #     paths_value_error = []
         #     for path, idx in self.models_idx.items():
         #         paths_value_error.append(path)

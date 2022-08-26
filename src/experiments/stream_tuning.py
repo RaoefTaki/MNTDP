@@ -385,8 +385,7 @@ def train_on_tasks(config):
 
             # Perform Ray HPO for 3 criteria: learning rate, weight decay, architecture (7+1 possibilities)
             # First define the possibilities for each criteria
-            print("[TEST] learner.connections:", learner.connections)
-            nr_of_architectures = 16  # 7 if len(learner.connections) == 1 else 16
+            nr_of_architectures = 7 if len(learner.connections) == 1 else 12
             config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': config['optim'][0]['lr'], 'weight_decay': config['optim'][0]['weight_decay']}]
             # TODO: REMOVE LINE BELOW
             # config['optim'] = [{'architecture': {'grid_search': list(range(nr_of_architectures))}, 'lr': {'grid_search': [0.01]}, 'weight_decay': {'grid_search': [0]}}]  # TODO: REMOVE
@@ -433,9 +432,6 @@ def train_on_tasks(config):
             total_iterations_for_this_task = 0
             # TODO: does this also consider stopped trials?
             for trial in analysis.trials:
-                print(trial.trial_id)
-                print(trial.last_result['best_val'])
-                print(trial.last_result['path'])
                 # print(trial.trial_id)
                 # print(trial.status)
                 # print(trial.last_result['iteration_of_report'])

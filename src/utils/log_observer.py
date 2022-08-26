@@ -106,7 +106,7 @@ class LogObserver(RunObserver):
 
         traces_folder = config['experiment']['visdom_traces_folder']
         self.traces_folder = os.path.join(traces_folder,
-                                    get_env_name(config,_id))
+                                          get_env_name(config,_id))
         os.makedirs(self.traces_folder)
         trace_filename = os.path.join(self.traces_folder, self.exp_name)
         self.viz = visdom.Visdom(env=self.exp_name,
@@ -147,21 +147,21 @@ class LogObserver(RunObserver):
         self._log_env_url()
 
     def artifact_event(self, name, filename, metadata=None, content_type=None):
-       logger.info('New artifact {}'.format(filename))
+        logger.info('New artifact {}'.format(filename))
 
-       if self._is_video(metadata):
-           logger.info('Adding video "{}"'.format(name))
-           opts = {
-               'title': name,
-           }
-           if 'frame_size' in metadata:
-               opts['width'] = metadata['frame_size'][1]
-               opts['height'] = metadata['frame_size'][0]
-           else:
-               opts['width'] = 500
-               opts['height'] = 500
+        if self._is_video(metadata):
+            logger.info('Adding video "{}"'.format(name))
+            opts = {
+                'title': name,
+            }
+            if 'frame_size' in metadata:
+                opts['width'] = metadata['frame_size'][1]
+                opts['height'] = metadata['frame_size'][0]
+            else:
+                opts['width'] = 500
+                opts['height'] = 500
 
-           self.viz.video(videofile=filename, opts=opts)
+            self.viz.video(videofile=filename, opts=opts)
 
     def heartbeat_event(self, info, captured_out, beat_time, result):
         # Ugly trick to set the pane name if using GNU Screen
