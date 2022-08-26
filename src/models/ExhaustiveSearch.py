@@ -68,15 +68,25 @@ class ExhaustiveSearch(nn.Module):
                     #     nn_module.load_state_dict(self.block_inits[node])
 
                 # Check if this node is a lateral forward connection
-                if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
-                    newly_added_lateral_fw_connections_count += 1
-                    # Only if it's a left lateral fw connection within the first 3 layers, we accept, and
-                    # Only if it's a right lateral fw connection within the last 3 layers, we accept
-                    is_left_lateral_fw_connection = node[2] > node[0]
-                    is_right_lateral_fw_connection = node[0] > node[2]
-                    if (is_left_lateral_fw_connection and node[1] > self.early_or_late_layer) or\
-                            (is_right_lateral_fw_connection and node[1] < self.early_or_late_layer):
-                        has_wrong_early_or_late_lateral_fw_connection = True
+                if len(node) == 4:
+                    if node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
+                        newly_added_lateral_fw_connections_count += 1
+                        # Only if it's a left lateral fw connection within the first 3 layers, we accept, and
+                        # Only if it's a right lateral fw connection within the last 3 layers, we accept
+                        is_left_lateral_fw_connection = node[2] > node[0]
+                        is_right_lateral_fw_connection = node[0] > node[2]
+                        if (is_left_lateral_fw_connection and node[1] > self.early_or_late_layer) or\
+                                (is_right_lateral_fw_connection and node[1] < self.early_or_late_layer):
+                            has_wrong_early_or_late_lateral_fw_connection = True
+                    elif node[3] == 'b' and (node[0] == iteration or node[2] == iteration):
+                        newly_added_lateral_fw_connections_count += 1
+                        # Only if it's a left lateral fw connection within the first 3 layers, we accept, and
+                        # Only if it's a right lateral fw connection within the last 3 layers, we accept
+                        is_left_lateral_fw_connection = node[0] > node[2]
+                        is_right_lateral_fw_connection = node[2] > node[0]
+                        if (is_left_lateral_fw_connection and node[1] > self.early_or_late_layer) or \
+                                (is_right_lateral_fw_connection and node[1] < self.early_or_late_layer):
+                            has_wrong_early_or_late_lateral_fw_connection = True
 
                 i += 1
 
