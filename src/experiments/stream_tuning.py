@@ -405,12 +405,13 @@ def train_on_tasks(config):
             # 'max_failures': 3}
 
             # Define the scheduler for ASHA
+            asha_grace_period = 10 if config['training-params']['n_ep_max'] >= 10 else 1
             asha_scheduler = ASHAScheduler(
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
-                grace_period=10,
+                grace_period=asha_grace_period,
                 reduction_factor=3,
                 brackets=1)
 
