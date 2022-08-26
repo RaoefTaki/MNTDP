@@ -84,6 +84,7 @@ class ExhaustiveSearch(nn.Module):
                         # Only if it's a right lateral fw connection within the last 3 layers, we accept
                         is_left_lateral_fw_connection = node[0] > node[2]
                         is_right_lateral_fw_connection = node[2] > node[0]
+                        raise ValueError(node, node[0], node[1], node[2]. node[3], is_left_lateral_fw_connection, is_right_lateral_fw_connection, self.early_or_late_layer)
                         if (is_left_lateral_fw_connection and node[1] > self.early_or_late_layer) or \
                                 (is_right_lateral_fw_connection and node[1] < self.early_or_late_layer):
                             has_wrong_early_or_late_lateral_fw_connection = True
