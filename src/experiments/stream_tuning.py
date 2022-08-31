@@ -575,10 +575,11 @@ def calc_memory_requirements(task_id=None, task=None, learner=None):
             if len(node) == 2 and node[0] == task_id and isinstance(node[1], int):
                 # Don't add the INs and OUT nodes
                 original_nodes.append(node)
+    print(original_nodes)
     nr_of_parameters_saved = 0
     for node in original_nodes:
-        nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[max(node[1]+1, 7)]
-    return nr_of_parameters_saved
+        nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[min(node[1]+1, 7)]
+    return (((nr_of_parameters_saved)*32)/8)/1000000
 
 def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
                               training_params=None, original_accuracies_list=None, knn_accuracies_list=None,
