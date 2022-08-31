@@ -570,6 +570,7 @@ def calc_memory_requirements(task_id=None, task=None, learner=None):
     in_node = (task_id, learner.IN_NODE)
     out_node = (task_id, learner.OUT_NODE)
     for constructed_path in nx.all_simple_paths(learner.fixed_graphs[task_id], in_node, out_node):
+        print(constructed_path)
         for node in constructed_path:
             if len(node) == 2 and node[0] == task_id and isinstance(node[1], int):
                 # Don't add the INs and OUT nodes
