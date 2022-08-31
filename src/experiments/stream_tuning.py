@@ -43,6 +43,7 @@ visdom.logger.setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 IMAGES_PER_MB = (1000000/(3*32*32*4))  # The number of images that fit in one MB of memory. To be rounded down after possible multiplication of the number of MBs used
+MAX_MEMORY_MB_PER_TASK = 2.43852  # The MBs required to construct a model following the entire base architecture for a task
 
 class StreamTuningExperiment(BaseExperiment):
     def run(self):
@@ -361,6 +362,7 @@ def train_on_tasks(config):
     knn_accuracies = []
     tasks_bw_output_head = {}  # A dict containing per task_id which different output head to use instead. If no key is present
     # for a certain task_id, then just use its specifically designated classification head
+    memory_requirements_task_MB = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
         static_params = dict(
@@ -456,6 +458,11 @@ def train_on_tasks(config):
 
             # Save the learner
             torch.save(learner, learner_path)
+
+            # Calculate the total memory requirements for the model so far
+            memory_requirements_task_MB += calc_memory_requirements(t_id, task, learner)
+            print("[TEST] Memory required so far in total:", memory_requirements_task_MB)
+            print("[TEST] Memory space left compared to 'Independent':", MAX_MEMORY_MB_PER_TASK*(t_id+1) - memory_requirements_task_MB)
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
@@ -553,6 +560,24 @@ def train_on_tasks(config):
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
+
+def calc_memory_requirements(task_id=None, task=None, learner=None):
+    if task_id is None or task is None or learner is None:
+        raise ValueError('Some arguments are None or not supplied')
+
+    # Find all generated paths where t_id != key, to see which nodes of key can be deleted
+    original_nodes = []
+    in_node = (task_id, learner.IN_NODE)
+    out_node = (task_id, learner.OUT_NODE)
+    for constructed_path in nx.all_simple_paths(learner.fixed_graphs[task_id], in_node, out_node):
+        for node in constructed_path:
+            if len(node) == 2 and node[0] == task_id and isinstance(node[1], int):
+                # Don't add the INs and OUT nodes
+                original_nodes.append(node)
+    nr_of_parameters_saved = 0
+    for node in original_nodes:
+        nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1]]
+    return nr_of_parameters_saved
 
 def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
                               training_params=None, original_accuracies_list=None, knn_accuracies_list=None,
