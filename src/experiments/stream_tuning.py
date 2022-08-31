@@ -576,7 +576,7 @@ def calc_memory_requirements(task_id=None, task=None, learner=None):
                 original_nodes.append(node)
     nr_of_parameters_saved = 0
     for node in original_nodes:
-        nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1]]
+        nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[max(node[1]+1, 7)]
     return nr_of_parameters_saved
 
 def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
