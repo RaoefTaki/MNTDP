@@ -488,7 +488,7 @@ def train_on_tasks(config):
 
             # Calculate the extra memory requirements available to use for the memory buffer obtained in this iteration
             max_allowed_memory_so_far = MAX_MEMORY_MB_PER_TASK*(t_id+1)
-            model_size_MB += calc_memory_requirements(t_id, task, learner)
+            model_size_MB = (((int(best_trial.last_result['total_params']))*32)/8)/1000000
             max_free_available_space_MB = max(max_allowed_memory_so_far - (model_size_MB - nr_MB_saved_due_to_bwtr), 0)  # Max(x, 0) just to be sure it's always at least 0
             print("[TEST] Memory space required for 'Independent' so far:", max_allowed_memory_so_far)
             print("[TEST] Memory space required for the current model so far:", model_size_MB)
@@ -554,26 +554,6 @@ def train_on_tasks(config):
         save_path = path.join(tune.get_trial_dir(), 'learner.pth')
         logger.info('Saving {} to {}'.format(learner, save_path))
         torch.save(learner, save_path)
-
-def calc_memory_requirements(task_id=None, task=None, learner=None):
-    if task_id is None or task is None or learner is None:
-        raise ValueError('Some arguments are None or not supplied')
-
-    # Find all generated paths where t_id != key, to see which nodes of key can be deleted
-    original_nodes = []
-    in_node = (task_id, learner.IN_NODE)
-    out_node = (task_id, learner.OUT_NODE)
-    for constructed_path in nx.all_simple_paths(learner.fixed_graphs[task_id], in_node, out_node):
-        print(constructed_path)
-        for node in constructed_path:
-            if len(node) == 2 and node[0] == task_id and isinstance(node[1], int):
-                # Don't add the INs and OUT nodes
-                original_nodes.append(node)
-    print(original_nodes)
-    nr_of_parameters_saved = 0
-    for node in original_nodes:
-        nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[min(node[1]+1, 7)]
-    return (((nr_of_parameters_saved)*32)/8)/1000000
 
 def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=None, tasks_list=None, learner=None,
                               training_params=None, original_accuracies_list=None, knn_accuracies_list=None,
