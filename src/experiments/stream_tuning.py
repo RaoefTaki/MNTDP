@@ -492,6 +492,7 @@ def train_on_tasks(config):
             max_free_available_space_MB = max(max_allowed_memory_so_far - (model_size_MB - nr_MB_saved_due_to_bwtr), 0)  # Max(x, 0) just to be sure it's always at least 0
             print("[TEST] Memory space required for 'Independent' so far:", max_allowed_memory_so_far)
             print("[TEST] Memory space required for the current model so far:", model_size_MB)
+            print("[TEST] Total memory space saved due to BWTr so far:", nr_MB_saved_due_to_bwtr)
             print("[TEST] Maximum potential free memory space left:", max_free_available_space_MB)
 
             # Increase the size of the memory
