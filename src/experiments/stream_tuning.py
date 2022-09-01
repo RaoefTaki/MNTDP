@@ -460,14 +460,6 @@ def train_on_tasks(config):
             # Save the learner
             torch.save(learner, learner_path)
 
-            # Calculate the extra memory requirements available to use for the memory buffer obtained in this iteration
-            max_allowed_memory_so_far = MAX_MEMORY_MB_PER_TASK*(t_id+1)
-            model_size_MB += calc_memory_requirements(t_id, task, learner)
-            max_free_available_space_MB = max(max_allowed_memory_so_far - model_size_MB, 0)  # Max(x, 0) just to be sure it's always at least 0
-            print("[TEST] Memory space required for 'Independent' so far:", max_allowed_memory_so_far)
-            print("[TEST] Memory space required for the current model so far:", model_size_MB)
-            print("[TEST] Maximum potential free memory space left:", max_free_available_space_MB)
-
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
             print("[TEST] best_trial:", best_trial, "selected_tags:", selected_tags, "best_trial.last_result:", best_trial.last_result)
@@ -488,16 +480,30 @@ def train_on_tasks(config):
                 knn_n=learner.n_neighbors)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
+            # Calculate how many parameters are saved by performing BWTr this iteration
+            _, _, _, _, nr_of_parameters_saved_list = \
+                get_bw_transfer_info()
+            nr_MB_saved_due_to_bwtr = ((sum(nr_of_parameters_saved_list)*32)/8)/1000000
+
+            # Calculate the extra memory requirements available to use for the memory buffer obtained in this iteration
+            max_allowed_memory_so_far = MAX_MEMORY_MB_PER_TASK*(t_id+1)
+            model_size_MB += calc_memory_requirements(t_id, task, learner)
+            max_free_available_space_MB = max(max_allowed_memory_so_far - (model_size_MB - nr_MB_saved_due_to_bwtr), 0)  # Max(x, 0) just to be sure it's always at least 0
+            print("[TEST] Memory space required for 'Independent' so far:", max_allowed_memory_so_far)
+            print("[TEST] Memory space required for the current model so far:", model_size_MB)
+            print("[TEST] Maximum potential free memory space left:", max_free_available_space_MB)
+
             # Increase the size of the memory
             if max_free_available_space_MB > memory_size_MB:
                 max_potential_nr_data_samples_in_memory_buffer = math.floor(IMAGES_PER_MB * max_free_available_space_MB)
                 memory_buffer.set_memory_size(max_potential_nr_data_samples_in_memory_buffer)
+                memory_size_MB = max_free_available_space_MB
             elif max_free_available_space_MB == 0:
                 # Just for printing each round
                 max_potential_nr_data_samples_in_memory_buffer = 197
                 max_potential_free_available_space_MB = MAX_MEMORY_MB_PER_TASK
-            print("[TEST] Current size of the memory:", max_free_available_space_MB,
-                  "Number of items in the memory:", max_potential_nr_data_samples_in_memory_buffer)
+            print("[TEST] Current size of the memory:", memory_size_MB,
+                  "Number of items in the memory:", memory_buffer.memory_size)
 
             # Save samples of the current task to the memory buffer
             print("[TEST] Save samples to memory")
@@ -530,43 +536,13 @@ def train_on_tasks(config):
 
     # Edited example of outcome of print(learner.columns), figure out how to loop over this:
     # [{0: {(0, 0): '(0, 0)'}, "INs": {(0, "INs"): '(0, "INs")', (0, "INs", 0): '(0, "INs", 0)'}, 1: {(0, 1, "w"): '(0, 1, "w")', (0, 1): '(0, 1)'}, 2: {(0, 2, "w"): '(0, 2, "w")', (0, 2): '(0, 2)'}, 3: {(0, 3, "w"): '(0, 3, "w")', (0, 3): '(0, 3)'}, 4: {(0, 4, "w"): '(0, 4, "w")', (0, 4): '(0, 4)'}, 5: {(0, 5, "w"): '(0, 5, "w")', (0, 5): '(0, 5)'}, 6: {(0, 6, "w"): '(0, 6, "w")', (0, 6): '(0, 6)'}, "OUT": {(0, "OUT"): '(0, "OUT")', (0, "OUT", 0): '(0, "OUT", 0)'}}, {0: {}, "INs": {(1, "INs"): '(1, "INs")', (1, "INs", 0): '(1, "INs", 0)'}, 1: {}, 2: {}, 3: {}, 4: {(1, 4): '(1, 4)', (1, 4, 0, "f"): '(1, 4, 0, "f")'}, 5: {(1, 5, "w"): '(1, 5, "w")', (1, 5): '(1, 5)'}, 6: {(1, 6, "w"): '(1, 6, "w")', (1, 6): '(1, 6)'}, "OUT": {(1, "OUT"): '(1, "OUT")', (1, "OUT", 1): '(1, "OUT", 1)'}}, {0: {}, "INs": {(2, "INs"): '(2, "INs")', (2, "INs", 0): '(2, "INs", 0)'}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {(2, 5): '(2, 5)', (2, 5, 1, "f"): '(2, 5, 1, "f")'}, 6: {(2, 6, "w"): '(2, 6, "w")', (2, 6): '(2, 6)'}, "OUT": {(2, "OUT"): '(2, "OUT")', (2, "OUT", 2): '(2, "OUT", 2)'}}, {0: {(3, 0): '(3, 0)'}, "INs": {(3, "INs"): '(3, "INs")', (3, "INs", 3): '(3, "INs", 3)'}, 1: {(3, 1, "w"): '(3, 1, "w")', (3, 1): '(3, 1)'}, 2: {(3, 2, "w"): '(3, 2, "w")', (3, 2): '(3, 2)'}, 3: {(3, 3, "w"): '(3, 3, "w")', (3, 3): '(3, 3)'}, 4: {(3, 4, "w"): '(3, 4, "w")', (3, 4): '(3, 4)'}, 5: {(3, 5, "w"): '(3, 5, "w")', (3, 5): '(3, 5)'}, 6: {(3, 6, "w"): '(3, 6, "w")', (3, 6): '(3, 6)'}, "OUT": {(3, "OUT"): '(3, "OUT")', (3, "OUT", 3): '(3, "OUT", 3)'}}]
-    for key, value in tasks_bw_output_head.items():
-        # Find all generated paths where t_id != key, to see which nodes of key can be deleted
-        original_nodes = []
-        shared_nodes = []
-        for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
-            in_node = (t_id, learner.IN_NODE)
-            out_node = (t_id, learner.OUT_NODE)
-            for constructed_path in nx.all_simple_paths(learner.fixed_graphs[t_id], in_node, out_node):
-                for node in constructed_path:
-                    if len(node) == 2 and node[0] == key:
-                        if t_id != key:
-                            shared_nodes.append(node)
-                        elif isinstance(node[1], int):
-                            # Don't add the INs and OUT nodes
-                            original_nodes.append(node)
-        # Find the nodes which can be removed from the learner, reducing the memory space
-        original_nodes = list(set(original_nodes).difference(shared_nodes))
-
-        # Calculate from the layers of the nodes the number of parameters that are saved by removing these nodes
-        # Use a lookup table
-        nr_of_parameters_saved = 0
-        for node in original_nodes:
-            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1]]
-
-        # Calculate old and new evaluation accuracy
-        transforms, normalize = get_transform_normalize(config['training-params'], tasks_list[key])
-        key_eval_dataset = _load_datasets(tasks_list[key], 'Test', normalize=normalize)[0]
-        old_evaluation_accuracy = evaluate(learner.get_model(task_id=key), key_eval_dataset,
-                                           config['training-params']['batch_sizes'][1], config['training-params']['device'])
-
-        new_evaluation_accuracy = evaluate(learner.get_model(task_id=value['other_t_id']), key_eval_dataset,
-                                           config['training-params']['batch_sizes'][1], config['training-params']['device'])
-
-        print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'],
-              "to update the evaluation accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
-        print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")
-    print("[RESULT] Used memory with", memory_size, "items requiring", max_potential_free_available_space_MB, "MB in total")
+    keys_list, values_list, old_evaluation_accuracy_list, new_evaluation_accuracy_list, nr_of_parameters_saved_list =\
+        get_bw_transfer_info()
+    for key_id in range(len(keys_list)):
+        print("[RESULT] Updated task", keys_list[key_id], "using the model of task", values_list[key_id]['other_t_id'],
+              "to update the evaluation accuracy from", old_evaluation_accuracy_list[key_id], "to", new_evaluation_accuracy_list[key_id])
+        print("[RESULT] Updated task", keys_list[key_id], "to save", nr_of_parameters_saved_list[key_id], "parameters")
+    print("[RESULT] Used memory with", memory_buffer.memory_size, "items requiring", memory_size_MB, "MB in total")
 
     if task_level_tuning:
         print("[TEST] len(all_analysis):", len(all_analysis), "selected_tags:", selected_tags)
@@ -785,14 +761,56 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     print("-----")
     return memory_buffer
 
-def try_backward_transfer(memory_buffer=None, current_task_id=None, current_task=None, past_task_id=None, learner=None,
-                          training_params=None):
-    if memory_buffer is None or current_task_id is None or current_task is None or past_task_id is None or\
-            learner is None or training_params is None:
+def get_bw_transfer_info(tasks=None, last_task_id=None, task_vis_params=None, config=None, learner=None,
+                         tasks_list=None, tasks_bw_output_head=None):
+    if tasks is None or task_vis_params is None or config is None or learner is None or tasks_list is None or\
+            tasks_bw_output_head is None:
         raise ValueError('Some arguments are None or not supplied')
 
-    # Try to create a new path branching off from the current model, and train it on TODO
-    pass
+    keys_list, values_list, old_evaluation_accuracy_list, new_evaluation_accuracy_list, nr_of_parameters_saved_list =\
+        [], [], [], [], []
+
+    for key, value in tasks_bw_output_head.items():
+        # Find all generated paths where t_id != key, to see which nodes of key can be deleted
+        original_nodes = []
+        shared_nodes = []
+        for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
+            if last_task_id is not None and t_id > last_task_id:
+                continue
+            in_node = (t_id, learner.IN_NODE)
+            out_node = (t_id, learner.OUT_NODE)
+            for constructed_path in nx.all_simple_paths(learner.fixed_graphs[t_id], in_node, out_node):
+                for node in constructed_path:
+                    if len(node) == 2 and node[0] == key:
+                        if t_id != key:
+                            shared_nodes.append(node)
+                        elif isinstance(node[1], int):
+                            # Don't add the INs and OUT nodes
+                            original_nodes.append(node)
+        # Find the nodes which can be removed from the learner, reducing the memory space
+        original_nodes = list(set(original_nodes).difference(shared_nodes))
+
+        # Calculate from the layers of the nodes the number of parameters that are saved by removing these nodes
+        # Use a lookup table
+        nr_of_parameters_saved = 0
+        for node in original_nodes:
+            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1]]
+
+        # Calculate old and new evaluation accuracy
+        transforms, normalize = get_transform_normalize(config['training-params'], tasks_list[key])
+        key_eval_dataset = _load_datasets(tasks_list[key], 'Test', normalize=normalize)[0]
+        old_evaluation_accuracy = evaluate(learner.get_model(task_id=key), key_eval_dataset,
+                                           config['training-params']['batch_sizes'][1], config['training-params']['device'])
+
+        new_evaluation_accuracy = evaluate(learner.get_model(task_id=value['other_t_id']), key_eval_dataset,
+                                           config['training-params']['batch_sizes'][1], config['training-params']['device'])
+
+        keys_list.append(key)
+        values_list.append(value)
+        old_evaluation_accuracy_list.append(old_evaluation_accuracy)
+        new_evaluation_accuracy_list.append(new_evaluation_accuracy)
+        nr_of_parameters_saved_list.append(nr_of_parameters_saved)
+    return keys_list, values_list, old_evaluation_accuracy_list, new_evaluation_accuracy_list, nr_of_parameters_saved_list
 
 def train_t(config):
     # As per https://docs.ray.io/en/latest/tune/tutorials/tune-resources.html:
