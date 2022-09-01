@@ -352,7 +352,8 @@ def train_on_tasks(config):
         selected_tags = []
 
     # Create a buffer of the size of the base architecture, to expand later
-    memory_size = math.floor(IMAGES_PER_MB * MAX_MEMORY_MB_PER_TASK)
+    memory_size_MB = MAX_MEMORY_MB_PER_TASK
+    memory_size = math.floor(IMAGES_PER_MB * memory_size_MB)
     memory_buffer = MemoryBuffer(memory_size=memory_size)
 
     task_counter = 0
@@ -360,7 +361,7 @@ def train_on_tasks(config):
     original_accuracies_list = []
     knn_accuracies = []
     model_size_MB = 0
-    max_potential_free_available_space_MB = 0
+    max_free_available_space_MB = 0
     tasks_bw_output_head = {}  # A dict containing per task_id which different output head to use instead. If no key is present
     # for a certain task_id, then just use its specifically designated classification head
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
@@ -462,10 +463,10 @@ def train_on_tasks(config):
             # Calculate the extra memory requirements available to use for the memory buffer obtained in this iteration
             max_allowed_memory_so_far = MAX_MEMORY_MB_PER_TASK*(t_id+1)
             model_size_MB += calc_memory_requirements(t_id, task, learner)
-            max_potential_free_available_space_MB = max_allowed_memory_so_far - model_size_MB
+            max_free_available_space_MB = max(max_allowed_memory_so_far - model_size_MB, 0)  # Max(x, 0) just to be sure it's always at least 0
             print("[TEST] Memory space required for 'Independent' so far:", max_allowed_memory_so_far)
             print("[TEST] Memory space required for the current model so far:", model_size_MB)
-            print("[TEST] Maximum potential free memory space left:", max_potential_free_available_space_MB)
+            print("[TEST] Maximum potential free memory space left:", max_free_available_space_MB)
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
@@ -488,11 +489,14 @@ def train_on_tasks(config):
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Increase the size of the memory
-            max_potential_nr_data_samples_in_memory_buffer = 81
-            if max_potential_free_available_space_MB > 0:
-                max_potential_nr_data_samples_in_memory_buffer = math.floor(IMAGES_PER_MB * max_potential_free_available_space_MB)
+            if max_free_available_space_MB > memory_size:
+                max_potential_nr_data_samples_in_memory_buffer = math.floor(IMAGES_PER_MB * max_free_available_space_MB)
                 memory_buffer.set_memory_size(max_potential_nr_data_samples_in_memory_buffer)
-            print("[TEST] Current size of the memory:", max_potential_free_available_space_MB,
+            elif max_free_available_space_MB == 0:
+                # Just for printing each round
+                max_potential_nr_data_samples_in_memory_buffer = 81
+                max_potential_free_available_space_MB = MAX_MEMORY_MB_PER_TASK
+            print("[TEST] Current size of the memory:", max_free_available_space_MB,
                   "Number of items in the memory:", max_potential_nr_data_samples_in_memory_buffer)
 
             # Save samples of the current task to the memory buffer
