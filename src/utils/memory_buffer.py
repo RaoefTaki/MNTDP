@@ -79,3 +79,13 @@ class MemoryBuffer:
     # Gets the number of data samples added to the memory
     def __get_memory_filled_size(self):
         return sum([1 for key in self.memory for entry in self.memory[key]])
+
+    def get_memory_filled_size(self):
+        return self.__get_memory_filled_size()
+
+    def increase_memory_size(self, amount):
+        self.memory_size += amount
+
+    def set_memory_size(self, amount):
+        # WARNING: Only use this if self.memory_size is sure not to decrease. Unexpected behaviour might else occur
+        self.memory_size = amount

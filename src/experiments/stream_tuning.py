@@ -43,7 +43,7 @@ visdom.logger.setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
 IMAGES_PER_MB = (1000000/(3*32*32*4))  # The number of images that fit in one MB of memory. To be rounded down after possible multiplication of the number of MBs used
-MAX_MEMORY_MB_PER_TASK = 2.43852  # The MBs required to construct a model following the entire base architecture for a task
+MAX_MEMORY_MB_PER_TASK = 2.4282  # The MBs required to construct a model following the entire base architecture for a task
 
 class StreamTuningExperiment(BaseExperiment):
     def run(self):
@@ -351,18 +351,18 @@ def train_on_tasks(config):
         all_analysis = []
         selected_tags = []
 
-    # # TODO: try to see if data sample saving is doable
-    number_of_MB_in_memory = 3
-    memory_size = math.floor(IMAGES_PER_MB * number_of_MB_in_memory)
+    # Create a buffer of the size of the base architecture, to expand later
+    memory_size = math.floor(IMAGES_PER_MB * MAX_MEMORY_MB_PER_TASK)
     memory_buffer = MemoryBuffer(memory_size=memory_size)
 
     task_counter = 0
     tasks_list = []  # The list of currently encountered 'task' objects
     original_accuracies_list = []
     knn_accuracies = []
+    model_size_MB = 0
+    max_potential_free_available_space_MB = 0
     tasks_bw_output_head = {}  # A dict containing per task_id which different output head to use instead. If no key is present
     # for a certain task_id, then just use its specifically designated classification head
-    memory_requirements_task_MB = 0
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
         # todo sync transfer matrix
         static_params = dict(
@@ -459,10 +459,13 @@ def train_on_tasks(config):
             # Save the learner
             torch.save(learner, learner_path)
 
-            # Calculate the total memory requirements for the model so far
-            memory_requirements_task_MB += calc_memory_requirements(t_id, task, learner)
-            print("[TEST] Memory required so far in total:", memory_requirements_task_MB)
-            print("[TEST] Memory space left compared to 'Independent':", MAX_MEMORY_MB_PER_TASK*(t_id+1) - memory_requirements_task_MB)
+            # Calculate the extra memory requirements available to use for the memory buffer obtained in this iteration
+            max_allowed_memory_so_far = MAX_MEMORY_MB_PER_TASK*(t_id+1)
+            model_size_MB += calc_memory_requirements(t_id, task, learner)
+            max_potential_free_available_space_MB = max_allowed_memory_so_far - model_size_MB
+            print("[TEST] Memory space required for 'Independent' so far:", max_allowed_memory_so_far)
+            print("[TEST] Memory space required for the current model so far:", model_size_MB)
+            print("[TEST] Maximum potential free memory space left:", max_potential_free_available_space_MB)
 
             print("[TEST] Iterations for task:", t_id, "= ", total_iterations_for_this_task)
             print("[TEST] Iterations in total so far:", total_iterations_so_far_per_task[t_id])
@@ -483,6 +486,14 @@ def train_on_tasks(config):
                 tasks_bw_output_head=tasks_bw_output_head,
                 knn_n=learner.n_neighbors)
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
+
+            # Increase the size of the memory
+            max_potential_nr_data_samples_in_memory_buffer = 81
+            if max_potential_free_available_space_MB > 0:
+                max_potential_nr_data_samples_in_memory_buffer = math.floor(IMAGES_PER_MB * max_potential_free_available_space_MB)
+                memory_buffer.set_memory_size(max_potential_nr_data_samples_in_memory_buffer)
+            print("[TEST] Current size of the memory:", max_potential_free_available_space_MB,
+                  "Number of items in the memory:", max_potential_nr_data_samples_in_memory_buffer)
 
             # Save samples of the current task to the memory buffer
             print("[TEST] Save samples to memory")
@@ -551,7 +562,7 @@ def train_on_tasks(config):
         print("[RESULT] Updated task", key, "using the model of task", value['other_t_id'],
               "to update the evaluation accuracy from", old_evaluation_accuracy, "to", new_evaluation_accuracy)
         print("[RESULT] Updated task", key, "to save", nr_of_parameters_saved, "parameters")
-    print("[RESULT] Used memory with", memory_size, "items requiring", number_of_MB_in_memory, "MB in total")
+    print("[RESULT] Used memory with", memory_size, "items requiring", max_potential_free_available_space_MB, "MB in total")
 
     if task_level_tuning:
         print("[TEST] len(all_analysis):", len(all_analysis), "selected_tags:", selected_tags)
