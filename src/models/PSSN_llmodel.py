@@ -64,6 +64,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
                  n_source_models=-1, entropy_coef=None, *args, **kwargs):
         super(MNTDP, self).__init__(*args, **kwargs)
         self.columns = []
+        self.temporary_fw_lb_modules = []
 
         self.column_repr_sizes = []
         self.fixed_columns = set()
@@ -359,6 +360,9 @@ class MNTDP(LifelongLearningModel, ModularModel):
             # This is the first "real" layer, forward connection would be
             # identical to the (col_id, depth, 'w') layer
             return lateral_connections
+
+        # Loop over all columns in the MNTDP network, including the last column (newly added, still empty, to be initialized,
+        # hpo tuned, and trained etc)
         for src_col_id, src_col in enumerate(self.columns[:col_id]):
             # if src_col_id not in columns:
             #     continue
@@ -380,6 +384,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         self.columns[new_col_id][self.IN_NODE] = in_nodes
 
         in_size = sizes[0]
+        new_modules_keys_list = []
         # for depth, out_size in enumerate(sizes[1:], start=1):
         for depth in range(1, self.n_modules+1):
             # Start from 1 because input (depth 0) is already connected.
@@ -394,11 +399,14 @@ class MNTDP(LifelongLearningModel, ModularModel):
                                                       candidate_nodes,
                                                       is_last_layer)
             out_activations = not is_last_layer
-            new_modules = self.add_layer(f_connections, backward_connections,
-                                         depth, new_col_id, out_activations,
-                                         in_size, out_size)
+            new_modules, new_fw_lb_modules = self.add_layer(f_connections, backward_connections,
+                                                            depth, new_col_id, out_activations,
+                                                            in_size, out_size, candidate_nodes)
             in_size = out_size
-            self.columns[-1][depth] = new_modules
+            new_modules.update(new_fw_lb_modules)  # TODO: Add potential new FW edges as well
+            self.columns[-1][depth] = new_modules  # Includes lateral left branching FW connections
+            new_modules_keys_list.append(new_modules.keys())
+            self.temporary_fw_lb_modules = new_fw_lb_modules
 
         # Add output
         out_nodes = self.connect_new_output(new_col_id, candidate_nodes)
@@ -467,10 +475,21 @@ class MNTDP(LifelongLearningModel, ModularModel):
         return input_connections
 
     def add_layer(self, f_connections, b_connections, depth, col_id, out_act,
-                  in_size, out_size):
+                  in_size, out_size, candidate_nodes):
         """ Add a layer to the 'col_id' column
         :returns the modules created for this block
         """
+        # Check whether the candidate path has left or rightbranched to reach this specific node, in the previous edge
+        branch_direction = None
+        current_node = None
+        if depth >= 1 and len(candidate_nodes):
+            current_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth][0]
+            previous_node = [node for node in list(candidate_nodes) if len(node) == 2 and node[1] == depth-1][0]
+            if current_node[0] > previous_node[0]:
+                branch_direction = 'right'
+            elif current_node[0] < previous_node[0]:
+                branch_direction = 'left'
+
         # Create node corresponding to current depth and column id
         h_name = (col_id, depth)
         # h = Add_Block(activation=out_act)
@@ -490,6 +509,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
         self.graph.add_edge(w_name, h_name)
 
         added_modules = {w_name: w, h_name: h}
+        added_fw_leftbranching_modules = {}
 
         # Create forward lateral connections
         u_name = (col_id, depth, 'u')
@@ -516,6 +536,20 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(proj_name, lateral_out_node)
 
             added_modules[proj_name] = mod
+
+            # Also add a reverse node to allow for leftbranching too. Later on in the code restrict so that you can only either
+            # rightbranch once or leftbranch once
+            if branch_direction == 'right' or branch_direction == 'left':
+                node_left = current_node[0]
+            else:
+                node_left = source_column
+            node_right = col_id
+            proj_name_left_branch = (node_left, depth, node_right, 'f')
+            source = (node_right, depth - 1)
+            self.graph.add_node(proj_name_left_branch, module=mod)
+            self.graph.add_edge(source, proj_name_left_branch)
+            self.graph.add_edge(proj_name_left_branch, (node_left, depth))
+            added_fw_leftbranching_modules[proj_name_left_branch] = mod
 
         if f_connections and self.use_adapters:
             # Add the second layer of the non linear lateral connection
@@ -561,7 +595,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
             self.graph.add_edge(src_node, r_name)
             added_modules[r_name] = r
 
-        return added_modules
+        return added_modules, added_fw_leftbranching_modules
 
     def get_module(self, in_size, out_size, depth, is_adapter=False):
         if self.residual:
@@ -683,12 +717,15 @@ class MNTDP(LifelongLearningModel, ModularModel):
             frozen_modules = []
             stoch_nodes = []
 
+            # Add trainable modules
             for layer in self.columns[task_id].values():
                 for node, mod in layer.items():
+                    # This should only include the latest added nodes, e.g. (1, 3), (1, 3, 0, 'f'), (0, 3, 1, 'f') etc
                     trainable_modules.append(mod)
                     if len(node) > 2:
                         stoch_nodes.append(node)
 
+            # Add frozen modules
             for column in self.columns[:task_id]:
                 for layer in column.values():
                     for node, mod in layer.items():
@@ -744,7 +781,13 @@ class MNTDP(LifelongLearningModel, ModularModel):
         node_lay = node[1]
         logger.debug('Pruning {}'.format(node))
         self.graph.remove_node(node)
-        del self.columns[node_col][node_lay][node]
+        try:
+            del self.columns[node_col][node_lay][node]
+        except KeyError:
+            # In case it was not found, it could probably mean that it is a left branching lateral forward (FW) connection
+            # Thus, we search for the other column
+            node_col = node[2]
+            del self.columns[node_col][node_lay][node]
 
         for i, arch_sampler in enumerate(self.arch_samplers[node_col:]):
             if node in arch_sampler.var_names:
@@ -766,6 +809,7 @@ class MNTDP(LifelongLearningModel, ModularModel):
 
     def get_used_nodes(self, col):
         candidate_nodes = []
+        # Get all columns up to and until the current task
         for column in self.columns[:col + 1]:
             for lay in column.values():
                 candidate_nodes.extend(lay.keys())
@@ -800,10 +844,21 @@ class MNTDP(LifelongLearningModel, ModularModel):
         nodes_to_remove = model.nodes_to_prune(self.pruning_treshold)
         for node in stoch_nodes:
             if node in nodes_to_remove:
-                if node[0] == task_id:
+                # Also include leftbranching nodes
+                if node[0] == task_id or (len(node) == 4 and node[3] == 'f' and node[0] < node[2] == task_id):
                     self.remove_node(node)
-                    plot_graph.node[node]['color'] = 'red'
-                    graph.remove_node(node)
+                    previous_graph_nodes = graph.nodes()
+                    if node in plot_graph.node:
+                        plot_graph.node[node]['color'] = 'red'
+                    try:
+                        graph.remove_node(node)
+                    except:
+                        raise ValueError("previous_graph_nodes:", previous_graph_nodes)
+                        # ValueError: ('previous_graph_nodes:', NodeView(((0, 0), (0, 1), (0, 1, 'w'), (0, 2),
+                        # (0, 2, 'w'), (0, 3), (0, 3, 'w'), (0, 4), (0, 4, 'w'), (1, 5), (1, 5, 0, 'f'), (1, 6),
+                        # (1, 6, 'w'), (2, 'INs'), (2, 0), (2, 'INs', 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5),
+                        # (2, 5, 0, 'f'), (2, 6), (2, 6, 'w'), (2, 6, 1, 'f'), (1, 6, 2, 'f'), (2, 'OUT'),
+                        # (2, 'OUT', 1), (2, 'OUT', 2))))
                 else:
                     logger.debug('Was supposed to remove {}, but no'
                                  .format(node))
@@ -838,7 +893,8 @@ class MNTDP(LifelongLearningModel, ModularModel):
         node_to_remove = clean_graph(graph, model.in_node, model.out_node)
         for n in node_to_remove:
             graph.remove_node(n)
-            if n[0] == task_id:
+            # Also include leftbranching nodes
+            if n[0] == task_id or (len(n) == 4 and n[3] == 'f' and n[0] < n[2] == task_id):
                 self.remove_node(n)
             elif n in stoch_nodes and hasattr(model, 'arch_sampler'):
                 model.arch_sampler.remove_var(n)

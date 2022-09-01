@@ -46,6 +46,7 @@ class ExhaustiveSearch(nn.Module):
             last = None
             i = 0
             n_new_blocks = 0
+            newly_added_lateral_fw_connections_count = 0
             for node in path:
                 assert node == self.in_node \
                        or node in self.graph.successors(last)
@@ -60,11 +61,21 @@ class ExhaustiveSearch(nn.Module):
                     n_new_blocks += 1
                     # else:
                     #     nn_module.load_state_dict(self.block_inits[node])
+
+                # Check if this node is a lateral forward connection
+                if len(node) == 4 and node[3] == 'f' and (node[0] == iteration or node[2] == iteration):
+                    newly_added_lateral_fw_connections_count += 1
+
                 i += 1
 
             if n_new_blocks > self.max_new_blocks and len(archs) > 1:
                 # print('Skipping {}'.format(path))
                 continue
+
+            # Skip this in case there are multiple NEWLY ADDED lateral FW connections
+            if newly_added_lateral_fw_connections_count > 1:
+                continue
+
             # print('Adding {}'.format(path))
             new_model.n_out = self.n_out
             self.models_idx[tuple(path)] = len(self.models_idx)
@@ -100,7 +111,6 @@ class ExhaustiveSearch(nn.Module):
     #     return self.models[self.models_idx[self._selected_path()]].parameters()
 
     def train_func(self, datasets_p, b_sizes, optim_fact, env_url, t_id, tune_report_arguments_initialized, *args, **kwargs):
-        # TODO: use argumenst for t_id etc to report to the tuner
         # if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/1406'):
         if datasets_p['task']['data_path'][0].startswith('/net/blackorpheus/veniat/lileb/datasets/2775'):
             kwargs['n_ep_max'] = 6
@@ -108,7 +118,6 @@ class ExhaustiveSearch(nn.Module):
             p = Path('../../understood/')
             p.mkdir(parents=True, exist_ok=True)
 
-        # TODO: pull this forward if possible (if it helps speed at all), i.e. calculate the possible models earlier
         if not self.models:
             archs = self.init_models(iteration=t_id)
 
@@ -180,7 +189,10 @@ class ExhaustiveSearch(nn.Module):
                 call_path = path
 
         # Execute and override the outcomes
-        all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        try:
+            all_res = [call()]  # optim_fact.keywords['optim_params'][0]['architecture']]]
+        except TypeError:
+            raise ValueError(t_id, optim_fact.keywords['optim_params'][0]['architecture'], self.models_idx)
         all_res = all_res[0]
 
         # raise ValueError("It gets here, print conducted_iterations_list:", conducted_iterations_list,
