@@ -750,8 +750,8 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     temp_seed = random.randint(0, 1000000)
     dataset_input_tensor = datasets[1].tensors[0]
     dataset_output_tensor = datasets[1].tensors[1]
-    random.Random(temp_seed).shuffle(dataset_input_tensor)
-    random.Random(temp_seed).shuffle(dataset_output_tensor)
+    # random.Random(temp_seed).shuffle(dataset_input_tensor)
+    # random.Random(temp_seed).shuffle(dataset_output_tensor)
     for i, data_sample in enumerate(dataset_input_tensor):
         label = torch.index_select(dataset_output_tensor, 0, torch.tensor([i])).tolist()[0][0]
         print(label)
