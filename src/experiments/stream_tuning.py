@@ -489,12 +489,12 @@ def train_on_tasks(config):
             print("[TEST] Completed trying for backward transfer on task:", t_id)  # TODO: RESULTS SHORTLY
 
             # Increase the size of the memory
-            if max_free_available_space_MB > memory_size:
+            if max_free_available_space_MB > memory_size_MB:
                 max_potential_nr_data_samples_in_memory_buffer = math.floor(IMAGES_PER_MB * max_free_available_space_MB)
                 memory_buffer.set_memory_size(max_potential_nr_data_samples_in_memory_buffer)
             elif max_free_available_space_MB == 0:
                 # Just for printing each round
-                max_potential_nr_data_samples_in_memory_buffer = 81
+                max_potential_nr_data_samples_in_memory_buffer = 197
                 max_potential_free_available_space_MB = MAX_MEMORY_MB_PER_TASK
             print("[TEST] Current size of the memory:", max_free_available_space_MB,
                   "Number of items in the memory:", max_potential_nr_data_samples_in_memory_buffer)
