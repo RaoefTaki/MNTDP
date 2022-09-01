@@ -748,12 +748,11 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     # We don't use the training dataset, since we don't want to use samples on which the model has overfit
     # Randomize the samples picked from the datasets, since it seems too ordered otherwise
     temp_seed = random.randint(0, 1000000)
-    dataset_input_tensor = datasets[1].tensors[0]
-    dataset_output_tensor = datasets[1].tensors[1]
-    # random.Random(temp_seed).shuffle(dataset_input_tensor)
-    # random.Random(temp_seed).shuffle(dataset_output_tensor)
-    for i, data_sample in enumerate(dataset_input_tensor):
-        label = torch.index_select(dataset_output_tensor, 0, torch.tensor([i])).tolist()[0][0]
+    random_indices = list(range(len(datasets[1].tensors[0].size(dim=0))))
+    random.Random(temp_seed).shuffle(random_indices)
+    for i in random_indices:
+        data_sample = torch.index_select(datasets[1].tensors[0], 0, torch.tensor([i]))
+        label = torch.index_select(datasets[1].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
         print(label)
         memory_buffer.observe_sample(data_sample, task_id, label, i)
 
