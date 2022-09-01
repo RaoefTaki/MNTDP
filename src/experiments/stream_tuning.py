@@ -754,6 +754,7 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     random.Random(temp_seed).shuffle(dataset_output_tensor)
     for i, data_sample in enumerate(dataset_input_tensor):
         label = torch.index_select(dataset_output_tensor, 0, torch.tensor([i])).tolist()[0][0]
+        print(label)
         memory_buffer.observe_sample(data_sample, task_id, label, i)
 
     # Print info about the current memory contents for clarity
