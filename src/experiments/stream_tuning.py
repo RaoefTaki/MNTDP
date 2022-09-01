@@ -753,7 +753,6 @@ def save_samples_to_memory(memory_buffer=None, task_id=None, task=None, transfor
     for i in random_indices:
         data_sample = torch.index_select(datasets[1].tensors[0], 0, torch.tensor([i]))
         label = torch.index_select(datasets[1].tensors[1], 0, torch.tensor([i])).tolist()[0][0]
-        print(label)
         memory_buffer.observe_sample(data_sample, task_id, label, i)
 
     # Print info about the current memory contents for clarity
