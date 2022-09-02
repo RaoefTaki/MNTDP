@@ -782,7 +782,7 @@ def get_bw_transfer_info(tasks=None, last_task_id=None, task_vis_params=None, co
         # Use a lookup table
         nr_of_parameters_saved = 0
         for node in original_nodes:
-            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1]]
+            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1] + 1]
 
         # Calculate old and new evaluation accuracy
         transforms, normalize = get_transform_normalize(config['training-params'], tasks_list[key])
