@@ -476,7 +476,7 @@ def train_on_tasks(config):
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
                 grace_period=asha_grace_period,
-                reduction_factor=9,
+                reduction_factor=7,
                 brackets=1)
 
             analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)  # scheduler=asha_scheduler,
