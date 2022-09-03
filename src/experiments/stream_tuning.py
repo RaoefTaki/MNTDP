@@ -471,7 +471,7 @@ def train_on_tasks(config):
 
             # Define the scheduler for ASHA
             asha_grace_period = 10 if config['training-params']['n_ep_max'] >= 10 else 1
-            asha_reduction_factor = 9 if t_id > 0 else 3
+            asha_reduction_factor = 9
             asha_scheduler = ASHAScheduler(
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
@@ -835,7 +835,7 @@ def get_bw_transfer_info(tasks=None, last_task_id=None, task_vis_params=None, co
         # Use a lookup table
         nr_of_parameters_saved = 0
         for node in original_nodes:
-            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[node[1] + 1]
+            nr_of_parameters_saved += BASE_ARCHITECTURE_PARAMS[min(node[1] + 1, 7)]
 
         # Calculate old and new evaluation accuracy
         transforms, normalize = get_transform_normalize(config['training-params'], tasks_list[key])
