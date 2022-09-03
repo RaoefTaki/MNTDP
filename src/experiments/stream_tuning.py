@@ -417,6 +417,57 @@ def train_on_tasks(config):
             # 'trial_name_creator': <function tune_learner_on_stream.<locals>.trial_name_creator at 0x7fcceee28f70>,
             # 'max_failures': 3}
 
+            # The number of current expected iterations:
+            # 72*10 + (72/3)*(10*3-10) + (72/3/3)*(10*3*3-(10*3)) + (72/3/3/3)*(10*3*3*3-(10*3*3)) = 2160
+            # More generally, can plot in https://www.desmos.com/calculato:
+            # y=a*\min\left(R,\ c\right)+(a/b)*(\min\left(R,\ c*b-c)\right)+(a/b/b)*(\min\left(R,\ c*b*b-(c*b))\right)+(a/b/b/b)*(\min\left(R,\ c*b*b*b-(c*b*b))\right)
+
+            # AN EXAMPLE TO VISUALIZE THE NR OF ITERATIONS PER RUNG:
+            # import math
+            # n = 72
+            # r = 10
+            # R = 300
+            # eta = 3
+            # print("n:", n)
+            # print("r:", r)
+            # print("R:", R)
+            # print("eta:", eta)
+            # print()
+            #
+            # iterations_per_config = {}
+            # chosen_configs = []
+            # total_iterations = 0
+            # i = 0
+            # while True:
+            #     # Calc nr of extra iterations to do now
+            #     nr_extra_configs_this_iteration = None
+            #     if i != 0:
+            #         nr_extra_configs_this_iteration = min(R, r*math.pow(eta, i)) - r*math.pow(eta, i-1)
+            #     else:
+            #         nr_extra_configs_this_iteration = min(R, r*math.pow(eta, i))
+            #
+            #     if nr_extra_configs_this_iteration <= 0:
+            #         break
+            #
+            #     print(i)
+            #     print(nr_extra_configs_this_iteration)
+            #
+            #     current_iterations = 0
+            #     if len(chosen_configs) == 0 and i == 0:
+            #         chosen_configs = list(range(n))
+            #
+            #     total_iterations += len(chosen_configs) * nr_extra_configs_this_iteration
+            #
+            #     elements_to_keep = math.floor(len(chosen_configs) / eta)
+            #     print("elements_to_keep:", elements_to_keep)
+            #     chosen_configs = chosen_configs[:elements_to_keep]
+            #
+            #     print()
+            #     i += 1
+            #     if i >= 10 or elements_to_keep == 0:
+            #         break
+            # print("total_iterations:", total_iterations)
+
             # Define the scheduler for ASHA
             asha_grace_period = 10 if config['training-params']['n_ep_max'] >= 10 else 1
             asha_scheduler = ASHAScheduler(
@@ -425,7 +476,7 @@ def train_on_tasks(config):
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
                 grace_period=asha_grace_period,
-                reduction_factor=3,
+                reduction_factor=9,
                 brackets=1)
 
             analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)  # scheduler=asha_scheduler,
