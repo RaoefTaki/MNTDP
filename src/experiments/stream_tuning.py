@@ -365,6 +365,7 @@ def train_on_tasks(config):
     tasks_bw_output_head = {}  # A dict containing per task_id which different output head to use instead. If no key is present
     # for a certain task_id, then just use its specifically designated classification head
     for t_id, (task, vis_p) in enumerate(zip(tasks, task_vis_params)):
+        print("t_id:", t_id)
         # todo sync transfer matrix
         static_params = dict(
             t_id=t_id, task=task, tasks=tasks, vis_p=vis_p,
@@ -470,13 +471,14 @@ def train_on_tasks(config):
 
             # Define the scheduler for ASHA
             asha_grace_period = 10 if config['training-params']['n_ep_max'] >= 10 else 1
+            asha_reduction_factor = 9 if t_id > 0 else 3
             asha_scheduler = ASHAScheduler(
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
                 mode='max',
                 max_t=config['training-params']['n_ep_max'] + 1,  # Represents infinity; will never be reached in MNTDP
                 grace_period=asha_grace_period,
-                reduction_factor=7,
+                reduction_factor=asha_reduction_factor,
                 brackets=1)
 
             analysis = tune.run(train_t, config=config, scheduler=asha_scheduler, **ray_params)  # scheduler=asha_scheduler,
