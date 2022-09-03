@@ -181,7 +181,7 @@ modules:
             _name: pssn-resnet
             norm_layer: batch
             strat: search_all
-#            block_id: [0, 1, 1, 2, 2, 3 ,3, 4, 5, 6]
+            block_id: [0, 1, 1, 2, 2, 3 ,3, 4, 5, 6]
             n_source_models: 1
             n_neighbors: 5
 #            method: rand
