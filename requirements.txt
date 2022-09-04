@@ -95,3 +95,10 @@ visdom @ git+git://github.com/TomVeniat/visdom.git@088890d27c8699d22f969d006b5cc
 websocket-client==0.57.0
 wrapt==1.12.1
 yarl==1.6.3
+pylrpredictor @ git+https://github.com/RaoefTaki/pylearningcurvepredictor
+emcee>=2.1.0
+docutils>=0.3
+lmfit
+setuptools
+triangle
+gputil
