@@ -471,7 +471,7 @@ def train_on_tasks(config):
 
             # Define the scheduler for ASHA
             asha_grace_period = 10 if config['training-params']['n_ep_max'] >= 10 else 1
-            asha_reduction_factor = 9
+            asha_reduction_factor = 3
             asha_scheduler = ASHAScheduler(
                 time_attr='epoch_of_report_T' + str(t_id),
                 metric='best_val_T' + str(t_id),
