@@ -623,6 +623,8 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
     # Get the unique labels of the current task (c_t)
     c_t_val_dataset = get_datasets_of_task(task, transforms=None, normalize=None)[1]
     c_t_train_dataset = get_datasets_of_task(task, transforms=None, normalize=None)[0]
+    c_t_number_val = len(c_t_val_dataset.tensors[1].tolist())
+    print("Number of validation samples for the current task", task_id, "is", c_t_number_val)
     c_t_labels = c_t_val_dataset.tensors[1].tolist()
     c_t_labels = [item for sublist in c_t_labels for item in sublist]
     # print("c_t_labels:", c_t_labels)
@@ -666,6 +668,8 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Get validation, evaluation data samples of the past task. These are just for comprehension purposes
         p_t_EVAL_dataset = _load_datasets(tasks_list[p_t_id], 'Test', normalize=normalize)[0]
         p_t_val_dataset = _load_datasets(tasks_list[p_t_id], 'Val', normalize=normalize)[0]
+        p_t_number_val = len(p_t_val_dataset.tensors[1].tolist())
+        print("Number of validation samples for p_t", p_t_id, "is", p_t_number_val)
 
         # Check if the past samples' labels are all included in the labels of the current task. Also return if there are
         # no found samples
@@ -723,9 +727,11 @@ def check_possibility_backward_transfer(memory_buffer=None, task_id=None, task=N
         # Account for that of all labels at least one sample should be included. This serves as a check on the nr of samples
         # in the memory, so that not tóó little samples are present for our next analyses
         nr_of_labels_p_t = len(torch.unique(p_t_val_dataset.tensors[1]))
-        if len(p_t_labels) >= nr_of_labels_p_t and (p_t_id not in tasks_bw_output_head and p_t_c_m_acc > original_accuracies_list[p_t_id]):
+        if len(p_t_labels) >= nr_of_labels_p_t and c_t_number_val > p_t_number_val and \
+                (p_t_id not in tasks_bw_output_head and p_t_c_m_acc > original_accuracies_list[p_t_id]):
             tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': original_accuracies_list[p_t_id]}
-        elif len(p_t_labels) >= nr_of_labels_p_t and (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc']):
+        elif len(p_t_labels) >= nr_of_labels_p_t and c_t_number_val > p_t_number_val and \
+                (p_t_id in tasks_bw_output_head and p_t_c_m_acc > tasks_bw_output_head[p_t_id]['acc']):
             tasks_bw_output_head[p_t_id] = {'other_t_id': task_id, 'acc': p_t_c_m_acc, 'acc_original_model': tasks_bw_output_head[p_t_id]['acc_original_model']}
         print()
     return original_accuracies_list, knn_accuracies_list, tasks_bw_output_head
